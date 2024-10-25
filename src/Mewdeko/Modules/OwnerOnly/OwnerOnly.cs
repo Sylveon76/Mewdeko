@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Net.Http;
 using System.Runtime.InteropServices;
 using Discord.Commands;
 using Discord.Net;
@@ -53,7 +54,7 @@ public class OwnerOnly(
     IServiceProvider services,
     GuildSettingsService guildSettings,
     CommandHandler commandHandler,
-    BotConfig config)
+    BotConfig botConfig, HttpClient httpClient)
     : MewdekoModuleBase<OwnerOnlyService>
 {
     /// <summary>
@@ -99,7 +100,7 @@ public class OwnerOnly(
         {
             await Service.ClearUsedTokens();
             await ctx.Channel.SendErrorAsync("Cleared.",
-                config); // Assuming SendErrorAsync sends a message to the channel.
+                botConfig); // Assuming SendErrorAsync sends a message to the channel.
         }
     }
 
@@ -282,7 +283,7 @@ public class OwnerOnly(
             return;
 
         var affected = await dbContext.Database.ExecuteSqlRawAsync(sql).ConfigureAwait(false);
-        await ctx.Channel.SendErrorAsync($"Affected {affected} rows.", config).ConfigureAwait(false);
+        await ctx.Channel.SendErrorAsync($"Affected {affected} rows.", botConfig).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -506,7 +507,7 @@ public class OwnerOnly(
         {
             Console.WriteLine(e);
             await ctx.Channel.SendErrorAsync(
-                "There was an error setting or printing the config, please check the logs.", config);
+                "There was an error setting or printing the config, please check the logs.", botConfig);
         }
     }
 
@@ -1253,7 +1254,7 @@ public class OwnerOnly(
             if (potentialUser is null)
             {
                 await ctx.Channel.SendErrorAsync("Unable to find that user or guild! Please double check the Id!",
-                        config)
+                        botConfig)
                     .ConfigureAwait(false);
                 return;
             }
@@ -1274,7 +1275,7 @@ public class OwnerOnly(
 
         if (to == 0)
         {
-            await ctx.Channel.SendErrorAsync("You need to specify a Channel or User ID after the Server ID!", config)
+            await ctx.Channel.SendErrorAsync("You need to specify a Channel or User ID after the Server ID!", botConfig)
                 .ConfigureAwait(false);
             return;
         }
@@ -1302,7 +1303,7 @@ public class OwnerOnly(
         if (user is null)
         {
             await ctx.Channel.SendErrorAsync("Unable to find that channel or user! Please check the ID and try again.",
-                    config)
+                    botConfig)
                 .ConfigureAwait(false);
             return;
         }
@@ -1458,7 +1459,7 @@ public class OwnerOnly(
             else
             {
                 process.Kill();
-                await ctx.Channel.SendErrorAsync("The process was hanging and has been terminated.", config)
+                await ctx.Channel.SendErrorAsync("The process was hanging and has been terminated.", botConfig)
                     .ConfigureAwait(false);
             }
 
@@ -1481,102 +1482,185 @@ public class OwnerOnly(
     [Cmd]
     [Aliases]
     [OwnerOnly]
-    public async Task Evaluate([Remainder] string code)
+    public async Task Evaluate([Remainder] string code = null)
     {
-        var cs1 = code.IndexOf("```", StringComparison.Ordinal) + 3;
-        cs1 = code.IndexOf('\n', cs1) + 1;
-        var cs2 = code.LastIndexOf("```", StringComparison.Ordinal);
+        var codeToEvaluate = string.Empty;
+        var evaluationSource = "code block";
 
-        if (cs1 == -1 || cs2 == -1)
-            throw new ArgumentException("You need to wrap the code into a code block.", nameof(code));
+        // Check if there's at least one attachment
+        if (ctx.Message.Attachments.Count!=0)
+        {
+            var attachment = Context.Message.Attachments.First();
 
-        code = code[cs1..cs2];
+            // Validate the file extension
+                // Optional: Validate the file size (e.g., limit to 100 KB)
+                if (attachment.Size > 100 * 1024)
+                {
+                    await ReplyAsync("❌ **Error:** The attached file is too large. Please ensure it's under 100 KB.");
+                    return;
+                }
+
+                try
+                {
+                    // Download the attachment content
+                    await using var stream = await httpClient.GetStreamAsync(attachment.Url);
+                    using var reader = new StreamReader(stream);
+                    codeToEvaluate = await reader.ReadToEndAsync();
+                    evaluationSource = $"attachment `{attachment.Filename}`";
+                }
+                catch (Exception ex)
+                {
+                    await ReplyAsync($"❌ **Error:** Failed to read the attached file. {ex.Message}");
+                    return;
+                }
+        }
+        else
+        {
+            if (code is null)
+            {
+                await ctx.Channel.SendErrorAsync("No code was provided.", botConfig);
+            }
+            var startIndex = code.IndexOf("```", StringComparison.Ordinal);
+            if (startIndex != -1)
+            {
+                startIndex += 3;
+                var languageSpecifierEnd = code.IndexOf('\n', startIndex);
+                if (languageSpecifierEnd != -1)
+                {
+                    startIndex = languageSpecifierEnd + 1;
+                    var endIndex = code.LastIndexOf("```", StringComparison.Ordinal);
+                    if (endIndex != -1 && endIndex > startIndex)
+                    {
+                        codeToEvaluate = code.Substring(startIndex, endIndex - startIndex);
+                        evaluationSource = "code block";
+                    }
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(codeToEvaluate))
+            {
+                await ReplyAsync("❌ **Error:** No code provided. Please include code within code blocks or attach a `.cs` file.");
+                return;
+            }
+        }
 
         var embed = new EmbedBuilder
         {
-            Title = "Evaluating...", Color = new Color(0xD091B2)
+            Title = "Evaluating...",
+            Color = new Color(0xD091B2)
         };
-        var msg = await ctx.Channel.SendMessageAsync(embed: embed.Build()).ConfigureAwait(false);
+        var msg = await Context.Channel.SendMessageAsync(embed: embed.Build()).ConfigureAwait(false);
 
+        // Set up the script options with necessary imports and references
         var globals = new EvaluationEnvironment((CommandContext)Context);
-        var sopts = ScriptOptions.Default
-            .WithImports("System", "System.Collections.Generic", "System.Diagnostics", "System.Linq",
-                "System.Net.Http", "System.Net.Http.Headers", "System.Reflection", "System.Text",
-                "System.Threading.Tasks", "Discord.Net", "Discord", "Discord.WebSocket", "Mewdeko.Modules",
-                "Mewdeko.Services", "Mewdeko.Extensions", "Mewdeko.Modules.Administration",
-                "Mewdeko.Modules.Chat_Triggers", "Mewdeko.Modules", "Mewdeko.Modules.Games",
-                "Mewdeko.Modules.Help", "Mewdeko.Modules.Music", "Mewdeko.Modules.Nsfw",
-                "Mewdeko.Modules.Permissions", "Mewdeko.Modules.Searches", "Mewdeko.Modules.Server_Management")
+        var scriptOptions = ScriptOptions.Default
+            .WithImports(
+                "System",
+                "System.Collections.Generic",
+                "System.Diagnostics",
+                "System.Linq",
+                "System.Net.Http",
+                "System.Net.Http.Headers",
+                "System.Reflection",
+                "System.Text",
+                "System.Threading.Tasks",
+                "Discord.Net",
+                "Discord",
+                "Discord.WebSocket",
+                "Mewdeko.Modules",
+                "Mewdeko.Services",
+                "Mewdeko.Extensions",
+                "Mewdeko.Modules.Administration",
+                "Mewdeko.Modules.Chat_Triggers",
+                "Mewdeko.Modules",
+                "Mewdeko.Modules.Games",
+                "Mewdeko.Modules.Help",
+                "Mewdeko.Modules.Music",
+                "Mewdeko.Modules.Nsfw",
+                "Mewdeko.Modules.Permissions",
+                "Mewdeko.Modules.Searches",
+                "Mewdeko.Modules.Server_Management")
             .WithReferences(AppDomain.CurrentDomain.GetAssemblies()
                 .Where(xa => !xa.IsDynamic && !string.IsNullOrWhiteSpace(xa.Location)));
 
-        var sw1 = Stopwatch.StartNew();
-        var cs = CSharpScript.Create(code, sopts, typeof(EvaluationEnvironment));
-        var csc = cs.Compile();
-        sw1.Stop();
+        // Start measuring compilation time
+        var compilationStopwatch = Stopwatch.StartNew();
+        var script = CSharpScript.Create(codeToEvaluate, scriptOptions, typeof(EvaluationEnvironment));
+        var compilationDiagnostics = script.Compile();
+        compilationStopwatch.Stop();
 
-        if (csc.Any(xd => xd.Severity == DiagnosticSeverity.Error))
+        // Check for compilation errors
+        if (compilationDiagnostics.Any(diag => diag.Severity == DiagnosticSeverity.Error))
         {
             embed = new EmbedBuilder
             {
-                Title = "Compilation failed",
-                Description =
-                    $"Compilation failed after {sw1.ElapsedMilliseconds:#,##0}ms with {csc.Length:#,##0} errors.",
-                Color = new Color(0xD091B2)
+                Title = "Compilation Failed",
+                Description = $"Compilation failed after {compilationStopwatch.ElapsedMilliseconds:#,##0}ms with {compilationDiagnostics.Length:#,##0} error(s).",
+                Color = new Color(0xE74C3C)
             };
-            foreach (var xd in csc.Take(3))
+
+            foreach (var diagnostic in compilationDiagnostics.Where(diag => diag.Severity == DiagnosticSeverity.Error).Take(3))
             {
-                var ls = xd.Location.GetLineSpan();
-                embed.AddField($"Error at {ls.StartLinePosition.Line:#,##0}, {ls.StartLinePosition.Character:#,##0}",
-                    Format.Code(xd.GetMessage()));
+                var lineSpan = diagnostic.Location.GetLineSpan();
+                embed.AddField($"Error at Line {lineSpan.StartLinePosition.Line + 1}, Character {lineSpan.StartLinePosition.Character + 1}",
+                    $"```csharp\n{diagnostic.GetMessage()}\n```");
             }
 
-            if (csc.Length > 3)
-                embed.AddField("Some errors omitted", $"{csc.Length - 3:#,##0} more errors not displayed");
+            if (compilationDiagnostics.Length > 3)
+            {
+                embed.AddField("Additional Errors", $"{compilationDiagnostics.Length - 3:#,##0} more error(s) not displayed.");
+            }
+
             await msg.ModifyAsync(x => x.Embed = embed.Build()).ConfigureAwait(false);
             return;
         }
 
-        Exception rex;
-        ScriptState<object> css = default;
-        var sw2 = Stopwatch.StartNew();
+        // Execute the script and measure execution time
+        Exception executionException = null;
+        ScriptState<object> scriptState = null;
+        var executionStopwatch = Stopwatch.StartNew();
         try
         {
-            css = await cs.RunAsync(globals).ConfigureAwait(false);
-            rex = css.Exception;
+            scriptState = await script.RunAsync(globals).ConfigureAwait(false);
+            executionException = scriptState.Exception;
         }
         catch (Exception ex)
         {
-            rex = ex;
+            executionException = ex;
         }
+        executionStopwatch.Stop();
 
-        sw2.Stop();
-
-        if (rex != null)
+        // Handle execution exceptions
+        if (executionException != null)
         {
             embed = new EmbedBuilder
             {
-                Title = "Execution failed",
-                Description =
-                    $"Execution failed after {sw2.ElapsedMilliseconds:#,##0}ms with `{rex.GetType()}: {rex.Message}`.",
-                Color = new Color(0xD091B2)
+                Title = "Execution Failed",
+                Description = $"Execution failed after {executionStopwatch.ElapsedMilliseconds:#,##0}ms with `{executionException.GetType()}: {executionException.Message}`.",
+                Color = new Color(0xE74C3C)
             };
             await msg.ModifyAsync(x => x.Embed = embed.Build()).ConfigureAwait(false);
             return;
         }
 
-        // execution succeeded
+        // Execution succeeded
         embed = new EmbedBuilder
         {
-            Title = "Evaluation successful", Color = new Color(0xD091B2)
+            Title = "Evaluation Successful",
+            Color = new Color(0x2ECC71)
         };
 
-        embed.AddField("Result", css.ReturnValue != null ? css.ReturnValue.ToString() : "No value returned")
-            .AddField("Compilation time", $"{sw1.ElapsedMilliseconds:#,##0}ms", true)
-            .AddField("Execution time", $"{sw2.ElapsedMilliseconds:#,##0}ms", true);
+        var result = scriptState.ReturnValue != null ? scriptState.ReturnValue.ToString() : "No value returned";
 
-        if (css.ReturnValue != null)
-            embed.AddField("Return type", css.ReturnValue.GetType().ToString(), true);
+        embed.AddField("Result", $"```csharp\n{result}\n```")
+             .AddField("Source", evaluationSource, true)
+             .AddField("Compilation Time", $"{compilationStopwatch.ElapsedMilliseconds:#,##0}ms", true)
+             .AddField("Execution Time", $"{executionStopwatch.ElapsedMilliseconds:#,##0}ms", true);
+
+        if (scriptState.ReturnValue != null)
+        {
+            embed.AddField("Return Type", scriptState.ReturnValue.GetType().ToString(), true);
+        }
 
         await msg.ModifyAsync(x => x.Embed = embed.Build()).ConfigureAwait(false);
     }
