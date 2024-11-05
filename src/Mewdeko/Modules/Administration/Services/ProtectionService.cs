@@ -172,11 +172,11 @@ public class ProtectionService : INService, IReadyExecutor
     /// </summary>
     /// <param name="user">The user that has joined the guild.</param>
     /// <returns>A task that represents the asynchronous operation.</returns>
-    private Task HandleUserJoined(IGuildUser user)
+    private async Task HandleUserJoined(IGuildUser user)
     {
         // If the user is a bot, do nothing
         if (user.IsBot)
-            return Task.CompletedTask;
+            return;
 
         // Try to get the anti-raid and anti-alt settings for the guild
         antiRaidGuilds.TryGetValue(user.Guild.Id, out var maybeStats);
@@ -184,26 +184,22 @@ public class ProtectionService : INService, IReadyExecutor
 
         // If no settings are found, do nothing
         if (maybeStats is null && maybeAlts is null)
-            return Task.CompletedTask;
-
-        // Run the anti-raid and anti-alt checks in a separate task
-        _ = Task.Run(async () =>
-        {
+            return;
             // If anti-alt settings are found
             if (maybeAlts is { } alts)
             {
                 // If the user's account is not new
                 if (user.CreatedAt != default)
                 {
-                    // Calculate the age of the user's account
                     var diff = DateTime.UtcNow - user.CreatedAt.UtcDateTime;
-                    // If the account is younger than the minimum age
-                    if (diff < TimeSpan.Parse(alts.MinAge))
+
+                    var minAgeMinutes = double.Parse(alts.MinAge);
+                    var minAgeSpan = TimeSpan.FromMinutes(minAgeMinutes);
+
+                    if (diff < minAgeSpan)
                     {
-                        // Increment the counter of new accounts
                         alts.Increment();
 
-                        // Punish the user
                         await PunishUsers(
                             alts.Action,
                             ProtectionType.Alting,
@@ -251,8 +247,6 @@ public class ProtectionService : INService, IReadyExecutor
             {
                 // ignored
             }
-        });
-        return Task.CompletedTask;
     }
 
     /// <summary>
