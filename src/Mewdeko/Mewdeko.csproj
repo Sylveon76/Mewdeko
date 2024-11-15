@@ -30,6 +30,7 @@
     <PackageReference Include="HarfBuzzSharp.NativeAssets.Linux" Version="8.3.0-preview.4.1"/>
     <PackageReference Include="LibGit2Sharp" Version="0.30.0"/>
     <PackageReference Include="MathNet.Symbolics" Version="0.25.0"/>
+    <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="3.0.1" />
     <PackageReference Include="OxyPlot.Core" Version="2.2.0"/>
     <PackageReference Include="OxyPlot.SkiaSharp" Version="2.2.0"/>
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.3" />
@@ -88,7 +89,7 @@
     <PackageReference Include="morelinq" Version="4.3.0" />
     <PackageReference Include="NekosBestApiNet" Version="1.0.7"/>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3"/>
-    <PackageReference Include="NHentaiAPI" Version="1.7.0"/>
+    <PackageReference Include="NHentaiAPI" Version="1.8.0"/>
     <PackageReference Include="NonBlocking" Version="2.1.2"/>
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.8"/>
     <PackageReference Include="Octokit" Version="13.0.1" />
@@ -157,6 +158,11 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+<!--  <ItemGroup>-->
+<!--    <Reference Include="NHentaiAPI">-->
+<!--      <HintPath>..\..\..\NHentaiAPI\NHentaiAPI\bin\Release\net8.0\NHentaiAPI.dll</HintPath>-->
+<!--    </Reference>-->
+<!--  </ItemGroup>-->
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>DEBUG;TRACE;DNETLABS</DefineConstants>
