@@ -1,5 +1,6 @@
 ﻿using Mewdeko.Common.JsonConverters;
 using Newtonsoft.Json;
+using static Mewdeko.Extensions.StringExtensions;
 
 // ReSharper disable NotNullOrRequiredMemberIsNotInitialized
 
@@ -239,28 +240,32 @@ public class NewEmbed
         if (Components is null) return null;
         foreach (var comp in Components)
         {
-            if (activeRowId == 5)
-                break;
-
-            if (rowLength == 5)
-            {
-                ++activeRowId;
-                rowLength = 0;
-            }
 
             if (comp.IsSelect)
             {
+
                 if (rowLength != 0)
+                {
                     ++activeRowId;
-                rowLength = 0;
-                if (activeRowId == 5)
-                    break;
-                cb.WithSelectMenu(GetSelectMenu(comp, activeRowId * 10 + rowLength, guildId ?? 0));
+                    rowLength = 0;
+                }
+
+                cb.WithSelectMenu(GetSelectMenu(comp, activeRowId, guildId ?? 0));
+
+                ++activeRowId;
             }
             else
             {
+
+                if (rowLength != 0)
+                {
+                    ++activeRowId;
+                    rowLength = 0;
+                }
+
+
+                cb.WithButton(GetButton(comp, activeRowId, guildId ?? 0));
                 ++rowLength;
-                cb.WithButton(GetButton(comp, activeRowId * 10 + rowLength, guildId ?? 0));
             }
         }
 
@@ -308,7 +313,7 @@ public class NewEmbed
         return bb;
     }
 
-    private static SelectMenuBuilder GetSelectMenu(NewEmbedComponent sel, int pos, ulong guildId)
+    private SelectMenuBuilder GetSelectMenu(NewEmbedComponent sel, int pos, ulong guildId)
     {
         var sb = new SelectMenuBuilder();
 
@@ -341,7 +346,8 @@ public class NewEmbed
                 .WithMinValues(sel.MinOptions)
                 .WithOptions(sel.Options
                     .Select(x =>
-                        new SelectMenuOptionBuilder(x.Name, x.Id.ToString(), x.Description ?? "None", x.Emoji?.ToIEmote()))
+                        new SelectMenuOptionBuilder(x.Name, $"option.{x.Id}.{GenerateSecureString(10)}", x.Description ?? "None",
+                            x.Emoji?.ToIEmote()))
                     .ToList());
 
         return sb;

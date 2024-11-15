@@ -59,6 +59,18 @@ public static partial class Extensions
     }
 
     /// <summary>
+    /// SOmething that really should already have been in dnet.
+    /// </summary>
+    /// <param name="guild"></param>
+    /// <param name="categoryId"></param>
+    /// <returns></returns>
+    public async static Task<ICategoryChannel?> GetCategoryChannelAsync(this IGuild guild, ulong categoryId)
+    {
+        var cats = await guild.GetCategoriesAsync();
+        return cats.FirstOrDefault(x => x.Id == categoryId);
+    }
+
+    /// <summary>
     ///     Implementation that should already have existed in c# but doesnt for some reason
     /// </summary>
     /// <param name="source"></param>

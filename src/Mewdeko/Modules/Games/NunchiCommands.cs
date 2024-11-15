@@ -12,7 +12,7 @@ public partial class Games
     /// </summary>
     /// <param name="client"></param>
     [Group]
-    public class NunchiCommands(DiscordShardedClient client) : MewdekoSubmodule<GamesService>
+    public class NunchiCommands(EventHandler handler) : MewdekoSubmodule<GamesService>
     {
         /// <summary>
         ///     Starts or joins a game of Nunchi.
@@ -55,7 +55,7 @@ public partial class Games
             nunchi.OnRoundEnded += Nunchi_OnRoundEnded;
             nunchi.OnUserGuessed += Nunchi_OnUserGuessed;
             nunchi.OnRoundStarted += Nunchi_OnRoundStarted;
-            client.MessageReceived += ClientMessageReceived;
+            handler.MessageReceived += ClientMessageReceived;
 
             var success = await nunchi.Initialize().ConfigureAwait(false);
             if (!success)
@@ -65,10 +65,8 @@ public partial class Games
                 await ConfirmLocalizedAsync("nunchi_failed_to_start").ConfigureAwait(false);
             }
 
-            Task ClientMessageReceived(SocketMessage arg)
+            async Task ClientMessageReceived(SocketMessage arg)
             {
-                _ = Task.Run(async () =>
-                {
                     if (arg.Channel.Id != ctx.Channel.Id)
                         return;
 
@@ -82,21 +80,19 @@ public partial class Games
                     {
                         // Ignored
                     }
-                });
-                return Task.CompletedTask;
             }
 
-            Task NunchiOnGameEnded(NunchiGame arg1, string? arg2)
+            async Task NunchiOnGameEnded(NunchiGame arg1, string? arg2)
             {
                 if (Service.NunchiGames.TryRemove(ctx.Guild.Id, out var game))
                 {
-                    client.MessageReceived -= ClientMessageReceived;
+                    handler.MessageReceived -= ClientMessageReceived;
                     game.Dispose();
                 }
 
                 if (arg2 == null)
-                    return ConfirmLocalizedAsync("nunchi_ended_no_winner", Format.Bold(arg2));
-                return ConfirmLocalizedAsync("nunchi_ended", Format.Bold(arg2));
+                    await ConfirmLocalizedAsync("nunchi_ended_no_winner", Format.Bold(arg2));
+                await ConfirmLocalizedAsync("nunchi_ended", Format.Bold(arg2));
             }
         }
 

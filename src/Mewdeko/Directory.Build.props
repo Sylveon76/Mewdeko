@@ -1,0 +1,5 @@
+﻿<Project>
+  <PropertyGroup>
+    <RegenerateGeneratedFiles>true</RegenerateGeneratedFiles>
+  </PropertyGroup>
+</Project>

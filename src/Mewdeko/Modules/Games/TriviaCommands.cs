@@ -19,7 +19,7 @@ public partial class Games
         DiscordShardedClient client,
         IDataCache cache,
         GamesConfigService gamesConfig,
-        GuildSettingsService guildSettings)
+        GuildSettingsService guildSettings, EventHandler handler)
         : MewdekoSubmodule<GamesService>
     {
         /// <summary>
@@ -49,8 +49,8 @@ public partial class Games
 
             var config = gamesConfig.Data;
             if (config.Trivia.MinimumWinReq > 0 && config.Trivia.MinimumWinReq > opts.WinRequirement) return;
-            var trivia = new TriviaGame(Strings, client, cache, channel.Guild, channel, opts,
-                $"{await guildSettings.GetPrefix(ctx.Guild)}tq");
+            var trivia = new TriviaGame(Strings, cache, channel.Guild, channel, opts,
+                $"{await guildSettings.GetPrefix(ctx.Guild)}tq", handler);
             if (Service.RunningTrivias.TryAdd(channel.Guild.Id, trivia))
             {
                 try

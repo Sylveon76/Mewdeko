@@ -79,10 +79,6 @@ public class DiscordUser : DbEntity
     /// </summary>
     public string? AvatarId { get; set; }
 
-    /// <summary>
-    ///     Gets or sets a value indicating whether the user is a club admin.
-    /// </summary>
-    public bool IsClubAdmin { get; set; } = false;
 
     /// <summary>
     ///     Gets or sets the total XP of the user.

@@ -29,7 +29,7 @@ public static class LogSetup
                 outputTemplate:
                 "[{Timestamp:HH:mm:ss} {Level:u3}] | #{LogSource} | {Message:lj}{NewLine}{Exception}")
             .Enrich.WithProperty("LogSource", source)
-            .CreateLogger();
+            .CreateBootstrapLogger();
 
         Console.OutputEncoding = Encoding.UTF8;
 

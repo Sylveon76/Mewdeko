@@ -108,6 +108,29 @@ public class ClientOperations(DiscordShardedClient client) : Controller
         return Ok(JsonConvert.SerializeObject(users, settings));
     }
 
+
+    /// <summary>
+    /// Gets text channels from a guild
+    /// </summary>
+    /// <param name="guildId">The guild id to get text channels from</param>
+    /// <returns>Text channels or 404 if the guild is not found</returns>
+    [HttpGet("textchannels/{guildId}")]
+    public async Task<IActionResult> GetTextChannels(ulong guildId)
+    {
+        await Task.CompletedTask;
+        var guild = client.GetGuild(guildId);
+        if (guild == null)
+            return NotFound();
+
+        var channels = guild.TextChannels.Select(x => new
+        {
+            Id = x.Id,
+            Name = x.Name
+        });
+
+        return Ok(channels);
+    }
+
     /// <summary>
     ///     Gets a single user from a guild.
     /// </summary>

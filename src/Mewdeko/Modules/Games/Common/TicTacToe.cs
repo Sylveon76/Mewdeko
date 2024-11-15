@@ -32,6 +32,7 @@ public class TicTacToe
     private Timer timeoutTimer;
 
     private IGuildUser? winner;
+    private readonly EventHandler handler;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="TicTacToe" /> class with the specified strings, client, channel, first
@@ -43,14 +44,16 @@ public class TicTacToe
     /// <param name="firstUser">User who started tic tac toe</param>
     /// <param name="options">Options along with the game</param>
     /// <param name="config">Bot Configuration</param>
+    /// <param name="handler">Event Handler</param>
     public TicTacToe(IBotStrings strings, DiscordShardedClient client, ITextChannel channel,
-        IGuildUser firstUser, Options options, BotConfig config)
+        IGuildUser firstUser, Options options, BotConfig config, EventHandler handler)
     {
         this.channel = channel;
         this.strings = strings;
         this.client = client;
         this.options = options;
         this.config = config;
+        this.handler = handler;
 
         users =
         [
@@ -206,7 +209,7 @@ public class TicTacToe
             }
         }, null, options.TurnTimer * 1000, Timeout.Infinite);
 
-        client.MessageReceived += Client_MessageReceived;
+        handler.MessageReceived += Client_MessageReceived;
 
         previousMessage = await channel.EmbedAsync(GetEmbed(GetText("game_started"))).ConfigureAwait(false);
     }
@@ -225,122 +228,117 @@ public class TicTacToe
         return true;
     }
 
-    private Task Client_MessageReceived(SocketMessage msg)
+    private async Task Client_MessageReceived(SocketMessage msg)
     {
-        _ = Task.Run(async () =>
+        await moveLock.WaitAsync().ConfigureAwait(false);
+        try
         {
-            await moveLock.WaitAsync().ConfigureAwait(false);
-            try
-            {
-                var curUser = users[curUserIndex];
-                if (phase == Phase.Ended || msg.Author?.Id != curUser.Id)
-                    return;
+            var curUser = users[curUserIndex];
+            if (phase == Phase.Ended || msg.Author?.Id != curUser.Id)
+                return;
 
-                if (int.TryParse(msg.Content, out var index) &&
-                    --index >= 0 &&
-                    index <= 9 &&
-                    state[index / 3, index % 3] == null)
+            if (int.TryParse(msg.Content, out var index) &&
+                --index >= 0 &&
+                index <= 9 &&
+                state[index / 3, index % 3] == null)
+            {
+                state[index / 3, index % 3] = curUserIndex;
+
+                // i'm lazy
+                if (state[index / 3, 0] == state[index / 3, 1] &&
+                    state[index / 3, 1] == state[index / 3, 2])
                 {
-                    state[index / 3, index % 3] = curUserIndex;
+                    state[index / 3, 0] = curUserIndex + 2;
+                    state[index / 3, 1] = curUserIndex + 2;
+                    state[index / 3, 2] = curUserIndex + 2;
 
-                    // i'm lazy
-                    if (state[index / 3, 0] == state[index / 3, 1] &&
-                        state[index / 3, 1] == state[index / 3, 2])
-                    {
-                        state[index / 3, 0] = curUserIndex + 2;
-                        state[index / 3, 1] = curUserIndex + 2;
-                        state[index / 3, 2] = curUserIndex + 2;
-
-                        phase = Phase.Ended;
-                    }
-                    else if (state[0, index % 3] == state[1, index % 3] &&
-                             state[1, index % 3] == state[2, index % 3])
-                    {
-                        state[0, index % 3] = curUserIndex + 2;
-                        state[1, index % 3] = curUserIndex + 2;
-                        state[2, index % 3] = curUserIndex + 2;
-
-                        phase = Phase.Ended;
-                    }
-                    else if (curUserIndex == state[0, 0] && state[0, 0] == state[1, 1] &&
-                             state[1, 1] == state[2, 2])
-                    {
-                        state[0, 0] = curUserIndex + 2;
-                        state[1, 1] = curUserIndex + 2;
-                        state[2, 2] = curUserIndex + 2;
-
-                        phase = Phase.Ended;
-                    }
-                    else if (curUserIndex == state[0, 2] && state[0, 2] == state[1, 1] &&
-                             state[1, 1] == state[2, 0])
-                    {
-                        state[0, 2] = curUserIndex + 2;
-                        state[1, 1] = curUserIndex + 2;
-                        state[2, 0] = curUserIndex + 2;
-
-                        phase = Phase.Ended;
-                    }
-
-                    var reason = "";
-
-                    if (phase == Phase.Ended) // if user won, stop receiving moves
-                    {
-                        reason = GetText("ttt_matched_three");
-                        winner = users[curUserIndex];
-                        client.MessageReceived -= Client_MessageReceived;
-                        OnEnded.Invoke(this);
-                    }
-                    else if (IsDraw())
-                    {
-                        reason = GetText("ttt_a_draw");
-                        phase = Phase.Ended;
-                        client.MessageReceived -= Client_MessageReceived;
-                        OnEnded.Invoke(this);
-                    }
-
-                    await Task.Run(async () =>
-                    {
-                        var del1 = msg.DeleteAsync();
-                        var del2 = previousMessage?.DeleteAsync();
-                        try
-                        {
-                            previousMessage = await channel.EmbedAsync(GetEmbed(reason)).ConfigureAwait(false);
-                        }
-                        catch
-                        {
-                            // ignored
-                        }
-
-                        try
-                        {
-                            await del1.ConfigureAwait(false);
-                        }
-                        catch
-                        {
-                            // ignored
-                        }
-
-                        try
-                        {
-                            if (del2 != null) await del2.ConfigureAwait(false);
-                        }
-                        catch
-                        {
-                            // ignored
-                        }
-                    });
-                    curUserIndex ^= 1;
-
-                    timeoutTimer.Change(options.TurnTimer * 1000, Timeout.Infinite);
+                    phase = Phase.Ended;
                 }
-            }
-            finally
-            {
-                moveLock.Release();
-            }
-        });
+                else if (state[0, index % 3] == state[1, index % 3] &&
+                         state[1, index % 3] == state[2, index % 3])
+                {
+                    state[0, index % 3] = curUserIndex + 2;
+                    state[1, index % 3] = curUserIndex + 2;
+                    state[2, index % 3] = curUserIndex + 2;
 
-        return Task.CompletedTask;
+                    phase = Phase.Ended;
+                }
+                else if (curUserIndex == state[0, 0] && state[0, 0] == state[1, 1] &&
+                         state[1, 1] == state[2, 2])
+                {
+                    state[0, 0] = curUserIndex + 2;
+                    state[1, 1] = curUserIndex + 2;
+                    state[2, 2] = curUserIndex + 2;
+
+                    phase = Phase.Ended;
+                }
+                else if (curUserIndex == state[0, 2] && state[0, 2] == state[1, 1] &&
+                         state[1, 1] == state[2, 0])
+                {
+                    state[0, 2] = curUserIndex + 2;
+                    state[1, 1] = curUserIndex + 2;
+                    state[2, 0] = curUserIndex + 2;
+
+                    phase = Phase.Ended;
+                }
+
+                var reason = "";
+
+                if (phase == Phase.Ended) // if user won, stop receiving moves
+                {
+                    reason = GetText("ttt_matched_three");
+                    winner = users[curUserIndex];
+                    handler.MessageReceived -= Client_MessageReceived;
+                    OnEnded.Invoke(this);
+                }
+                else if (IsDraw())
+                {
+                    reason = GetText("ttt_a_draw");
+                    phase = Phase.Ended;
+                    handler.MessageReceived -= Client_MessageReceived;
+                    OnEnded.Invoke(this);
+                }
+
+                await Task.Run(async () =>
+                {
+                    var del1 = msg.DeleteAsync();
+                    var del2 = previousMessage?.DeleteAsync();
+                    try
+                    {
+                        previousMessage = await channel.EmbedAsync(GetEmbed(reason)).ConfigureAwait(false);
+                    }
+                    catch
+                    {
+                        // ignored
+                    }
+
+                    try
+                    {
+                        await del1.ConfigureAwait(false);
+                    }
+                    catch
+                    {
+                        // ignored
+                    }
+
+                    try
+                    {
+                        if (del2 != null) await del2.ConfigureAwait(false);
+                    }
+                    catch
+                    {
+                        // ignored
+                    }
+                });
+                curUserIndex ^= 1;
+
+                timeoutTimer.Change(options.TurnTimer * 1000, Timeout.Infinite);
+            }
+        }
+        finally
+        {
+            moveLock.Release();
+        }
     }
 
     /// <summary>

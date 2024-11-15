@@ -2,6 +2,7 @@ using System.Globalization;
 using Discord.Interactions;
 using Mewdeko.Common.Configs;
 using Mewdeko.Services.strings;
+using Microsoft.Extensions.DependencyInjection;
 
 // ReSharper disable NotNullOrRequiredMemberIsNotInitialized
 
@@ -207,10 +208,11 @@ public abstract class MewdekoSlashCommandModule : InteractionModuleBase
         bool alreadyDeferred = false)
     {
         var userInputTask = new TaskCompletionSource<string>();
-        var dsc = (DiscordShardedClient)ctx.Client;
+        var dsc = CmdHandler.Services.GetRequiredService<DiscordShardedClient>();
+        var handler = new EventHandler(dsc);
         try
         {
-            dsc.InteractionCreated += Interaction;
+            handler.InteractionCreated += Interaction;
             if (await Task.WhenAny(userInputTask.Task, Task.Delay(30000)).ConfigureAwait(false) !=
                 userInputTask.Task)
             {
@@ -221,35 +223,27 @@ public abstract class MewdekoSlashCommandModule : InteractionModuleBase
         }
         finally
         {
-            dsc.InteractionCreated -= Interaction;
+            handler.InteractionCreated -= Interaction;
         }
 
-        Task Interaction(SocketInteraction arg)
+        async Task Interaction(SocketInteraction arg)
         {
-            if (arg is SocketMessageComponent c)
+            if (arg is not SocketMessageComponent c) return;
+            if (c.Channel.Id != channelId || c.Message.Id != msgId || c.User.Id != userId)
             {
-                Task.Run(() =>
-                {
-                    if (c.Channel.Id != channelId || c.Message.Id != msgId || c.User.Id != userId)
-                    {
-                        if (!alreadyDeferred) c.DeferAsync();
-                        return Task.CompletedTask;
-                    }
-
-                    if (c.Data.CustomId == "yes")
-                    {
-                        if (!alreadyDeferred) c.DeferAsync();
-                        userInputTask.TrySetResult("Yes");
-                        return Task.CompletedTask;
-                    }
-
-                    if (!alreadyDeferred) c.DeferAsync();
-                    userInputTask.TrySetResult(c.Data.CustomId);
-                    return Task.CompletedTask;
-                });
+                if (!alreadyDeferred) await c.DeferAsync();
+                return;
             }
 
-            return Task.CompletedTask;
+            if (c.Data.CustomId == "yes")
+            {
+                if (!alreadyDeferred) await c.DeferAsync();
+                userInputTask.TrySetResult("Yes");
+                return;
+            }
+
+            if (!alreadyDeferred) await c.DeferAsync();
+            userInputTask.TrySetResult(c.Data.CustomId);
         }
     }
 
@@ -262,10 +256,11 @@ public abstract class MewdekoSlashCommandModule : InteractionModuleBase
     public async Task<string>? NextMessageAsync(ulong channelId, ulong userId)
     {
         var userInputTask = new TaskCompletionSource<string>();
-        var dsc = (DiscordShardedClient)ctx.Client;
+        var dsc = CmdHandler.Services.GetRequiredService<DiscordShardedClient>();
+        var handler = new EventHandler(dsc);
         try
         {
-            dsc.MessageReceived += Interaction;
+            handler.MessageReceived += Interaction;
             if (await Task.WhenAny(userInputTask.Task, Task.Delay(60000)).ConfigureAwait(false) !=
                 userInputTask.Task)
             {
@@ -279,24 +274,19 @@ public abstract class MewdekoSlashCommandModule : InteractionModuleBase
             dsc.MessageReceived -= Interaction;
         }
 
-        Task Interaction(SocketMessage arg)
+        async Task Interaction(SocketMessage arg)
         {
-            Task.Run(() =>
-            {
-                if (arg.Author.Id != userId || arg.Channel.Id != channelId) return Task.CompletedTask;
+                if (arg.Author.Id != userId || arg.Channel.Id != channelId) return;
                 userInputTask.TrySetResult(arg.Content);
                 try
                 {
-                    arg.DeleteAsync();
+                    await arg.DeleteAsync();
                 }
                 catch
                 {
                     //Exclude
                 }
 
-                return Task.CompletedTask;
-            });
-            return Task.CompletedTask;
         }
     }
 }
@@ -315,13 +305,9 @@ public abstract class MewdekoSlashModuleBase<TService> : MewdekoSlashCommandModu
 /// <summary>
 ///     Base class for generic slash submodule in Mewdeko.
 /// </summary>
-public abstract class MewdekoSlashSubmodule : MewdekoSlashCommandModule
-{
-}
+public abstract class MewdekoSlashSubmodule : MewdekoSlashCommandModule;
 
 /// <summary>
 ///     Base class for generic slash submodule with a service in Mewdeko.
 /// </summary>
-public abstract class MewdekoSlashSubmodule<TService> : MewdekoSlashModuleBase<TService>
-{
-}
+public abstract class MewdekoSlashSubmodule<TService> : MewdekoSlashModuleBase<TService>;

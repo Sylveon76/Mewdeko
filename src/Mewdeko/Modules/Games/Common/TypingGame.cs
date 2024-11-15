@@ -21,6 +21,7 @@ public class TypingGame
     private readonly Options options;
     private readonly string? prefix;
     private readonly Stopwatch sw;
+    private readonly EventHandler handler;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="TypingGame" /> class.
@@ -31,12 +32,13 @@ public class TypingGame
     /// <param name="prefix">The bots prefix</param>
     /// <param name="options">Options along with starting the game</param>
     public TypingGame(GamesService games, DiscordShardedClient client, ITextChannel channel,
-        string? prefix, Options options)
+        string? prefix, Options options, EventHandler handler)
     {
         this.games = games;
         this.client = client;
         this.prefix = prefix;
         this.options = options;
+        this.handler = handler;
 
         Channel = channel;
         IsActive = false;
@@ -69,7 +71,7 @@ public class TypingGame
     public async Task<bool> Stop()
     {
         if (!IsActive) return false;
-        client.MessageReceived -= AnswerReceived;
+        handler.MessageReceived -= AnswerReceived;
         finishedUserIds.Clear();
         IsActive = false;
         sw.Stop();
@@ -164,55 +166,51 @@ public class TypingGame
 
     private void HandleAnswers()
     {
-        client.MessageReceived += AnswerReceived;
+        handler.MessageReceived += AnswerReceived;
     }
 
-    private Task AnswerReceived(SocketMessage imsg)
+    private async Task AnswerReceived(SocketMessage imsg)
     {
-        _ = Task.Run(async () =>
+        try
         {
-            try
+            if (imsg.Author.IsBot)
+                return;
+            if (imsg is not SocketUserMessage msg)
+                return;
+
+            if (Channel == null || Channel.Id != msg.Channel.Id) return;
+
+            var guess = msg.Content;
+
+            var distance = CurrentSentence.LevenshteinDistance(guess);
+            var decision = Judge(distance, guess.Length);
+            if (decision && !finishedUserIds.Contains(msg.Author.Id))
             {
-                if (imsg.Author.IsBot)
-                    return;
-                if (imsg is not SocketUserMessage msg)
-                    return;
-
-                if (Channel == null || Channel.Id != msg.Channel.Id) return;
-
-                var guess = msg.Content;
-
-                var distance = CurrentSentence.LevenshteinDistance(guess);
-                var decision = Judge(distance, guess.Length);
-                if (decision && !finishedUserIds.Contains(msg.Author.Id))
+                var elapsed = sw.Elapsed;
+                var wpm = CurrentSentence.Length / WordValue / elapsed.TotalSeconds * 60;
+                finishedUserIds.Add(msg.Author.Id);
+                await Channel.EmbedAsync(new EmbedBuilder().WithOkColor()
+                        .WithTitle($"{msg.Author} finished the race!")
+                        .AddField(efb =>
+                            efb.WithName("Place").WithValue($"#{finishedUserIds.Count}").WithIsInline(true))
+                        .AddField(efb =>
+                            efb.WithName("WPM").WithValue($"{wpm:F1} *[{elapsed.TotalSeconds:F2}sec]*")
+                                .WithIsInline(true))
+                        .AddField(efb =>
+                            efb.WithName("Errors").WithValue(distance.ToString()).WithIsInline(true)))
+                    .ConfigureAwait(false);
+                if (finishedUserIds.Count % 4 == 0)
                 {
-                    var elapsed = sw.Elapsed;
-                    var wpm = CurrentSentence.Length / WordValue / elapsed.TotalSeconds * 60;
-                    finishedUserIds.Add(msg.Author.Id);
-                    await Channel.EmbedAsync(new EmbedBuilder().WithOkColor()
-                            .WithTitle($"{msg.Author} finished the race!")
-                            .AddField(efb =>
-                                efb.WithName("Place").WithValue($"#{finishedUserIds.Count}").WithIsInline(true))
-                            .AddField(efb =>
-                                efb.WithName("WPM").WithValue($"{wpm:F1} *[{elapsed.TotalSeconds:F2}sec]*")
-                                    .WithIsInline(true))
-                            .AddField(efb =>
-                                efb.WithName("Errors").WithValue(distance.ToString()).WithIsInline(true)))
+                    await Channel.SendConfirmAsync(
+                            $":exclamation: A lot of people finished, here is the text for those still typing:\n\n**{Format.Sanitize(CurrentSentence.Replace(" ", " \x200B", StringComparison.InvariantCulture)).SanitizeMentions(true)}**")
                         .ConfigureAwait(false);
-                    if (finishedUserIds.Count % 4 == 0)
-                    {
-                        await Channel.SendConfirmAsync(
-                                $":exclamation: A lot of people finished, here is the text for those still typing:\n\n**{Format.Sanitize(CurrentSentence.Replace(" ", " \x200B", StringComparison.InvariantCulture)).SanitizeMentions(true)}**")
-                            .ConfigureAwait(false);
-                    }
                 }
             }
-            catch (Exception ex)
-            {
-                Log.Warning(ex.ToString());
-            }
-        });
-        return Task.CompletedTask;
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex.ToString());
+        }
     }
 
     private static bool Judge(int errors, int textLength)

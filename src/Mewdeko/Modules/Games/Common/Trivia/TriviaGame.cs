@@ -12,7 +12,6 @@ namespace Mewdeko.Modules.Games.Common.Trivia;
 /// </summary>
 public class TriviaGame
 {
-    private readonly DiscordShardedClient client;
     private readonly SemaphoreSlim guessLock = new(1, 1);
     private readonly TriviaOptions options;
 
@@ -20,6 +19,7 @@ public class TriviaGame
     private readonly string? quitCommand;
     private readonly IBotStrings strings;
     private int timeoutCount;
+    private readonly EventHandler handler;
 
     private CancellationTokenSource triviaCancelSource;
 
@@ -27,21 +27,21 @@ public class TriviaGame
     ///     Initializes a new instance of the <see cref="TriviaGame" /> class.
     /// </summary>
     /// <param name="strings">Localization Strings</param>
-    /// <param name="client">The discord client</param>
     /// <param name="cache">Redis cache</param>
     /// <param name="guild">The guild the game is running in</param>
     /// <param name="channel">The channel the game is running in</param>
     /// <param name="options">Options when the game was started.</param>
     /// <param name="quitCommand">If the quit command was activated this round</param>
-    public TriviaGame(IBotStrings strings, DiscordShardedClient client,
+    /// <param name="handler">The event handler</param>
+    public TriviaGame(IBotStrings strings,
         IDataCache cache, IGuild guild, ITextChannel channel,
-        TriviaOptions options, string? quitCommand)
+        TriviaOptions options, string? quitCommand, EventHandler handler)
     {
         questionPool = new TriviaQuestionPool(cache);
         this.strings = strings;
-        this.client = client;
         this.options = options;
         this.quitCommand = quitCommand;
+        this.handler = handler;
 
         Guild = guild;
         Channel = channel;
@@ -143,7 +143,7 @@ public class TriviaGame
             //receive messages
             try
             {
-                client.MessageReceived += PotentialGuess;
+                handler.MessageReceived += PotentialGuess;
 
                 //allow people to guess
                 GameActive = true;
@@ -184,7 +184,7 @@ public class TriviaGame
             finally
             {
                 GameActive = false;
-                client.MessageReceived -= PotentialGuess;
+                handler.MessageReceived -= PotentialGuess;
             }
 
             if (!triviaCancelSource.IsCancellationRequested)
@@ -246,10 +246,8 @@ public class TriviaGame
         }
     }
 
-    private Task PotentialGuess(SocketMessage imsg)
+    private async Task PotentialGuess(SocketMessage imsg)
     {
-        _ = Task.Run(async () =>
-        {
             try
             {
                 if (imsg.Author.IsBot)
@@ -315,8 +313,6 @@ public class TriviaGame
             {
                 Log.Warning(ex.ToString());
             }
-        });
-        return Task.CompletedTask;
     }
 
     /// <summary>

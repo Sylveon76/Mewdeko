@@ -597,6 +597,32 @@ public class SuggestionsController(
     }
 
     /// <summary>
+    ///     Gets the suggest channel setting for a guild
+    /// </summary>
+    /// <param name="guildId">The ID of the guild</param>
+    /// <returns>The suggestion channel id</returns>
+    [HttpGet("suggestChannel")]
+    public async Task<IActionResult> GetSuggestChannel(ulong guildId)
+    {
+        var archiveOnImplement = await service.GetSuggestionChannel(guildId);
+        return Ok(archiveOnImplement);
+    }
+
+    /// <summary>
+    ///     Sets the suggest channel setting for a guild
+    /// </summary>
+    /// <param name="guildId">The ID of the guild</param>
+    /// <param name="channelid">The new channelId for suggestions</param>
+    /// <returns>An IActionResult indicating the result of the operation</returns>
+    [HttpPost("suggestChannel")]
+    public async Task<IActionResult> SetSuggestChannel(ulong guildId, [FromBody] ulong channelid)
+    {
+        var guild = client.GetGuild(guildId);
+        await service.SetSuggestionChannelId(guild, channelid);
+        return Ok();
+    }
+
+    /// <summary>
     ///     Sets the archive on implement setting for a guild
     /// </summary>
     /// <param name="guildId">The ID of the guild</param>

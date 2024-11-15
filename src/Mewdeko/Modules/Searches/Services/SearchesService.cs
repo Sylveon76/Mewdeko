@@ -2,14 +2,19 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading;
 using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
 using GTranslate.Translators;
 using Html2Markdown;
+using MartineApiNet;
+using MartineApiNet.Enums;
+using MartineApiNet.Models.Images;
 using Mewdeko.Modules.Searches.Common;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Refit;
 using Serilog;
 using SkiaSharp;
 
@@ -56,6 +61,7 @@ public class SearchesService : INService, IUnloadableService
     });
 
     private readonly IDataCache cache;
+    private readonly MartineApi martineApi;
     private readonly IBotCredentials creds;
     private readonly IGoogleApiService google;
     private readonly GuildSettingsService gss;
@@ -81,7 +87,7 @@ public class SearchesService : INService, IUnloadableService
     /// <param name="gss">The guild setting service.</param>
     public SearchesService(DiscordShardedClient client, IGoogleApiService google, IDataCache cache,
         IHttpClientFactory factory,
-        IBotCredentials creds, GuildSettingsService gss)
+        IBotCredentials creds, GuildSettingsService gss, EventHandler handler, MartineApi martineApi)
     {
         httpFactory = factory;
         this.google = google;
@@ -89,61 +95,58 @@ public class SearchesService : INService, IUnloadableService
         this.cache = cache;
         this.creds = creds;
         this.gss = gss;
+        this.martineApi = martineApi;
         rng = new MewdekoRandom();
 
         //translate commands
-        client.MessageReceived += msg =>
+        handler.MessageReceived += async msg =>
         {
-            _ = Task.Run(async () =>
+            try
             {
-                try
+                if (msg is not SocketUserMessage umsg)
+                    return;
+
+                if (!TranslatedChannels.TryGetValue(umsg.Channel.Id, out var autoDelete))
+                    return;
+
+                var key = (umsg.Author.Id, umsg.Channel.Id);
+
+                if (!UserLanguages.TryGetValue(key, out var langs))
+                    return;
+                string text;
+                if (langs.Contains('<'))
                 {
-                    if (msg is not SocketUserMessage umsg)
-                        return;
-
-                    if (!TranslatedChannels.TryGetValue(umsg.Channel.Id, out var autoDelete))
-                        return;
-
-                    var key = (umsg.Author.Id, umsg.Channel.Id);
-
-                    if (!UserLanguages.TryGetValue(key, out var langs))
-                        return;
-                    string text;
-                    if (langs.Contains('<'))
-                    {
-                        var split = langs.Split('<');
-                        text = await AutoTranslate(umsg.Resolve(TagHandling.Ignore), split[1], split[0])
-                            .ConfigureAwait(false);
-                    }
-                    else
-                    {
-                        var split = langs.Split('>');
-                        text = await AutoTranslate(umsg.Resolve(TagHandling.Ignore), split[0], split[1])
-                            .ConfigureAwait(false);
-                    }
-
-                    if (autoDelete)
-                    {
-                        try
-                        {
-                            await umsg.DeleteAsync().ConfigureAwait(false);
-                        }
-                        catch
-                        {
-                            // ignored
-                        }
-                    }
-
-                    await umsg.Channel.SendConfirmAsync(
-                            $"{umsg.Author.Mention} `:` {text.Replace("<@ ", "<@", StringComparison.InvariantCulture).Replace("<@! ", "<@!", StringComparison.InvariantCulture)}")
+                    var split = langs.Split('<');
+                    text = await AutoTranslate(umsg.Resolve(TagHandling.Ignore), split[1], split[0])
                         .ConfigureAwait(false);
                 }
-                catch
+                else
                 {
-                    // ignored
+                    var split = langs.Split('>');
+                    text = await AutoTranslate(umsg.Resolve(TagHandling.Ignore), split[0], split[1])
+                        .ConfigureAwait(false);
                 }
-            });
-            return Task.CompletedTask;
+
+                if (autoDelete)
+                {
+                    try
+                    {
+                        await umsg.DeleteAsync().ConfigureAwait(false);
+                    }
+                    catch
+                    {
+                        // ignored
+                    }
+                }
+
+                await umsg.Channel.SendConfirmAsync(
+                        $"{umsg.Author.Mention} `:` {text.Replace("<@ ", "<@", StringComparison.InvariantCulture).Replace("<@! ", "<@!", StringComparison.InvariantCulture)}")
+                    .ConfigureAwait(false);
+            }
+            catch
+            {
+                // ignored
+            }
         };
 
         //joke commands
@@ -470,29 +473,69 @@ public class SearchesService : INService, IUnloadableService
     }
 
     /// <summary>
-    ///     Generates a random image URL based on the provided tag.
-    /// </summary>
-    /// <param name="tag">The tag specifying the category of images.</param>
-    /// <returns>A URI representing a randomly selected image.</returns>
-    /// <remarks>
-    ///     This method generates a random image URL based on the provided tag, typically used for displaying images in various
-    ///     contexts.
-    /// </remarks>
-    public Uri GetRandomImageUrl(ImageTag tag)
+///     Gets a random image from a specified category using the Martine API.
+/// </summary>
+/// <param name="tag">The category of image to fetch.</param>
+/// <returns>A task that represents the asynchronous operation. The task result contains the image data.</returns>
+/// <exception cref="ApiException">Thrown when the API request fails.</exception>
+/// <remarks>
+///     This method fetches random images using the Martine API, selecting from multiple themed subreddits per category.
+/// </remarks>
+public async Task<RedditPost> GetRandomImageAsync(ImageTag tag)
+{
+    var subreddit = tag switch
     {
-        var subpath = tag.ToString().ToLowerInvariant();
-
-        var max = tag switch
+        ImageTag.Food => rng.Next() switch
         {
-            ImageTag.Food => 773,
-            ImageTag.Dogs => 750,
-            ImageTag.Cats => 773,
-            ImageTag.Birds => 578,
-            _ => 100
-        };
+            var n when n % 5 == 0 => "FoodPorn",
+            var n when n % 5 == 1 => "food",
+            var n when n % 5 == 2 => "cooking",
+            var n when n % 5 == 3 => "recipes",
+            _ => "culinary"
+        },
+        ImageTag.Dogs => rng.Next() switch
+        {
+            var n when n % 6 == 0 => "dogpictures",
+            var n when n % 6 == 1 => "rarepuppers",
+            var n when n % 6 == 2 => "puppies",
+            var n when n % 6 == 3 => "dogs",
+            var n when n % 6 == 4 => "dogswithjobs",
+            _ => "WhatsWrongWithYourDog"
+        },
+        ImageTag.Cats => rng.Next() switch
+        {
+            var n when n % 7 == 0 => "cats",
+            var n when n % 7 == 1 => "CatPictures",
+            var n when n % 7 == 2 => "catpics",
+            var n when n % 7 == 3 => "SupermodelCats",
+            var n when n % 7 == 4 => "CatsStandingUp",
+            var n when n % 7 == 5 => "CatsInSinks",
+            _ => "TheCatTrapIsWorking"
+        },
+        ImageTag.Birds => rng.Next() switch
+        {
+            var n when n % 5 == 0 => "birdpics",
+            var n when n % 5 == 1 => "parrots",
+            var n when n % 5 == 2 => "birding",
+            var n when n % 5 == 3 => "whatsthisbird",
+            _ => "Birbs"
+        },
+        _ => throw new ArgumentException($"Unsupported image tag: {tag}", nameof(tag))
+    };
 
-        return new Uri($"https://nadeko-pictures.nyc3.digitaloceanspaces.com/{subpath}/{rng.Next(1, max):000}.png");
+    try
+    {
+        return await martineApi.RedditApi.GetRandomFromSubreddit(subreddit, Toptype.month).ConfigureAwait(false);
     }
+    catch (ApiException ex)
+    {
+        Log.Error("Failed to fetch image from Martine API for tag {Tag} (subreddit: r/{Subreddit}): {Error}",
+            tag,
+            subreddit,
+            ex.HasContent ? ex.Content : "No Content");
+        throw;
+    }
+}
 
     /// <summary>
     ///     Automatically translates the input string from one language to another.
@@ -759,11 +802,11 @@ public class SearchesService : INService, IUnloadableService
     }
 
     /// <summary>
-    ///     Retrieves movie data asynchronously from the OMDB API.
+    ///     Retrieves movie data asynchronously from Wikipedia.
     /// </summary>
     /// <param name="name">The name of the movie.</param>
     /// <returns>A task representing the asynchronous operation, returning the movie data.</returns>
-    public Task<OmdbMovie?> GetMovieDataAsync(string name)
+    public Task<WikiMovie?> GetMovieDataAsync(string name)
     {
         name = name.Trim().ToLowerInvariant();
         return cache.GetOrAddCachedDataAsync($"Mewdeko_movie_{name}",
@@ -772,17 +815,49 @@ public class SearchesService : INService, IUnloadableService
             TimeSpan.FromDays(1));
     }
 
-    private async Task<OmdbMovie?> GetMovieDataFactory(string name)
+    private async Task<WikiMovie?> GetMovieDataFactory(string name)
     {
         using var http = httpFactory.CreateClient();
-        var res = await http
-            .GetStringAsync($"https://omdbapi.nadeko.bot/?t={name.Trim().Replace(' ', '+')}&y=&plot=full&r=json")
-            .ConfigureAwait(false);
-        var movie = JsonConvert.DeserializeObject<OmdbMovie>(res);
-        if (movie?.Title == null)
+
+        // First search for the movie
+        var searchUrl =
+            $"https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch={Uri.EscapeDataString(name)}%20film&format=json&prop=info&inprop=url";
+        var searchResponse = await http.GetStringAsync(searchUrl).ConfigureAwait(false);
+        var searchResult = JsonConvert.DeserializeObject<WikiSearchResponse>(searchResponse);
+
+        if (searchResult?.Query?.Search == null || searchResult.Query.Search.Count == 0)
             return null;
-        movie.Poster = await google.ShortenUrl(movie.Poster).ConfigureAwait(false);
-        return movie;
+
+        // Get the full page data
+        var pageId = searchResult.Query.Search[0].PageId;
+        var contentUrl =
+            $"https://en.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages|info&pithumbsize=500&inprop=url&explaintext=1&pageids={pageId}&format=json";
+        var contentResponse = await http.GetStringAsync(contentUrl).ConfigureAwait(false);
+        var contentResult = JsonConvert.DeserializeObject<WikiContentResponse>(contentResponse);
+
+        if (!contentResult?.Query?.Pages?.ContainsKey(pageId.ToString()) ?? true)
+            return null;
+
+        var page = contentResult.Query.Pages[pageId.ToString()];
+
+        // Parse the year from the text
+        var yearMatch = Regex.Match(page.Extract, @"(?:released|premiered)[^\d]*(\d{4})");
+        var year = yearMatch.Success ? yearMatch.Groups[1].Value : "N/A";
+
+        return new WikiMovie
+        {
+            Title = page.Title.Replace("(film)", "").Trim(),
+            Year = year,
+            Plot = GetFirstParagraph(page.Extract),
+            Url = page.FullUrl,
+            ImageUrl = page.Thumbnail?.Source
+        };
+    }
+
+    private string GetFirstParagraph(string extract)
+    {
+        var firstParagraph = extract.Split("\n\n").FirstOrDefault() ?? "";
+        return firstParagraph.Length > 1000 ? firstParagraph[..1000] + "..." : firstParagraph;
     }
 
     /// <summary>

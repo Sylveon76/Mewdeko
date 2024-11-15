@@ -13,7 +13,7 @@ public static class MultiGreetExtensions
     /// <param name="set">The DbSet of MultiGreet entities to query.</param>
     /// <param name="guildId">The ID of the guild to filter by.</param>
     /// <returns>An array of MultiGreet entities for the specified guild.</returns>
-    public static MultiGreet[] GetAllGreets(this DbSet<MultiGreet> set, ulong guildId)
+    public static MultiGreet[]? GetAllGreets(this DbSet<MultiGreet> set, ulong guildId)
     {
         return set.AsQueryable().Where(x => x.GuildId == guildId).ToArray();
     }

@@ -39,7 +39,7 @@ public class MultiGreetService : INService
     /// </summary>
     /// <param name="guildId">The ID of the guild.</param>
     /// <returns>An array of MultiGreet objects for the specified guild.</returns>
-    public async Task<MultiGreet?[]> GetGreets(ulong guildId) =>
+    public async Task<MultiGreet?[]?> GetGreets(ulong guildId) =>
         await WithMewdekoContext(db => Task.FromResult(db.MultiGreets.GetAllGreets(guildId)));
 
     private async Task<MultiGreet?[]> GetForChannel(ulong channelId) =>
@@ -51,7 +51,7 @@ public class MultiGreetService : INService
         if (greets.Length == 0) return;
 
         var greetType = await GetMultiGreetType(user.Guild.Id);
-        if (greetType == 3) return;
+        if (greetType == 2) return;
 
         var replacer = new ReplacementBuilder().WithUser(user).WithClient(client)
             .WithServer(client, user.Guild as SocketGuild);

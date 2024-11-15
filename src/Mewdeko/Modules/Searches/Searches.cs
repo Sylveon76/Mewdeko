@@ -37,7 +37,6 @@ namespace Mewdeko.Modules.Searches;
 /// <param name="martineApi">The Martine API service.</param>
 /// <param name="toneTagService">The ToneTag service.</param>
 /// <param name="config">The bot configuration service.</param>
-/// <param name="nsfwSpy">The NSFW spy service.</param>
 public partial class Searches(
     IBotCredentials creds,
     IGoogleApiService google,
@@ -384,18 +383,16 @@ public partial class Searches(
         var movie = await Service.GetMovieDataAsync(query).ConfigureAwait(false);
         if (movie == null)
         {
-            await ReplyErrorLocalizedAsync("imdb_fail").ConfigureAwait(false);
+            await ReplyErrorLocalizedAsync("movie_fail").ConfigureAwait(false);
             return;
         }
 
         await ctx.Channel.EmbedAsync(new EmbedBuilder().WithOkColor()
             .WithTitle(movie.Title)
-            .WithUrl($"httpS://www.imdb.com/title/{movie.ImdbId}/")
-            .WithDescription(movie.Plot.TrimTo(1000))
-            .AddField(efb => efb.WithName("Rating").WithValue(movie.ImdbRating).WithIsInline(true))
-            .AddField(efb => efb.WithName("Genre").WithValue(movie.Genre).WithIsInline(true))
+            .WithUrl(movie.Url)
+            .WithDescription(movie.Plot)
             .AddField(efb => efb.WithName("Year").WithValue(movie.Year).WithIsInline(true))
-            .WithImageUrl(movie.Poster)).ConfigureAwait(false);
+            .WithImageUrl(movie.ImageUrl)).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -469,12 +466,51 @@ public partial class Searches(
     }
 
 
-    private Task<IUserMessage> InternalRandomImage(SearchesService.ImageTag tag)
+    /// <summary>
+    ///     Fetches and displays a random image from the specified category using Martine API.
+    /// </summary>
+    /// <param name="tag">The category of image to display.</param>
+    /// <returns>A task representing the asynchronous operation, containing the sent message.</returns>
+    /// <exception cref="ApiException">Thrown when the API request fails.</exception>
+    private async Task<IUserMessage> InternalRandomImage(SearchesService.ImageTag tag)
     {
-        var url = Service.GetRandomImageUrl(tag);
-        return ctx.Channel.EmbedAsync(new EmbedBuilder()
-            .WithOkColor()
-            .WithImageUrl(url.ToString()));
+        var msg = await ctx.Channel.SendConfirmAsync("Fetching image...").ConfigureAwait(false);
+        try
+        {
+            var image = await Service.GetRandomImageAsync(tag).ConfigureAwait(false);
+            var button = new ComponentBuilder().WithButton("Another!", $"randomimage:{tag}.{ctx.User.Id}");
+
+            var em = new EmbedBuilder()
+                .WithOkColor()
+                .WithAuthor($"u/{image.Data.Author.Name}")
+                .WithDescription($"Title: {image.Data.Title}\n[Source]({image.Data.PostUrl})")
+                .WithFooter($"{image.Data.Upvotes} Upvotes! | r/{image.Data.Subreddit.Name} Powered by martineAPI")
+                .WithImageUrl(image.Data.ImageUrl);
+
+            await msg.ModifyAsync(x =>
+            {
+                x.Embed = em.Build();
+                x.Components = button.Build();
+            }).ConfigureAwait(false);
+
+            return msg;
+        }
+        catch (ApiException ex)
+        {
+            await msg.DeleteAsync().ConfigureAwait(false);
+            var errorMsg = await ctx.Channel.SendErrorAsync(
+                "Failed to fetch image, please try again later!",
+                Config
+            ).ConfigureAwait(false);
+
+            Log.Error(
+                "Image fetch failed. Error:\nCode: {StatusCode}\nContent: {Content}",
+                ex.StatusCode,
+                ex.HasContent ? ex.Content : "No Content"
+            );
+
+            return errorMsg;
+        }
     }
 
     /// <summary>

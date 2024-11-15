@@ -1,3 +1,4 @@
+using System.IO;
 using System.Net.Http;
 using Discord.Commands;
 using Discord.Interactions;
@@ -19,12 +20,16 @@ using Mewdeko.Services.Settings;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.OpenApi.Models;
 using NekosBestApiNet;
 using Serilog;
+using Serilog.Events;
+using Serilog.Sinks.SystemConsole.Themes;
 using ZiggyCreatures.Caching.Fusion;
 using RunMode = Discord.Commands.RunMode;
 
@@ -76,19 +81,15 @@ public class Program
 
             // Configure logging
             builder.Logging.ClearProviders();
-            builder.Logging.AddSerilog(log);
+
 
             // Configure services
             ConfigureServices(services, credentials, Cache);
 
             // Configure web host settings
             builder.WebHost.UseUrls($"http://localhost:{credentials.ApiPort}");
-
-            if (!credentials.SkipApiKey)
-            {
                 services.AddTransient<IApiKeyValidation, ApiKeyValidation>();
                 services.AddAuthorization();
-            }
 
             services.AddControllers()
                 .AddJsonOptions(options =>
@@ -96,19 +97,41 @@ public class Program
                     options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
                 });
             services.AddEndpointsApiExplorer();
-            services.AddSwaggerGen();
+            services.AddSwaggerGen(x =>
+            {
+                x.AddSecurityDefinition("ApiKeyHeader", new OpenApiSecurityScheme()
+                {
+                    Name = "x-api-key",
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.ApiKey,
+                    Description = "Authorization by x-api-key inside request's header",
+                });
+                x.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme, Id = "ApiKeyHeader"
+                            }
+                        },
+                        new string[]
+                        {
+                        }
+                    }
+                });
+            });
 
             var auth = services.AddAuthentication(options =>
             {
                 options.AddScheme<AuthHandler>(AuthHandler.SchemeName, AuthHandler.SchemeName);
             });
 
-            if (!credentials.SkipApiKey)
                 auth.AddScheme<AuthenticationSchemeOptions, ApiKeyAuthHandler>("ApiKey", null);
 
             services.AddAuthorization(options =>
             {
-                if (!credentials.SkipApiKey)
                     options.AddPolicy("ApiKeyPolicy", policy =>
                         policy.RequireAuthenticatedUser().AddAuthenticationSchemes("ApiKey"));
                 options.AddPolicy("TopggPolicy",
@@ -117,6 +140,45 @@ public class Program
             });
 
             var app = builder.Build();
+            app.UseSerilogRequestLogging(options =>
+            {
+                options.IncludeQueryInRequestPath = true;
+                options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms\n{RequestBody}";
+                options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+                {
+                    var originalBody = httpContext.Request.Body;
+                    try
+                    {
+                        var requestBody = string.Empty;
+
+                        if (httpContext.Request.ContentLength > 0)
+                        {
+                            // Enable buffering for multiple reads
+                            httpContext.Request.EnableBuffering();
+
+                            // Create a StreamReader that leaves the stream open
+                            using var reader = new StreamReader(
+                                httpContext.Request.Body,
+                                encoding: System.Text.Encoding.UTF8,
+                                detectEncodingFromByteOrderMarks: false,
+                                bufferSize: -1,
+                                leaveOpen: true);
+                            requestBody = reader.ReadToEndAsync().Result;
+                            // Reset the stream position back to the beginning
+                            httpContext.Request.Body.Position = 0;
+                        }
+
+                        diagnosticContext.Set("RequestBody", requestBody);
+                        diagnosticContext.Set("QueryString", httpContext.Request.QueryString);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log any errors but don't throw them to avoid breaking the request pipeline
+                        Log.Error(ex, "Error reading request body for logging");
+                        diagnosticContext.Set("RequestBody", "Error reading request body");
+                    }
+                };
+            });
 
             // Configure the HTTP request pipeline.
             if (builder.Environment.IsDevelopment())
@@ -171,6 +233,18 @@ public class Program
             DefaultRetryMode = RetryMode.RetryRatelimit
         });
 
+        services.AddSerilog((eserv, lc) => lc
+            .ReadFrom.Services(eserv)
+            .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+            .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", LogEventLevel.Warning)
+            .MinimumLevel.Override("System", LogEventLevel.Information)
+            .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Verbose)
+            .MinimumLevel.Override("EntityFramework", LogEventLevel.Information)
+            .Enrich.FromLogContext()
+            .WriteTo.Console(LogEventLevel.Information,
+                outputTemplate:
+                "[{Timestamp:HH:mm:ss} {Level:u3}] | {Message:lj}{NewLine}{Exception}")
+            .Enrich.FromLogContext());
         services.AddSingleton(client);
         services.AddSingleton(credentials);
         services.AddSingleton(cache);
@@ -179,7 +253,7 @@ public class Program
         services
             .AddSingleton<FontProvider>()
             .AddSingleton<IBotCredentials>(credentials)
-            //.AddDbContext<MewdekoPostgresContext>()
+            .AddDbContext<MewdekoPostgresContext>()
             .AddPooledDbContextFactory<MewdekoContext>(dbContextOptionsBuilder => dbContextOptionsBuilder
                 .UseNpgsql(credentials.PsqlConnectionString,
                     x => x.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery))

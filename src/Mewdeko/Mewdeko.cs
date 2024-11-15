@@ -15,6 +15,7 @@ using Mewdeko.Services.Impl;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using Serilog;
+using Serilog.Events;
 using StackExchange.Redis;
 using TypeReader = Discord.Commands.TypeReader;
 
@@ -120,6 +121,7 @@ public class Mewdeko
         interactionService.AddTypeConverter(typeof(IRole[]), new RoleArrayConverter());
         interactionService.AddTypeConverter(typeof(IUser[]), new UserArrayConverter());
         interactionService.AddTypeConverter<StatusRolesTable>(new StatusRolesTypeConverter());
+
 
         sw.Stop();
         Log.Information("TypeReaders loaded in {ElapsedTotalSeconds}s", sw.Elapsed.TotalSeconds);
@@ -321,14 +323,20 @@ public class Mewdeko
         await tasks.WhenAll();
     }
 
-    private static Task Client_Log(LogMessage arg)
+    private async static Task Client_Log(LogMessage arg)
     {
-        if (arg.Exception != null)
-            Log.Warning(arg.Exception, arg.Source + " | " + arg.Message);
-        else
-            Log.Information(arg.Source + " | " + arg.Message);
-
-        return Task.CompletedTask;
+        var severity = arg.Severity switch
+        {
+            LogSeverity.Critical => LogEventLevel.Fatal,
+            LogSeverity.Error => LogEventLevel.Error,
+            LogSeverity.Warning => LogEventLevel.Warning,
+            LogSeverity.Info => LogEventLevel.Information,
+            LogSeverity.Verbose => LogEventLevel.Verbose,
+            LogSeverity.Debug => LogEventLevel.Debug,
+            _ => LogEventLevel.Information
+        };
+        Log.Write(severity, arg.Exception, "[{Source}] {Message}", arg.Source, arg.Message);
+        await Task.CompletedTask;
     }
 
     private void HandleStatusChanges()

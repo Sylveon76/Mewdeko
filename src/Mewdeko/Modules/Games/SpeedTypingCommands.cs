@@ -13,9 +13,10 @@ public partial class Games
     [Group]
     public class SpeedTypingCommands : MewdekoSubmodule<GamesService>
     {
-        private readonly DiscordShardedClient _client;
-        private readonly GamesService _games;
-        private readonly GuildSettingsService _guildSettings;
+        private readonly DiscordShardedClient client;
+        private readonly GamesService games;
+        private readonly GuildSettingsService guildSettings;
+        private readonly EventHandler handler;
 
         /// <summary>
         ///     Initializes a new instance of <see cref="SpeedTypingCommands" />.
@@ -24,11 +25,12 @@ public partial class Games
         /// <param name="games">The games service for fetching configs</param>
         /// <param name="guildSettings">The guild settings service</param>
         public SpeedTypingCommands(DiscordShardedClient client, GamesService games,
-            GuildSettingsService guildSettings)
+            GuildSettingsService guildSettings, EventHandler handler)
         {
-            _client = client;
-            _games = games;
-            _guildSettings = guildSettings;
+            this.client = client;
+            this.games = games;
+            this.guildSettings = guildSettings;
+            this.handler = handler;
         }
 
         /// <summary>
@@ -46,9 +48,9 @@ public partial class Games
             var channel = (ITextChannel)ctx.Channel;
 
             var game = Service.RunningContests.GetOrAdd(channel.Guild.Id,
-                _ => new TypingGame(_games, _client, channel,
-                    _guildSettings.GetPrefix(ctx.Guild).GetAwaiter().GetResult(),
-                    options));
+                _ => new TypingGame(games, client, channel,
+                    guildSettings.GetPrefix(ctx.Guild).GetAwaiter().GetResult(),
+                    options, handler));
 
             if (game.IsActive)
             {
@@ -95,7 +97,7 @@ public partial class Games
             if (string.IsNullOrWhiteSpace(text))
                 return;
 
-            _games.AddTypingArticle(ctx.User, text);
+            games.AddTypingArticle(ctx.User, text);
 
             await channel.SendConfirmAsync("Added new article for typing game.").ConfigureAwait(false);
         }
@@ -115,7 +117,7 @@ public partial class Games
             if (page < 1)
                 return;
 
-            var articles = _games.TypingArticles.Skip((page - 1) * 15).Take(15).ToArray();
+            var articles = games.TypingArticles.Skip((page - 1) * 15).Take(15).ToArray();
 
             if (articles.Length == 0)
             {

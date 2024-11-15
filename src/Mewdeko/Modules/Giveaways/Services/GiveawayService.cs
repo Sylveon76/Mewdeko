@@ -788,7 +788,7 @@ public class GiveawayService : INService
                 var winbed = ch.Embeds.FirstOrDefault().ToEmbedBuilder()
                     .WithErrorColor()
                     .WithDescription(
-                        $"Winner: {string.Join(", ", winners.Take(5).Select(x => x.Mention))}!\nHosted by: <@{r.UserId}>")
+                        $"Winner: {string.Join(", ", winners.Select(x => x.Mention))}!\nHosted by: <@{r.UserId}>")
                     .WithFooter($"Ended at {DateTime.UtcNow:dd.MM.yyyy HH:mm:ss}");
 
                 await ch.ModifyAsync(x =>

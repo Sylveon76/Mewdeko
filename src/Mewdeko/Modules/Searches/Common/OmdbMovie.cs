@@ -1,9 +1,11 @@
-﻿namespace Mewdeko.Modules.Searches.Common;
+﻿using Newtonsoft.Json;
+
+namespace Mewdeko.Modules.Searches.Common;
 
 /// <summary>
-///     Represents information about a movie obtained from the OMDB API.
+///     Represents movie information retrieved from Wikipedia.
 /// </summary>
-public class OmdbMovie
+public class WikiMovie
 {
     /// <summary>
     ///     Gets or sets the title of the movie.
@@ -11,24 +13,9 @@ public class OmdbMovie
     public string Title { get; set; }
 
     /// <summary>
-    ///     Gets or sets the year the movie was released.
+    ///     Gets or sets the release year of the movie.
     /// </summary>
     public string Year { get; set; }
-
-    /// <summary>
-    ///     Gets or sets the IMDb rating of the movie.
-    /// </summary>
-    public string ImdbRating { get; set; }
-
-    /// <summary>
-    ///     Gets or sets the IMDb ID of the movie.
-    /// </summary>
-    public string ImdbId { get; set; }
-
-    /// <summary>
-    ///     Gets or sets the genre(s) of the movie.
-    /// </summary>
-    public string Genre { get; set; }
 
     /// <summary>
     ///     Gets or sets the plot summary of the movie.
@@ -36,7 +23,114 @@ public class OmdbMovie
     public string Plot { get; set; }
 
     /// <summary>
-    ///     Gets or sets the URL of the movie poster.
+    ///     Gets or sets the full Wikipedia URL for the movie.
     /// </summary>
-    public string Poster { get; set; }
+    public string Url { get; set; }
+
+    /// <summary>
+    ///     Gets or sets the URL of the movie's poster or main image.
+    /// </summary>
+    public string ImageUrl { get; set; }
+}
+
+/// <summary>
+///     Represents the response from Wikipedia's search API.
+/// </summary>
+public class WikiSearchResponse
+{
+    /// <summary>
+    ///     Gets or sets the query results from the Wikipedia search.
+    /// </summary>
+    [JsonProperty("query")]
+    public WikiQuerySearch Query { get; set; }
+}
+
+/// <summary>
+///     Represents the search section of a Wikipedia API query.
+/// </summary>
+public class WikiQuerySearch
+{
+    /// <summary>
+    ///     Gets or sets the list of search results.
+    /// </summary>
+    [JsonProperty("search")]
+    public List<WikiSearchResult> Search { get; set; }
+}
+
+/// <summary>
+///     Represents a single search result from Wikipedia.
+/// </summary>
+public class WikiSearchResult
+{
+    /// <summary>
+    ///     Gets or sets the unique page ID of the Wikipedia article.
+    /// </summary>
+    [JsonProperty("pageid")]
+    public int PageId { get; set; }
+}
+
+/// <summary>
+///     Represents the response from Wikipedia's content API.
+/// </summary>
+public class WikiContentResponse
+{
+    /// <summary>
+    ///     Gets or sets the query results containing page content.
+    /// </summary>
+    [JsonProperty("query")]
+    public WikiQueryContent Query { get; set; }
+}
+
+/// <summary>
+///     Represents the content section of a Wikipedia API query.
+/// </summary>
+public class WikiQueryContent
+{
+    /// <summary>
+    ///     Gets or sets the dictionary of page contents, keyed by page ID.
+    /// </summary>
+    [JsonProperty("pages")]
+    public Dictionary<string, WikiPage> Pages { get; set; }
+}
+
+/// <summary>
+///     Represents a Wikipedia page and its contents.
+/// </summary>
+public class WikiPage
+{
+    /// <summary>
+    ///     Gets or sets the title of the Wikipedia page.
+    /// </summary>
+    [JsonProperty("title")]
+    public string Title { get; set; }
+
+    /// <summary>
+    ///     Gets or sets the main text content of the Wikipedia page.
+    /// </summary>
+    [JsonProperty("extract")]
+    public string Extract { get; set; }
+
+    /// <summary>
+    ///     Gets or sets the full URL of the Wikipedia page.
+    /// </summary>
+    [JsonProperty("fullurl")]
+    public string FullUrl { get; set; }
+
+    /// <summary>
+    ///     Gets or sets the thumbnail image information for the page.
+    /// </summary>
+    [JsonProperty("thumbnail")]
+    public WikiThumbnail Thumbnail { get; set; }
+}
+
+/// <summary>
+///     Represents thumbnail image information from Wikipedia.
+/// </summary>
+public class WikiThumbnail
+{
+    /// <summary>
+    ///     Gets or sets the URL of the thumbnail image.
+    /// </summary>
+    [JsonProperty("source")]
+    public string Source { get; set; }
 }

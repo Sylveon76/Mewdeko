@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Mewdeko.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Mewdeko.Database.Migrations.PostgreSql
 {
     [DbContext(typeof(MewdekoPostgresContext))]
-    partial class MewdekoPostgresContextModelSnapshot : ModelSnapshot
+    [Migration("20241111002254_MoreTicketStuff")]
+    partial class MoreTicketStuff
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -468,34 +471,6 @@ namespace Mewdeko.Database.Migrations.PostgreSql
                     b.HasKey("Id");
 
                     b.ToTable("BotReviews");
-                });
-
-            modelBuilder.Entity("Mewdeko.Database.Models.CaseNote", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<decimal>("AuthorId")
-                        .HasColumnType("numeric(20,0)");
-
-                    b.Property<int>("CaseId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CaseId");
-
-                    b.ToTable("CaseNote");
                 });
 
             modelBuilder.Entity("Mewdeko.Database.Models.ChatTriggers", b =>
@@ -1727,50 +1702,6 @@ namespace Mewdeko.Database.Migrations.PostgreSql
                     b.ToTable("GuildConfigs");
                 });
 
-            modelBuilder.Entity("Mewdeko.Database.Models.GuildTicketSettings", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<decimal[]>("BlacklistedUsers")
-                        .HasColumnType("numeric(20,0)[]");
-
-                    b.Property<TimeSpan?>("DefaultAutoCloseTime")
-                        .HasColumnType("interval");
-
-                    b.Property<int>("DefaultMaxTickets")
-                        .HasColumnType("integer");
-
-                    b.Property<TimeSpan?>("DefaultResponseTime")
-                        .HasColumnType("interval");
-
-                    b.Property<bool>("EnableDmNotifications")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("EnableStaffPings")
-                        .HasColumnType("boolean");
-
-                    b.Property<decimal>("GuildId")
-                        .HasColumnType("numeric(20,0)");
-
-                    b.Property<decimal?>("LogChannelId")
-                        .HasColumnType("numeric(20,0)");
-
-                    b.Property<decimal[]>("NotificationRoles")
-                        .IsRequired()
-                        .HasColumnType("numeric(20,0)[]");
-
-                    b.Property<decimal?>("TranscriptChannelId")
-                        .HasColumnType("numeric(20,0)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("GuildTicketSettings");
-                });
-
             modelBuilder.Entity("Mewdeko.Database.Models.GuildUserBalance", b =>
                 {
                     b.Property<int>("Id")
@@ -2299,43 +2230,6 @@ namespace Mewdeko.Database.Migrations.PostgreSql
                     b.ToTable("MutedUserId");
                 });
 
-            modelBuilder.Entity("Mewdeko.Database.Models.NoteEdit", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("CaseNoteId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("EditedAt")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<decimal>("EditorId")
-                        .HasColumnType("numeric(20,0)");
-
-                    b.Property<string>("NewContent")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("OldContent")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int?>("TicketNoteId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CaseNoteId");
-
-                    b.HasIndex("TicketNoteId");
-
-                    b.ToTable("NoteEdit");
-                });
-
             modelBuilder.Entity("Mewdeko.Database.Models.NsfwBlacklitedTag", b =>
                 {
                     b.Property<int>("Id")
@@ -2389,101 +2283,6 @@ namespace Mewdeko.Database.Migrations.PostgreSql
                     b.HasKey("Id");
 
                     b.ToTable("OwnerOnly");
-                });
-
-            modelBuilder.Entity("Mewdeko.Database.Models.PanelButton", b =>
-                {
-                    b.Property<int>("Id")
-                        .HasColumnType("integer");
-
-                    b.Property<List<string>>("AllowedPriorities")
-                        .HasColumnType("text[]");
-
-                    b.Property<decimal?>("ArchiveCategoryId")
-                        .HasColumnType("numeric(20,0)");
-
-                    b.Property<TimeSpan?>("AutoCloseTime")
-                        .HasColumnType("interval");
-
-                    b.Property<decimal?>("CategoryId")
-                        .HasColumnType("numeric(20,0)");
-
-                    b.Property<string>("ChannelNameFormat")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("CustomId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("DefaultPriority")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Emoji")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Label")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("MaxActiveTickets")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("ModalJson")
-                        .HasColumnType("text");
-
-                    b.Property<string>("OpenMessageJson")
-                        .HasColumnType("text");
-
-                    b.Property<int>("PanelId")
-                        .HasColumnType("integer");
-
-                    b.Property<TimeSpan?>("RequiredResponseTime")
-                        .HasColumnType("interval");
-
-                    b.Property<bool>("SaveTranscript")
-                        .HasColumnType("boolean");
-
-                    b.Property<int>("Style")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal[]>("SupportRoles")
-                        .HasColumnType("numeric(20,0)[]");
-
-                    b.Property<decimal[]>("ViewerRoles")
-                        .HasColumnType("numeric(20,0)[]");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PanelId");
-
-                    b.ToTable("PanelButtons");
-                });
-
-            modelBuilder.Entity("Mewdeko.Database.Models.PanelSelectMenu", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("CustomId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("PanelId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Placeholder")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PanelId");
-
-                    b.ToTable("PanelSelectMenu");
                 });
 
             modelBuilder.Entity("Mewdeko.Database.Models.Permission", b =>
@@ -3061,75 +2860,6 @@ namespace Mewdeko.Database.Migrations.PostgreSql
                     b.ToTable("RotatingStatus");
                 });
 
-            modelBuilder.Entity("Mewdeko.Database.Models.SelectMenuOption", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<List<string>>("AllowedPriorities")
-                        .HasColumnType("text[]");
-
-                    b.Property<decimal?>("ArchiveCategoryId")
-                        .HasColumnType("numeric(20,0)");
-
-                    b.Property<TimeSpan?>("AutoCloseTime")
-                        .HasColumnType("interval");
-
-                    b.Property<decimal?>("CategoryId")
-                        .HasColumnType("numeric(20,0)");
-
-                    b.Property<string>("ChannelNameFormat")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("DefaultPriority")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Emoji")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Label")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("MaxActiveTickets")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("ModalJson")
-                        .HasColumnType("text");
-
-                    b.Property<string>("OpenMessageJson")
-                        .HasColumnType("text");
-
-                    b.Property<TimeSpan?>("RequiredResponseTime")
-                        .HasColumnType("interval");
-
-                    b.Property<int>("SelectMenuId")
-                        .HasColumnType("integer");
-
-                    b.Property<decimal[]>("SupportRoles")
-                        .HasColumnType("numeric(20,0)[]");
-
-                    b.Property<string>("Value")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<decimal[]>("ViewerRoles")
-                        .HasColumnType("numeric(20,0)[]");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SelectMenuId");
-
-                    b.ToTable("SelectMenuOptions");
-                });
-
             modelBuilder.Entity("Mewdeko.Database.Models.SelfAssignedRole", b =>
                 {
                     b.Property<int>("Id")
@@ -3186,6 +2916,39 @@ namespace Mewdeko.Database.Migrations.PostgreSql
                     b.HasKey("Id");
 
                     b.ToTable("ServerRecoveryStore");
+                });
+
+            modelBuilder.Entity("Mewdeko.Database.Models.StaffNotificationPreference", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("DateAdded")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<bool>("EnableDmNotifications")
+                        .HasColumnType("boolean");
+
+                    b.Property<decimal>("GuildId")
+                        .HasColumnType("numeric(20,0)");
+
+                    b.Property<List<string>>("NotifyForPriorities")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.Property<List<string>>("NotifyForTags")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.Property<decimal>("UserId")
+                        .HasColumnType("numeric(20,0)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("StaffNotificationPreferences");
                 });
 
             modelBuilder.Entity("Mewdeko.Database.Models.StarboardPosts", b =>
@@ -3728,8 +3491,8 @@ namespace Mewdeko.Database.Migrations.PostgreSql
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp without time zone");
 
-                    b.Property<decimal>("CreatorId")
-                        .HasColumnType("numeric(20,0)");
+                    b.Property<DateTime?>("DateAdded")
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<decimal>("GuildId")
                         .HasColumnType("numeric(20,0)");
@@ -3737,33 +3500,124 @@ namespace Mewdeko.Database.Migrations.PostgreSql
                     b.Property<bool>("IsArchived")
                         .HasColumnType("boolean");
 
-                    b.Property<DateTime?>("LastActivityAt")
+                    b.Property<DateTime?>("LastActivity")
                         .HasColumnType("timestamp without time zone");
 
-                    b.Property<string>("ModalResponses")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Priority")
+                    b.Property<string>("PriorityId")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int?>("SelectOptionId")
                         .HasColumnType("integer");
 
                     b.Property<List<string>>("Tags")
+                        .IsRequired()
                         .HasColumnType("text[]");
 
-                    b.Property<string>("TranscriptUrl")
-                        .HasColumnType("text");
+                    b.Property<int?>("TicketCaseId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal?>("TranscriptMessageId")
+                        .HasColumnType("numeric(20,0)");
+
+                    b.Property<decimal>("UserId")
+                        .HasColumnType("numeric(20,0)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ButtonId");
 
-                    b.HasIndex("CaseId");
-
                     b.HasIndex("SelectOptionId");
 
+                    b.HasIndex("TicketCaseId");
+
                     b.ToTable("Tickets");
+                });
+
+            modelBuilder.Entity("Mewdeko.Database.Models.TicketButton", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("integer");
+
+                    b.Property<List<string>>("AllowedPriorityIds")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.Property<decimal?>("ArchiveCategoryId")
+                        .HasColumnType("numeric(20,0)");
+
+                    b.Property<decimal[]>("AutoAddRoleIds")
+                        .IsRequired()
+                        .HasColumnType("numeric(20,0)[]");
+
+                    b.Property<decimal[]>("AutoAddUserIds")
+                        .IsRequired()
+                        .HasColumnType("numeric(20,0)[]");
+
+                    b.Property<TimeSpan?>("AutoCloseTime")
+                        .HasColumnType("interval");
+
+                    b.Property<decimal?>("CategoryId")
+                        .HasColumnType("numeric(20,0)");
+
+                    b.Property<string>("ChannelNameFormat")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<TimeSpan?>("Cooldown")
+                        .HasColumnType("interval");
+
+                    b.Property<DateTime?>("DateAdded")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("DefaultPriorityId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Emoji")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("MaxActiveTickets")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("OpenMessage")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PreCreateMessage")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("RequireConfirmation")
+                        .HasColumnType("boolean");
+
+                    b.Property<List<string>>("RequiredTags")
+                        .IsRequired()
+                        .HasColumnType("text[]");
+
+                    b.Property<bool>("SaveTranscript")
+                        .HasColumnType("boolean");
+
+                    b.Property<decimal[]>("SupportRoleIds")
+                        .IsRequired()
+                        .HasColumnType("numeric(20,0)[]");
+
+                    b.Property<decimal[]>("ViewerRoleIds")
+                        .IsRequired()
+                        .HasColumnType("numeric(20,0)[]");
+
+                    b.Property<long>("_embedColorRaw")
+                        .HasColumnType("bigint")
+                        .HasColumnName("EmbedColor");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TicketButtons");
                 });
 
             modelBuilder.Entity("Mewdeko.Database.Models.TicketCase", b =>
@@ -3774,8 +3628,9 @@ namespace Mewdeko.Database.Migrations.PostgreSql
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime?>("ClosedAt")
-                        .HasColumnType("timestamp without time zone");
+                    b.Property<string>("CaseName")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp without time zone");
@@ -3783,19 +3638,66 @@ namespace Mewdeko.Database.Migrations.PostgreSql
                     b.Property<decimal>("CreatedBy")
                         .HasColumnType("numeric(20,0)");
 
+                    b.Property<DateTime?>("DateAdded")
+                        .HasColumnType("timestamp without time zone");
+
                     b.Property<string>("Description")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<decimal>("GuildId")
                         .HasColumnType("numeric(20,0)");
 
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<bool>("IsClosed")
+                        .HasColumnType("boolean");
 
                     b.HasKey("Id");
 
                     b.ToTable("TicketCases");
+                });
+
+            modelBuilder.Entity("Mewdeko.Database.Models.TicketConfig", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal[]>("BlacklistedUsers")
+                        .IsRequired()
+                        .HasColumnType("numeric(20,0)[]");
+
+                    b.Property<DateTime?>("DateAdded")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<TimeSpan?>("DefaultAutoCloseTime")
+                        .HasColumnType("interval");
+
+                    b.Property<TimeSpan?>("DefaultCooldown")
+                        .HasColumnType("interval");
+
+                    b.Property<bool>("EnableWebhookLogging")
+                        .HasColumnType("boolean");
+
+                    b.Property<decimal>("GuildId")
+                        .HasColumnType("numeric(20,0)");
+
+                    b.Property<decimal?>("WebhookId")
+                        .HasColumnType("numeric(20,0)");
+
+                    b.Property<string>("WebhookToken")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("_blacklistedTicketTypesJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("BlacklistedTicketTypes");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TicketConfigs");
                 });
 
             modelBuilder.Entity("Mewdeko.Database.Models.TicketNote", b =>
@@ -3837,19 +3739,217 @@ namespace Mewdeko.Database.Migrations.PostgreSql
                     b.Property<decimal>("ChannelId")
                         .HasColumnType("numeric(20,0)");
 
-                    b.Property<string>("EmbedJson")
+                    b.Property<DateTime?>("DateAdded")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<decimal>("GuildId")
+                        .HasColumnType("numeric(20,0)");
+
+                    b.Property<string>("MessageJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("TicketPanels");
+                });
+
+            modelBuilder.Entity("Mewdeko.Database.Models.TicketPriority", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("DateAdded")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Emoji")
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("GuildId")
+                        .HasColumnType("numeric(20,0)");
+
+                    b.Property<int?>("Level")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("PingStaff")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("PriorityId")
+                        .HasColumnType("text");
+
+                    b.Property<TimeSpan?>("RequiredResponseTime")
+                        .HasColumnType("interval");
+
+                    b.Property<int?>("TicketConfigId")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("_embedColorRaw")
+                        .HasColumnType("bigint")
+                        .HasColumnName("EmbedColor");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TicketConfigId");
+
+                    b.ToTable("TicketPriorities");
+                });
+
+            modelBuilder.Entity("Mewdeko.Database.Models.TicketSelect", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("DateAdded")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Placeholder")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int?>("TicketPanelId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TicketPanelId");
+
+                    b.ToTable("TicketSelects");
+                });
+
+            modelBuilder.Entity("Mewdeko.Database.Models.TicketSelectOption", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<List<string>>("AllowedPriorityIds")
+                        .HasColumnType("text[]");
+
+                    b.Property<decimal?>("ArchiveCategoryId")
+                        .HasColumnType("numeric(20,0)");
+
+                    b.Property<decimal[]>("AutoAddRoleIds")
+                        .HasColumnType("numeric(20,0)[]");
+
+                    b.Property<decimal[]>("AutoAddUserIds")
+                        .HasColumnType("numeric(20,0)[]");
+
+                    b.Property<TimeSpan?>("AutoCloseTime")
+                        .HasColumnType("interval");
+
+                    b.Property<decimal?>("CategoryId")
+                        .HasColumnType("numeric(20,0)");
+
+                    b.Property<string>("ChannelNameFormat")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<TimeSpan?>("Cooldown")
+                        .HasColumnType("interval");
+
+                    b.Property<DateTime?>("DateAdded")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("DefaultPriorityId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Emoji")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("MaxActiveTickets")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("OpenMessage")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PreCreateMessage")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("RequireConfirmation")
+                        .HasColumnType("boolean");
+
+                    b.Property<List<string>>("RequiredTags")
+                        .HasColumnType("text[]");
+
+                    b.Property<bool>("SaveTranscript")
+                        .HasColumnType("boolean");
+
+                    b.Property<decimal[]>("SupportRoleIds")
+                        .HasColumnType("numeric(20,0)[]");
+
+                    b.Property<int?>("TicketSelectId")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal[]>("ViewerRoleIds")
+                        .HasColumnType("numeric(20,0)[]");
+
+                    b.Property<long>("_embedColorRaw")
+                        .HasColumnType("bigint")
+                        .HasColumnName("EmbedColor");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TicketSelectId");
+
+                    b.ToTable("TicketSelectOptions");
+                });
+
+            modelBuilder.Entity("Mewdeko.Database.Models.TicketTag", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("DateAdded")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<decimal>("GuildId")
                         .HasColumnType("numeric(20,0)");
 
-                    b.Property<decimal>("MessageId")
-                        .HasColumnType("numeric(20,0)");
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int?>("TicketConfigId")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("_embedColorRaw")
+                        .HasColumnType("bigint")
+                        .HasColumnName("EmbedColor");
 
                     b.HasKey("Id");
 
-                    b.ToTable("TicketPanels");
+                    b.HasIndex("TicketConfigId");
+
+                    b.ToTable("TicketTag");
                 });
 
             modelBuilder.Entity("Mewdeko.Database.Models.TransactionHistory", b =>
@@ -4433,17 +4533,6 @@ namespace Mewdeko.Database.Migrations.PostgreSql
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Mewdeko.Database.Models.CaseNote", b =>
-                {
-                    b.HasOne("Mewdeko.Database.Models.TicketCase", "Case")
-                        .WithMany("Notes")
-                        .HasForeignKey("CaseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Case");
-                });
-
             modelBuilder.Entity("Mewdeko.Database.Models.CommandAlias", b =>
                 {
                     b.HasOne("Mewdeko.Database.Models.GuildConfig", null)
@@ -4550,17 +4639,6 @@ namespace Mewdeko.Database.Migrations.PostgreSql
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Mewdeko.Database.Models.NoteEdit", b =>
-                {
-                    b.HasOne("Mewdeko.Database.Models.CaseNote", null)
-                        .WithMany("EditHistory")
-                        .HasForeignKey("CaseNoteId");
-
-                    b.HasOne("Mewdeko.Database.Models.TicketNote", null)
-                        .WithMany("EditHistory")
-                        .HasForeignKey("TicketNoteId");
-                });
-
             modelBuilder.Entity("Mewdeko.Database.Models.NsfwBlacklitedTag", b =>
                 {
                     b.HasOne("Mewdeko.Database.Models.GuildConfig", null)
@@ -4568,34 +4646,6 @@ namespace Mewdeko.Database.Migrations.PostgreSql
                         .HasForeignKey("GuildConfigId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("Mewdeko.Database.Models.PanelButton", b =>
-                {
-                    b.HasOne("Mewdeko.Database.Models.TicketPanel", null)
-                        .WithMany("Buttons")
-                        .HasForeignKey("Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Mewdeko.Database.Models.TicketPanel", "Panel")
-                        .WithMany()
-                        .HasForeignKey("PanelId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Panel");
-                });
-
-            modelBuilder.Entity("Mewdeko.Database.Models.PanelSelectMenu", b =>
-                {
-                    b.HasOne("Mewdeko.Database.Models.TicketPanel", "Panel")
-                        .WithMany("SelectMenus")
-                        .HasForeignKey("PanelId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Panel");
                 });
 
             modelBuilder.Entity("Mewdeko.Database.Models.Permission", b =>
@@ -4664,17 +4714,6 @@ namespace Mewdeko.Database.Migrations.PostgreSql
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Mewdeko.Database.Models.SelectMenuOption", b =>
-                {
-                    b.HasOne("Mewdeko.Database.Models.PanelSelectMenu", "SelectMenu")
-                        .WithMany("Options")
-                        .HasForeignKey("SelectMenuId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("SelectMenu");
-                });
-
             modelBuilder.Entity("Mewdeko.Database.Models.StreamRoleBlacklistedUser", b =>
                 {
                     b.HasOne("Mewdeko.Database.Models.StreamRoleSettings", null)
@@ -4739,23 +4778,30 @@ namespace Mewdeko.Database.Migrations.PostgreSql
 
             modelBuilder.Entity("Mewdeko.Database.Models.Ticket", b =>
                 {
-                    b.HasOne("Mewdeko.Database.Models.PanelButton", "Button")
+                    b.HasOne("Mewdeko.Database.Models.TicketButton", "Button")
                         .WithMany()
                         .HasForeignKey("ButtonId");
 
-                    b.HasOne("Mewdeko.Database.Models.TicketCase", "Case")
-                        .WithMany("LinkedTickets")
-                        .HasForeignKey("CaseId");
-
-                    b.HasOne("Mewdeko.Database.Models.SelectMenuOption", "SelectOption")
+                    b.HasOne("Mewdeko.Database.Models.TicketSelectOption", "SelectOption")
                         .WithMany()
                         .HasForeignKey("SelectOptionId");
 
+                    b.HasOne("Mewdeko.Database.Models.TicketCase", null)
+                        .WithMany("LinkedTickets")
+                        .HasForeignKey("TicketCaseId");
+
                     b.Navigation("Button");
 
-                    b.Navigation("Case");
-
                     b.Navigation("SelectOption");
+                });
+
+            modelBuilder.Entity("Mewdeko.Database.Models.TicketButton", b =>
+                {
+                    b.HasOne("Mewdeko.Database.Models.TicketPanel", null)
+                        .WithMany("Buttons")
+                        .HasForeignKey("Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Mewdeko.Database.Models.TicketNote", b =>
@@ -4767,6 +4813,34 @@ namespace Mewdeko.Database.Migrations.PostgreSql
                         .IsRequired();
 
                     b.Navigation("Ticket");
+                });
+
+            modelBuilder.Entity("Mewdeko.Database.Models.TicketPriority", b =>
+                {
+                    b.HasOne("Mewdeko.Database.Models.TicketConfig", null)
+                        .WithMany("Priorities")
+                        .HasForeignKey("TicketConfigId");
+                });
+
+            modelBuilder.Entity("Mewdeko.Database.Models.TicketSelect", b =>
+                {
+                    b.HasOne("Mewdeko.Database.Models.TicketPanel", null)
+                        .WithMany("SelectMenus")
+                        .HasForeignKey("TicketPanelId");
+                });
+
+            modelBuilder.Entity("Mewdeko.Database.Models.TicketSelectOption", b =>
+                {
+                    b.HasOne("Mewdeko.Database.Models.TicketSelect", null)
+                        .WithMany("Options")
+                        .HasForeignKey("TicketSelectId");
+                });
+
+            modelBuilder.Entity("Mewdeko.Database.Models.TicketTag", b =>
+                {
+                    b.HasOne("Mewdeko.Database.Models.TicketConfig", null)
+                        .WithMany("Tags")
+                        .HasForeignKey("TicketConfigId");
                 });
 
             modelBuilder.Entity("Mewdeko.Database.Models.UnbanTimer", b =>
@@ -4862,11 +4936,6 @@ namespace Mewdeko.Database.Migrations.PostgreSql
                     b.Navigation("IgnoredChannels");
                 });
 
-            modelBuilder.Entity("Mewdeko.Database.Models.CaseNote", b =>
-                {
-                    b.Navigation("EditHistory");
-                });
-
             modelBuilder.Entity("Mewdeko.Database.Models.GuildConfig", b =>
                 {
                     b.Navigation("AntiAltSetting")
@@ -4933,11 +5002,6 @@ namespace Mewdeko.Database.Migrations.PostgreSql
                     b.Navigation("Songs");
                 });
 
-            modelBuilder.Entity("Mewdeko.Database.Models.PanelSelectMenu", b =>
-                {
-                    b.Navigation("Options");
-                });
-
             modelBuilder.Entity("Mewdeko.Database.Models.Permission", b =>
                 {
                     b.Navigation("Previous")
@@ -4971,13 +5035,13 @@ namespace Mewdeko.Database.Migrations.PostgreSql
             modelBuilder.Entity("Mewdeko.Database.Models.TicketCase", b =>
                 {
                     b.Navigation("LinkedTickets");
-
-                    b.Navigation("Notes");
                 });
 
-            modelBuilder.Entity("Mewdeko.Database.Models.TicketNote", b =>
+            modelBuilder.Entity("Mewdeko.Database.Models.TicketConfig", b =>
                 {
-                    b.Navigation("EditHistory");
+                    b.Navigation("Priorities");
+
+                    b.Navigation("Tags");
                 });
 
             modelBuilder.Entity("Mewdeko.Database.Models.TicketPanel", b =>
@@ -4985,6 +5049,11 @@ namespace Mewdeko.Database.Migrations.PostgreSql
                     b.Navigation("Buttons");
 
                     b.Navigation("SelectMenus");
+                });
+
+            modelBuilder.Entity("Mewdeko.Database.Models.TicketSelect", b =>
+                {
+                    b.Navigation("Options");
                 });
 
             modelBuilder.Entity("Mewdeko.Database.Models.XpSettings", b =>

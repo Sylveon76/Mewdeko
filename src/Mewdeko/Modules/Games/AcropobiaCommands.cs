@@ -14,9 +14,8 @@ public partial class Games
     /// <summary>
     ///     A module containing Acrophobia commands.
     /// </summary>
-    /// <param name="client">The discord client</param>
     [Group]
-    public class AcropobiaCommands(DiscordShardedClient client) : MewdekoSubmodule<GamesService>
+    public class AcropobiaCommands(EventHandler handler) : MewdekoSubmodule<GamesService>
     {
         /// <summary>
         ///     Command for starting an Acrophobia game.
@@ -41,12 +40,12 @@ public partial class Games
                     game.OnEnded += Game_OnEnded;
                     game.OnVotingStarted += Game_OnVotingStarted;
                     game.OnUserVoted += Game_OnUserVoted;
-                    client.MessageReceived += ClientMessageReceived;
+                    handler.MessageReceived += ClientMessageReceived;
                     await game.Run().ConfigureAwait(false);
                 }
                 finally
                 {
-                    client.MessageReceived -= ClientMessageReceived;
+                    handler.MessageReceived -= ClientMessageReceived;
                     Service.AcrophobiaGames.TryRemove(channel.Id, out game);
                     game.Dispose();
                 }
@@ -56,27 +55,22 @@ public partial class Games
                 await ReplyErrorLocalizedAsync("acro_running").ConfigureAwait(false);
             }
 
-            Task ClientMessageReceived(SocketMessage msg)
+            async Task ClientMessageReceived(SocketMessage msg)
             {
                 if (msg.Channel.Id != ctx.Channel.Id)
-                    return Task.CompletedTask;
+                    return;
 
-                _ = Task.Run(async () =>
+                try
                 {
-                    try
-                    {
-                        var success = await game.UserInput(msg.Author.Id, msg.Author.ToString(), msg.Content)
-                            .ConfigureAwait(false);
-                        if (success)
-                            await msg.DeleteAsync().ConfigureAwait(false);
-                    }
-                    catch
-                    {
-                        // ignored
-                    }
-                });
-
-                return Task.CompletedTask;
+                    var success = await game.UserInput(msg.Author.Id, msg.Author.ToString(), msg.Content)
+                        .ConfigureAwait(false);
+                    if (success)
+                        await msg.DeleteAsync().ConfigureAwait(false);
+                }
+                catch
+                {
+                    // ignored
+                }
             }
         }
 

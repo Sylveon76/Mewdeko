@@ -41,7 +41,10 @@ public class CommandHandler : INService
     private readonly DbContextProvider dbProvider;
     private readonly GuildSettingsService gss;
     private readonly InteractionService interactionService;
-    private readonly IServiceProvider services;
+    /// <summary>
+    /// Services stuffs
+    /// </summary>
+    public readonly IServiceProvider Services;
     private readonly IBotStrings strings;
 
     /// <summary>
@@ -74,7 +77,7 @@ public class CommandHandler : INService
         this.bss = bss;
         this.bot = bot;
         this.dbProvider = dbProvider;
-        this.services = services;
+        this.Services = services;
         eventHandler.InteractionCreated += TryRunInteraction;
         this.interactionService.SlashCommandExecuted += HandleCommands;
         this.interactionService.ContextCommandExecuted += HandleContextCommands;
@@ -386,7 +389,7 @@ public class CommandHandler : INService
     {
         try
         {
-            var blacklistService = services.GetService<BlacklistService>();
+            var blacklistService = Services.GetService<BlacklistService>();
             var cb = new ComponentBuilder().WithButton("Support Server", null, ButtonStyle.Link,
                 url: "https://discord.gg/mewdeko").Build();
             foreach (var bl in blacklistService.BlacklistEntries)
@@ -411,7 +414,7 @@ public class CommandHandler : INService
 
             if (interaction.Type == InteractionType.ApplicationCommand)
             {
-                var ctS = services.GetService<ChatTriggersService>();
+                var ctS = Services.GetService<ChatTriggersService>();
                 var triggers = await ctS.GetChatTriggersFor((interaction.Channel as IGuildChannel)?.Guild?.Id);
                 var trigger = triggers.FirstOrDefault(x => x.RealName == interaction.GetRealName());
                 if (trigger is not null)
@@ -426,7 +429,7 @@ public class CommandHandler : INService
             //     && !compInter.Data.CustomId.StartsWith("trigger.")) return;
 
             var ctx = new ShardedInteractionContext(client, interaction);
-            var result = await interactionService.ExecuteCommandAsync(ctx, services).ConfigureAwait(false);
+            var result = await interactionService.ExecuteCommandAsync(ctx, Services).ConfigureAwait(false);
 #if DEBUG
             Log.Information($"Button was executed:{result.IsSuccess}\nReason:{result.ErrorReason}");
 #endif
@@ -553,9 +556,9 @@ public class CommandHandler : INService
     {
         var execTime = Environment.TickCount;
 
-        var lateExecutors = services.GetServices<ILateExecutor>();
-        var inputTransformers = services.GetServices<IInputTransformer>();
-        var earlyBehaviors = services.GetServices<IEarlyBehavior>().ToArray();
+        var lateExecutors = Services.GetServices<ILateExecutor>();
+        var inputTransformers = Services.GetServices<IInputTransformer>();
+        var earlyBehaviors = Services.GetServices<IEarlyBehavior>().ToArray();
 
         foreach (var beh in earlyBehaviors)
         {
@@ -604,7 +607,7 @@ public class CommandHandler : INService
                 .ConfigureAwait(false);
             if (guild != null)
             {
-                var permissionService = services.GetService<PermissionService>();
+                var permissionService = Services.GetService<PermissionService>();
                 var pc = await permissionService.GetCacheFor(guild.Id).ConfigureAwait(false);
                 if (pc?.Permissions.CheckPermissions(usrMsg, info?.Name, info?.Module.Name, out _) ?? true)
                     await CommandErrored(info, channel as ITextChannel, error, usrMsg.Author).ConfigureAwait(false);
@@ -625,11 +628,11 @@ public class CommandHandler : INService
         if (!searchResult.IsSuccess)
             return (false, searchResult.ErrorReason, null);
 
-        var lateBlockers = services.GetServices<ILateBlocker>().ToArray();
+        var lateBlockers = Services.GetServices<ILateBlocker>().ToArray();
 
         var commands = searchResult.Commands;
         var preconditionResults = await Task.WhenAll(commands.Select(async match =>
-            (match, await match.Command.CheckPreconditionsAsync(context, services).ConfigureAwait(false))));
+            (match, await match.Command.CheckPreconditionsAsync(context, Services).ConfigureAwait(false))));
 
         var successfulPreconditions = preconditionResults.Where(x => x.Item2.IsSuccess).ToArray();
 
@@ -643,7 +646,7 @@ public class CommandHandler : INService
 
         var parseResults = await Task.WhenAll(successfulPreconditions.Select(async x =>
         {
-            var parseResult = await x.match.ParseAsync(context, searchResult, x.Item2, services).ConfigureAwait(false);
+            var parseResult = await x.match.ParseAsync(context, searchResult, x.Item2, Services).ConfigureAwait(false);
             return (x.match, parseResult);
         }));
 
@@ -673,7 +676,7 @@ public class CommandHandler : INService
                 return (false, "lateblocker", null);
         }
 
-        var result = await chosenOverload.match.ExecuteAsync(context, chosenOverload.parseResult, services)
+        var result = await chosenOverload.match.ExecuteAsync(context, chosenOverload.parseResult, Services)
             .ConfigureAwait(false);
 
         if (result is not ExecuteResult executeResult) return (result.IsSuccess, result.ErrorReason, cmd);

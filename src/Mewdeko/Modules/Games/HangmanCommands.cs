@@ -11,10 +11,9 @@ public partial class Games
     /// <summary>
     ///     A module containing Hangman commands.
     /// </summary>
-    /// <param name="client">The discord client</param>
     /// <param name="guildSettings">The guild settings service</param>
     [Group]
-    public class HangmanCommands(DiscordShardedClient client, GuildSettingsService guildSettings)
+    public class HangmanCommands(GuildSettingsService guildSettings, EventHandler handler)
         : MewdekoSubmodule<GamesService>
     {
         /// <summary>
@@ -63,7 +62,7 @@ public partial class Games
             hm.OnGuessFailed += Hm_OnGuessFailed;
             hm.OnGuessSucceeded += Hm_OnGuessSucceeded;
             hm.OnLetterAlreadyUsed += Hm_OnLetterAlreadyUsed;
-            client.MessageReceived += ClientMessageReceived;
+            handler.MessageReceived += ClientMessageReceived;
 
             try
             {
@@ -78,19 +77,15 @@ public partial class Games
 
             await hm.EndedTask.ConfigureAwait(false);
 
-            client.MessageReceived -= ClientMessageReceived;
+            handler.MessageReceived -= ClientMessageReceived;
             Service.HangmanGames.TryRemove(ctx.Channel.Id, out _);
             hm.Dispose();
+            return;
 
-            Task ClientMessageReceived(SocketMessage msg)
+            async Task ClientMessageReceived(SocketMessage msg)
             {
-                _ = Task.Run(() =>
-                {
                     if (ctx.Channel.Id == msg.Channel.Id && !msg.Author.IsBot)
-                        return hm.Input(msg.Author.Id, msg.Author.ToString(), msg.Content);
-                    return Task.CompletedTask;
-                });
-                return Task.CompletedTask;
+                        await hm.Input(msg.Author.Id, msg.Author.ToString(), msg.Content);
             }
         }
 

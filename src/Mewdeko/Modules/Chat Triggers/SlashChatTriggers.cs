@@ -606,9 +606,19 @@ public class SlashChatTriggers(IHttpClientFactory clientFactory, InteractiveServ
     {
         var values = (Context.Interaction as SocketMessageComponent).Data.Values;
         var i = -1;
+
         foreach (var n in values)
-            await Service.RunInteractionTrigger(ctx.Interaction as SocketInteraction,
-                await Service.GetChatTriggers(guildId, Convert.ToInt32(n)), ++i >= 1);
+        {
+            var id = n.Split('.').Length >= 2 && int.TryParse(n.Split('.')[1], out var parsedId)
+                ? parsedId
+                : int.TryParse(n, out parsedId)
+                    ? parsedId
+                    : (int?)null;
+
+            if (!id.HasValue) continue;
+            var chatTrigger = await Service.GetChatTriggers(guildId, id.Value);
+            await Service.RunInteractionTrigger(ctx.Interaction as SocketInteraction, chatTrigger, ++i >= 1);
+        }
     }
 
     /// <summary>
