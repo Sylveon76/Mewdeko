@@ -495,7 +495,7 @@ namespace Mewdeko.Database.Migrations.PostgreSql
 
                     b.HasIndex("CaseId");
 
-                    b.ToTable("CaseNote");
+                    b.ToTable("CaseNotes");
                 });
 
             modelBuilder.Entity("Mewdeko.Database.Models.ChatTriggers", b =>
@@ -2222,6 +2222,9 @@ namespace Mewdeko.Database.Migrations.PostgreSql
                     b.Property<int>("AutoPlay")
                         .HasColumnType("integer");
 
+                    b.Property<decimal?>("DjRoleId")
+                        .HasColumnType("numeric(20,0)");
+
                     b.Property<decimal>("GuildId")
                         .HasColumnType("numeric(20,0)");
 
@@ -2235,6 +2238,12 @@ namespace Mewdeko.Database.Migrations.PostgreSql
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
                         .HasDefaultValue(100);
+
+                    b.Property<bool>("VoteSkipEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("VoteSkipThreshold")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -2252,24 +2261,65 @@ namespace Mewdeko.Database.Migrations.PostgreSql
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Author")
-                        .HasColumnType("text");
-
                     b.Property<decimal>("AuthorId")
                         .HasColumnType("numeric(20,0)");
 
                     b.Property<DateTime?>("DateAdded")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp without time zone");
 
-                    b.Property<bool>("IsDefault")
-                        .HasColumnType("boolean");
+                    b.Property<decimal>("GuildId")
+                        .HasColumnType("numeric(20,0)");
 
                     b.Property<string>("Name")
-                        .HasColumnType("text");
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("GuildId", "Name")
+                        .IsUnique();
+
                     b.ToTable("MusicPlaylists");
+                });
+
+            modelBuilder.Entity("Mewdeko.Database.Models.MusicPlaylistTrack", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("DateAdded")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<TimeSpan>("Duration")
+                        .HasColumnType("interval");
+
+                    b.Property<int>("Index")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PlaylistId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Uri")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlaylistId", "Index");
+
+                    b.ToTable("MusicPlaylistTracks");
                 });
 
             modelBuilder.Entity("Mewdeko.Database.Models.MutedUserId", b =>
@@ -2483,7 +2533,7 @@ namespace Mewdeko.Database.Migrations.PostgreSql
 
                     b.HasIndex("PanelId");
 
-                    b.ToTable("PanelSelectMenu");
+                    b.ToTable("PanelSelectMenus");
                 });
 
             modelBuilder.Entity("Mewdeko.Database.Models.Permission", b =>
@@ -2595,8 +2645,6 @@ namespace Mewdeko.Database.Migrations.PostgreSql
                         .HasColumnType("text");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("MusicPlaylistId");
 
                     b.ToTable("PlaylistSong");
                 });
@@ -4541,6 +4589,17 @@ namespace Mewdeko.Database.Migrations.PostgreSql
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Mewdeko.Database.Models.MusicPlaylistTrack", b =>
+                {
+                    b.HasOne("Mewdeko.Database.Models.MusicPlaylist", "Playlist")
+                        .WithMany("Tracks")
+                        .HasForeignKey("PlaylistId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Playlist");
+                });
+
             modelBuilder.Entity("Mewdeko.Database.Models.MutedUserId", b =>
                 {
                     b.HasOne("Mewdeko.Database.Models.GuildConfig", null)
@@ -4612,15 +4671,6 @@ namespace Mewdeko.Database.Migrations.PostgreSql
                     b.HasOne("Mewdeko.Database.Models.GuildConfig", null)
                         .WithMany("Permissions")
                         .HasForeignKey("GuildConfigId");
-                });
-
-            modelBuilder.Entity("Mewdeko.Database.Models.PlaylistSong", b =>
-                {
-                    b.HasOne("Mewdeko.Database.Models.MusicPlaylist", null)
-                        .WithMany("Songs")
-                        .HasForeignKey("MusicPlaylistId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("Mewdeko.Database.Models.PollAnswers", b =>
@@ -4930,7 +4980,7 @@ namespace Mewdeko.Database.Migrations.PostgreSql
 
             modelBuilder.Entity("Mewdeko.Database.Models.MusicPlaylist", b =>
                 {
-                    b.Navigation("Songs");
+                    b.Navigation("Tracks");
                 });
 
             modelBuilder.Entity("Mewdeko.Database.Models.PanelSelectMenu", b =>

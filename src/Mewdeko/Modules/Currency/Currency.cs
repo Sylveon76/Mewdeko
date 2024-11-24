@@ -26,7 +26,7 @@ public partial class Currency(InteractiveService interactive, BlackjackService b
     {
         var eb = new EmbedBuilder()
             .WithOkColor()
-            .WithDescription(GetText("cash_balance", await Service.GetUserBalanceAsync(ctx.User.Id, ctx.Guild.Id),
+            .WithDescription(Strings.CashBalance(ctx.Guild.Id, await Service.GetUserBalanceAsync(ctx.User.Id, ctx.Guild.Id),
                 await Service.GetCurrencyEmote(ctx.Guild.Id)));
 
         await ReplyAsync(embed: eb.Build());
@@ -45,7 +45,7 @@ public partial class Currency(InteractiveService interactive, BlackjackService b
         var currentBalance = await Service.GetUserBalanceAsync(ctx.User.Id, ctx.Guild.Id);
         if (betAmount > currentBalance || betAmount <= 0)
         {
-            await ReplyAsync(GetText("coinflip_invalid_bet"));
+            await ReplyAsync(Strings.CoinflipInvalidBet(ctx.Guild.Id));
             return;
         }
 
@@ -53,18 +53,18 @@ public partial class Currency(InteractiveService interactive, BlackjackService b
         if (coinFlip.Equals(guess, StringComparison.OrdinalIgnoreCase))
         {
             await Service.AddUserBalanceAsync(ctx.User.Id, betAmount, ctx.Guild.Id);
-            await Service.AddTransactionAsync(ctx.User.Id, betAmount, GetText("coinflip_won_transaction"),
+            await Service.AddTransactionAsync(ctx.User.Id, betAmount, Strings.CoinflipWonTransaction(ctx.Guild.Id),
                 ctx.Guild.Id);
-            await ReplyAsync(GetText("coinflip_won", coinFlip, betAmount,
+            await ReplyAsync(Strings.CoinflipWon(ctx.Guild.Id, coinFlip, betAmount,
                 await Service.GetCurrencyEmote(ctx.Guild.Id)));
         }
         else
         {
             await Service.AddUserBalanceAsync(ctx.User.Id, -betAmount, ctx.Guild.Id);
-            await Service.AddTransactionAsync(ctx.User.Id, -betAmount, GetText("coinflip_lost_transaction"),
+            await Service.AddTransactionAsync(ctx.User.Id, -betAmount, Strings.CoinflipLostTransaction(ctx.Guild.Id),
                 ctx.Guild.Id);
             await ReplyAsync(
-                GetText("coinflip_lost", coinFlip, betAmount, await Service.GetCurrencyEmote(ctx.Guild.Id)));
+                Strings.CoinflipLost(ctx.Guild.Id, coinFlip, betAmount, await Service.GetCurrencyEmote(ctx.Guild.Id)));
         }
     }
 
@@ -80,7 +80,7 @@ public partial class Currency(InteractiveService interactive, BlackjackService b
     {
         await Service.AddUserBalanceAsync(user.Id, amount, ctx.Guild.Id);
         await Service.AddTransactionAsync(user.Id, amount, reason, ctx.Guild.Id);
-        await ReplyConfirmLocalizedAsync("user_balance_modified", user.Mention, amount, reason);
+        await ReplyConfirmAsync(Strings.UserBalanceModified(ctx.Guild.Id, user.Mention, amount, reason));
     }
 
     /// <summary>
@@ -94,14 +94,14 @@ public partial class Currency(InteractiveService interactive, BlackjackService b
         var (rewardAmount, cooldownSeconds) = await Service.GetReward(ctx.Guild.Id);
         if (rewardAmount == 0)
         {
-            await ctx.Channel.SendErrorAsync(GetText("daily_reward_not_set"), Config);
+            await ctx.Channel.SendErrorAsync(Strings.DailyRewardNotSet(ctx.Guild.Id), Config);
             return;
         }
 
         var minimumTimeBetweenClaims = TimeSpan.FromSeconds(cooldownSeconds);
 
         var recentTransactions = (await Service.GetTransactionsAsync(ctx.User.Id, ctx.Guild.Id))
-            .Where(t => t.Description == GetText("daily_reward_transaction") &&
+            .Where(t => t.Description == Strings.DailyRewardTransaction(ctx.Guild.Id) &&
                         t.DateAdded > DateTime.UtcNow - minimumTimeBetweenClaims);
 
         if (recentTransactions.Any())
@@ -109,15 +109,15 @@ public partial class Currency(InteractiveService interactive, BlackjackService b
             var nextAllowedClaimTime = recentTransactions.Max(t => t.DateAdded) + minimumTimeBetweenClaims;
 
             await ctx.Channel.SendErrorAsync(
-                GetText("daily_reward_already_claimed", TimestampTag.FromDateTime(nextAllowedClaimTime.Value)),
+                Strings.DailyRewardAlreadyClaimed(ctx.Guild.Id, TimestampTag.FromDateTime(nextAllowedClaimTime.Value)),
                 Config);
             return;
         }
 
         await Service.AddUserBalanceAsync(ctx.User.Id, rewardAmount, ctx.Guild.Id);
-        await Service.AddTransactionAsync(ctx.User.Id, rewardAmount, GetText("daily_reward_transaction"), ctx.Guild.Id);
+        await Service.AddTransactionAsync(ctx.User.Id, rewardAmount, Strings.DailyRewardTransaction(ctx.Guild.Id), ctx.Guild.Id);
         await ctx.Channel.SendConfirmAsync(
-            GetText("daily_reward_claimed", rewardAmount, await Service.GetCurrencyEmote(ctx.Guild.Id)));
+            Strings.DailyRewardClaimed(ctx.Guild.Id, rewardAmount, await Service.GetCurrencyEmote(ctx.Guild.Id)));
     }
 
     /// <summary>
@@ -136,13 +136,13 @@ public partial class Currency(InteractiveService interactive, BlackjackService b
             || guess.Equals("lower", StringComparison.OrdinalIgnoreCase) && nextNumber < currentNumber)
         {
             await Service.AddUserBalanceAsync(ctx.User.Id, 100, ctx.Guild.Id);
-            await ReplyAsync(GetText("highlow_won", currentNumber, nextNumber,
+            await ReplyAsync(Strings.HighlowWon(ctx.Guild.Id, currentNumber, nextNumber,
                 await Service.GetCurrencyEmote(ctx.Guild.Id)));
         }
         else
         {
             await Service.AddUserBalanceAsync(ctx.User.Id, -100, ctx.Guild.Id);
-            await ReplyAsync(GetText("highlow_lost", currentNumber, nextNumber,
+            await ReplyAsync(Strings.HighlowLost(ctx.Guild.Id, currentNumber, nextNumber,
                 await Service.GetCurrencyEmote(ctx.Guild.Id)));
         }
     }
@@ -174,16 +174,16 @@ public partial class Currency(InteractiveService interactive, BlackjackService b
         async Task<PageBuilder> PageFactory(int index)
         {
             var pageBuilder = new PageBuilder()
-                .WithTitle(GetText("leaderboard_title"))
-                .WithDescription(GetText("leaderboard_description", users.Count, ctx.Guild.Name))
+                .WithTitle(Strings.LeaderboardTitle(ctx.Guild.Id))
+                .WithDescription(Strings.LeaderboardDescription(ctx.Guild.Id, users.Count, ctx.Guild.Name))
                 .WithColor(Color.Blue);
 
             for (var i = index * 10; i < (index + 1) * 10 && i < users.Count; i++)
             {
                 var user = await ctx.Guild.GetUserAsync(users[i].UserId) ??
                            (IUser)await ctx.Client.GetUserAsync(users[i].UserId);
-                pageBuilder.AddField(GetText("leaderboard_user_entry", i + 1, user.Username),
-                    GetText("leaderboard_balance_entry", users[i].Balance,
+                pageBuilder.AddField(Strings.LeaderboardUserEntry(ctx.Guild.Id, i + 1, user.Username),
+                    Strings.LeaderboardBalanceEntry(ctx.Guild.Id, users[i].Balance,
                         await Service.GetCurrencyEmote(ctx.Guild.Id)), true);
             }
 
@@ -203,7 +203,7 @@ public partial class Currency(InteractiveService interactive, BlackjackService b
     public async Task SetDaily(int amount, StoopidTime time)
     {
         await Service.SetReward(amount, time.Time.Seconds, ctx.Guild.Id);
-        await ctx.Channel.SendConfirmAsync(GetText("setdaily_success", amount,
+        await ctx.Channel.SendConfirmAsync(Strings.SetdailySuccess(ctx.Guild.Id, amount,
             await Service.GetCurrencyEmote(ctx.Guild.Id), time.Time.Seconds));
     }
 
@@ -220,14 +220,14 @@ public partial class Currency(InteractiveService interactive, BlackjackService b
         if (balance <= 0)
         {
             await ctx.Channel.SendErrorAsync(
-                GetText("spinwheel_no_balance", await Service.GetCurrencyEmote(ctx.Guild.Id)), Config);
+                Strings.SpinwheelNoBalance(ctx.Guild.Id, await Service.GetCurrencyEmote(ctx.Guild.Id)), Config);
             return;
         }
 
         if (betAmount > balance)
         {
             await ctx.Channel.SendErrorAsync(
-                GetText("spinwheel_insufficient_balance", await Service.GetCurrencyEmote(ctx.Guild.Id)), Config);
+                Strings.SpinwheelInsufficientBalance(ctx.Guild.Id, await Service.GetCurrencyEmote(ctx.Guild.Id)), Config);
             return;
         }
 
@@ -264,13 +264,13 @@ public partial class Currency(InteractiveService interactive, BlackjackService b
         // Update user balance
         await Service.AddUserBalanceAsync(ctx.User.Id, balanceChange, ctx.Guild.Id);
         await Service.AddTransactionAsync(ctx.User.Id, balanceChange,
-            GetText(segments[winningSegment].Contains('-')
-                ? "spinwheel_loss_transaction"
-                : "spinwheel_win_transaction"), ctx.Guild.Id);
+            segments[winningSegment].Contains('-')
+                ? Strings.SpinwheelLossTransaction(ctx.Guild.Id)
+                : Strings.SpinwheelWinTransaction(ctx.Guild.Id), ctx.Guild.Id);
 
         var eb = new EmbedBuilder()
-            .WithTitle(balanceChange > 0 ? GetText("spinwheel_win_title") : GetText("spinwheel_loss_title"))
-            .WithDescription(GetText("spinwheel_result", segments[winningSegment], balanceChange,
+            .WithTitle(balanceChange > 0 ? Strings.SpinwheelWinTitle(ctx.Guild.Id) : Strings.SpinwheelLossTitle(ctx.Guild.Id))
+            .WithDescription(Strings.SpinwheelResult(ctx.Guild.Id, segments[winningSegment], balanceChange,
                 await Service.GetCurrencyEmote(ctx.Guild.Id)))
             .WithColor(balanceChange > 0 ? Color.Green : Color.Red)
             .WithImageUrl("attachment://wheelResult.png");
@@ -328,14 +328,14 @@ public partial class Currency(InteractiveService interactive, BlackjackService b
         var currentBalance = await Service.GetUserBalanceAsync(ctx.User.Id, ctx.Guild.Id);
         if (amount > currentBalance || amount <= 0)
         {
-            await ReplyAsync(GetText("blackjack_invalid_bet"));
+            await ReplyAsync(Strings.BlackjackInvalidBet(ctx.Guild.Id));
             return;
         }
 
         try
         {
             var game = BlackjackService.StartOrJoinGame(ctx.User, amount);
-            var embed = game.CreateGameEmbed(GetText("blackjack_joined", ctx.User.Username));
+            var embed = game.CreateGameEmbed(Strings.BlackjackJoined(ctx.Guild.Id, ctx.User.Username));
             await ReplyAsync(embeds: embed);
         }
         catch (InvalidOperationException ex)
@@ -343,10 +343,10 @@ public partial class Currency(InteractiveService interactive, BlackjackService b
             switch (ex.Message)
             {
                 case "full":
-                    await ReplyErrorLocalizedAsync("blackjack_game_full");
+                    await ReplyErrorAsync(Strings.BlackjackGameFull(ctx.Guild.Id));
                     break;
                 case "ingame":
-                    await ReplyErrorLocalizedAsync("already_in_game");
+                    await ReplyErrorAsync(Strings.AlreadyInGame(ctx.Guild.Id));
                     break;
             }
         }
@@ -364,11 +364,11 @@ public partial class Currency(InteractiveService interactive, BlackjackService b
         {
             var game = BlackjackService.GetGame(ctx.User);
             game.HitPlayer(ctx.User);
-            var embed = game.CreateGameEmbed(GetText("blackjack_hit", ctx.User.Username));
+            var embed = game.CreateGameEmbed(Strings.BlackjackHit(ctx.Guild.Id, ctx.User.Username));
 
             if (BlackjackService.BlackjackGame.CalculateHandTotal(game.PlayerHands[ctx.User]) > 21)
             {
-                await EndGame(game, false, GetText("blackjack_bust", ctx.User.Username));
+                await EndGame(game, false, Strings.BlackjackBust(ctx.Guild.Id, ctx.User.Username));
             }
             else if (BlackjackService.BlackjackGame.CalculateHandTotal(game.PlayerHands[ctx.User]) == 21)
             {
@@ -381,7 +381,7 @@ public partial class Currency(InteractiveService interactive, BlackjackService b
         }
         catch (InvalidOperationException ex)
         {
-            await ReplyAsync(GetText("blackjack_error", ex.Message));
+            await ReplyAsync(Strings.BlackjackError(ctx.Guild.Id, ex.Message));
         }
     }
 
@@ -404,7 +404,7 @@ public partial class Currency(InteractiveService interactive, BlackjackService b
         }
         catch (InvalidOperationException ex)
         {
-            await ReplyAsync(GetText("blackjack_error", ex.Message));
+            await ReplyAsync(Strings.BlackjackError(ctx.Guild.Id, ex.Message));
         }
     }
 
@@ -421,7 +421,7 @@ public partial class Currency(InteractiveService interactive, BlackjackService b
 
         await Service.AddUserBalanceAsync(ctx.User.Id, balanceChange, ctx.Guild.Id);
         await Service.AddTransactionAsync(ctx.User.Id, balanceChange,
-            GetText(playerWon ? "blackjack_won_transaction" : "blackjack_lost_transaction"), ctx.Guild.Id);
+            playerWon ? Strings.BlackjackWonTransaction(ctx.Guild.Id) : Strings.BlackjackLostTransaction(ctx.Guild.Id), ctx.Guild.Id);
 
         BlackjackService.EndGame(ctx.User);
 
@@ -440,7 +440,7 @@ public partial class Currency(InteractiveService interactive, BlackjackService b
     {
         if (bet < 1)
         {
-            await ctx.Channel.SendErrorAsync(GetText("slot_minimum_bet", await Service.GetCurrencyEmote(ctx.Guild.Id)),
+            await ctx.Channel.SendErrorAsync(Strings.SlotMinimumBet(ctx.Guild.Id, await Service.GetCurrencyEmote(ctx.Guild.Id)),
                 Config);
             return;
         }
@@ -449,7 +449,7 @@ public partial class Currency(InteractiveService interactive, BlackjackService b
         if (bet > userBalance)
         {
             await ctx.Channel.SendErrorAsync(
-                GetText("slot_insufficient_funds", await Service.GetCurrencyEmote(ctx.Guild.Id)), Config);
+                Strings.SlotInsufficientFunds(ctx.Guild.Id, await Service.GetCurrencyEmote(ctx.Guild.Id)), Config);
             return;
         }
 
@@ -466,15 +466,15 @@ public partial class Currency(InteractiveService interactive, BlackjackService b
 
         var balanceChange = winnings - bet;
         await Service.AddUserBalanceAsync(ctx.User.Id, balanceChange, ctx.Guild.Id);
-        await Service.AddTransactionAsync(ctx.User.Id, balanceChange, GetText("slot_transaction"), ctx.Guild.Id);
+        await Service.AddTransactionAsync(ctx.User.Id, balanceChange, Strings.SlotTransaction(ctx.Guild.Id), ctx.Guild.Id);
 
         var eb = new EmbedBuilder()
             .WithOkColor()
-            .WithTitle(GetText("slot_title"))
-            .WithDescription(GetText("slot_result", result[0], result[1], result[2]))
-            .AddField(GetText("slot_bet"), $"{bet} {await Service.GetCurrencyEmote(ctx.Guild.Id)}", true)
-            .AddField(GetText("slot_winnings"), $"{winnings} {await Service.GetCurrencyEmote(ctx.Guild.Id)}", true)
-            .AddField(GetText("slot_net_profit"), $"{balanceChange} {await Service.GetCurrencyEmote(ctx.Guild.Id)}",
+            .WithTitle(Strings.SlotTitle(ctx.Guild.Id))
+            .WithDescription(Strings.SlotResult(ctx.Guild.Id, result[0], result[1], result[2]))
+            .AddField(Strings.SlotBet(ctx.Guild.Id), $"{bet} {await Service.GetCurrencyEmote(ctx.Guild.Id)}", true)
+            .AddField(Strings.SlotWinnings(ctx.Guild.Id), $"{winnings} {await Service.GetCurrencyEmote(ctx.Guild.Id)}", true)
+            .AddField(Strings.SlotNetProfit(ctx.Guild.Id), $"{balanceChange} {await Service.GetCurrencyEmote(ctx.Guild.Id)}",
                 true);
 
         await ctx.Channel.SendMessageAsync(embed: eb.Build());
@@ -517,7 +517,7 @@ public partial class Currency(InteractiveService interactive, BlackjackService b
         var balance = await Service.GetUserBalanceAsync(ctx.User.Id, ctx.Guild.Id);
         if (betAmount > balance || betAmount <= 0)
         {
-            await ctx.Channel.SendErrorAsync(GetText("roulette_invalid_bet"), Config);
+            await ctx.Channel.SendErrorAsync(Strings.RouletteInvalidBet(ctx.Guild.Id), Config);
             return;
         }
 
@@ -548,7 +548,7 @@ public partial class Currency(InteractiveService interactive, BlackjackService b
                     won = result % 2 != 0;
                     break;
                 default:
-                    await ctx.Channel.SendErrorAsync(GetText("roulette_invalid_bet_type"), Config);
+                    await ctx.Channel.SendErrorAsync(Strings.RouletteInvalidBetType(ctx.Guild.Id), Config);
                     return;
             }
 
@@ -559,16 +559,16 @@ public partial class Currency(InteractiveService interactive, BlackjackService b
         var profit = winnings - betAmount;
 
         await Service.AddUserBalanceAsync(ctx.User.Id, profit, ctx.Guild.Id);
-        await Service.AddTransactionAsync(ctx.User.Id, profit, GetText("roulette_transaction"), ctx.Guild.Id);
+        await Service.AddTransactionAsync(ctx.User.Id, profit, Strings.RouletteTransaction(ctx.Guild.Id), ctx.Guild.Id);
 
         var eb = new EmbedBuilder()
             .WithOkColor()
-            .WithTitle(GetText("roulette_title"))
-            .WithDescription(GetText("roulette_result", result, color))
-            .AddField(GetText("roulette_bet"),
-                GetText("roulette_bet_details", betAmount, await Service.GetCurrencyEmote(ctx.Guild.Id), betType), true)
-            .AddField(GetText("roulette_outcome"), won ? GetText("roulette_won") : GetText("roulette_lost"), true)
-            .AddField(GetText("roulette_profit"), $"{profit} {await Service.GetCurrencyEmote(ctx.Guild.Id)}", true);
+            .WithTitle(Strings.RouletteTitle(ctx.Guild.Id))
+            .WithDescription(Strings.RouletteResult(ctx.Guild.Id, result, color))
+            .AddField(Strings.RouletteBet(ctx.Guild.Id),
+                Strings.RouletteBetDetails(ctx.Guild.Id, betAmount, await Service.GetCurrencyEmote(ctx.Guild.Id), betType), true)
+            .AddField(Strings.RouletteOutcome(ctx.Guild.Id), won ? Strings.RouletteWon(ctx.Guild.Id) : Strings.RouletteLost(ctx.Guild.Id), true)
+            .AddField(Strings.RouletteProfit(ctx.Guild.Id), $"{profit} {await Service.GetCurrencyEmote(ctx.Guild.Id)}", true);
 
         await ctx.Channel.SendMessageAsync(embed: eb.Build());
     }
@@ -586,13 +586,13 @@ public partial class Currency(InteractiveService interactive, BlackjackService b
     //     var balance = await Service.GetUserBalanceAsync(ctx.User.Id, ctx.Guild.Id);
     //     if (betAmount > balance || betAmount <= 0)
     //     {
-    //         await ctx.Channel.SendErrorAsync(GetText("roll_invalid_bet"), Config);
+    //         await ctx.Channel.SendErrorAsync(Strings.RollInvalidBet(ctx.Guild.Id), Config);
     //         return;
     //     }
     //
     //     if (guess is < 2 or > 12)
     //     {
-    //         await ctx.Channel.SendErrorAsync(GetText("roll_invalid_guess"), Config);
+    //         await ctx.Channel.SendErrorAsync(Strings.RollInvalidGuess(ctx.Guild.Id), Config);
     //         return;
     //     }
     //
@@ -608,15 +608,15 @@ public partial class Currency(InteractiveService interactive, BlackjackService b
     //     var profit = winnings - betAmount;
     //
     //     await Service.AddUserBalanceAsync(ctx.User.Id, profit, ctx.Guild.Id);
-    //     await Service.AddTransactionAsync(ctx.User.Id, profit, GetText("roll_transaction"), ctx.Guild.Id);
+    //     await Service.AddTransactionAsync(ctx.User.Id, profit, Strings.RollTransaction(ctx.Guild.Id), ctx.Guild.Id);
     //
     //     var eb = new EmbedBuilder()
     //         .WithOkColor()
-    //         .WithTitle(GetText("roll_title"))
-    //         .WithDescription(GetText("roll_result", dice1, dice2, sum))
-    //         .AddField(GetText("roll_your_guess"), guess, true)
-    //         .AddField(GetText("roll_outcome"), won ? GetText("roll_won") : GetText("roll_lost"), true)
-    //         .AddField(GetText("roll_profit"), $"{profit} {await Service.GetCurrencyEmote(ctx.Guild.Id)}", true);
+    //         .WithTitle(Strings.RollTitle(ctx.Guild.Id))
+    //         .WithDescription(Strings.RollResult(ctx.Guild.Id, dice1, dice2, sum))
+    //         .AddField(Strings.RollYourGuess(ctx.Guild.Id), guess, true)
+    //         .AddField(Strings.RollOutcome(ctx.Guild.Id), won ? Strings.RollWon(ctx.Guild.Id) : Strings.RollLost(ctx.Guild.Id), true)
+    //         .AddField(Strings.RollProfit(ctx.Guild.Id), $"{profit} {await Service.GetCurrencyEmote(ctx.Guild.Id)}", true);
     //
     //     await ctx.Channel.SendMessageAsync(embed: eb.Build());
     // }
@@ -649,14 +649,14 @@ public partial class Currency(InteractiveService interactive, BlackjackService b
         async Task<PageBuilder> PageFactory(int index)
         {
             var pageBuilder = new PageBuilder()
-                .WithTitle(GetText("transactions_title"))
-                .WithDescription(GetText("transactions_description", user.Username))
+                .WithTitle(Strings.TransactionsTitle(ctx.Guild.Id))
+                .WithDescription(Strings.TransactionsDescription(ctx.Guild.Id, user.Username))
                 .WithColor(Color.Blue);
 
             for (var i = index * 10; i < (index + 1) * 10 && i < transactions.Count(); i++)
             {
-                pageBuilder.AddField(GetText("transactions_entry", i + 1, transactions.ElementAt(i).Description),
-                    GetText("transactions_details", transactions.ElementAt(i).Amount,
+                pageBuilder.AddField(Strings.TransactionsEntry(ctx.Guild.Id, i + 1, transactions.ElementAt(i).Description),
+                    Strings.TransactionsDetails(ctx.Guild.Id, transactions.ElementAt(i).Amount,
                         await Service.GetCurrencyEmote(ctx.Guild.Id),
                         TimestampTag.FromDateTime(transactions.ElementAt(i).DateAdded.Value)));
             }
@@ -681,7 +681,7 @@ public partial class Currency(InteractiveService interactive, BlackjackService b
             var balance = await Service.GetUserBalanceAsync(ctx.User.Id, ctx.Guild.Id);
             if (betAmount > balance || betAmount <= 0)
             {
-                await ctx.Channel.SendErrorAsync(GetText("rps_invalid_bet"), Config);
+                await ctx.Channel.SendErrorAsync(Strings.RpsInvalidBet(ctx.Guild.Id), Config);
                 return;
             }
         }
@@ -692,7 +692,7 @@ public partial class Currency(InteractiveService interactive, BlackjackService b
         };
         if (!validChoices.Contains(choice.ToLower()))
         {
-            await ctx.Channel.SendErrorAsync(GetText("rps_invalid_choice"), Config);
+            await ctx.Channel.SendErrorAsync(Strings.RpsInvalidChoice(ctx.Guild.Id), Config);
             return;
         }
 
@@ -703,10 +703,10 @@ public partial class Currency(InteractiveService interactive, BlackjackService b
 
         var eb = new EmbedBuilder()
             .WithOkColor()
-            .WithTitle(GetText("rps_embed_title"))
-            .WithDescription(GetText("rps_embed_description", choice, botChoice))
-            .AddField(GetText("rps_embed_result"), result.ToUpperInvariant(), true)
-            .AddField(GetText("rps_embed_explanation"), description, true);
+            .WithTitle(Strings.RpsEmbedTitle(ctx.Guild.Id))
+            .WithDescription(Strings.RpsEmbedDescription(ctx.Guild.Id, choice, botChoice))
+            .AddField(Strings.RpsEmbedResult(ctx.Guild.Id), result.ToUpperInvariant(), true)
+            .AddField(Strings.RpsEmbedExplanation(ctx.Guild.Id), description, true);
 
         if (betAmount != 0)
         {
@@ -718,10 +718,10 @@ public partial class Currency(InteractiveService interactive, BlackjackService b
             };
 
             await Service.AddUserBalanceAsync(ctx.User.Id, profit, ctx.Guild.Id);
-            await Service.AddTransactionAsync(ctx.User.Id, profit, GetText("rps_transaction_description"),
+            await Service.AddTransactionAsync(ctx.User.Id, profit, Strings.RpsTransactionDescription(ctx.Guild.Id),
                 ctx.Guild.Id);
 
-            eb.AddField(GetText("rps_embed_profit"), $"{profit} {await Service.GetCurrencyEmote(ctx.Guild.Id)}", true);
+            eb.AddField(Strings.RpsEmbedProfit(ctx.Guild.Id), $"{profit} {await Service.GetCurrencyEmote(ctx.Guild.Id)}", true);
         }
 
         await ctx.Channel.SendMessageAsync(embed: eb.Build());
@@ -729,29 +729,29 @@ public partial class Currency(InteractiveService interactive, BlackjackService b
 
     private (string result, string description) DetermineWinner(string playerChoice, string botChoice)
     {
-        if (playerChoice == botChoice) return ("tie", GetText("rps_tie"));
+        if (playerChoice == botChoice) return ("tie", Strings.RpsTie(ctx.Guild.Id));
         return (playerChoice, botChoice) switch
         {
-            ("scissors", "paper") => ("win", GetText("rps_scissors_paper")),
-            ("paper", "rock") => ("win", GetText("rps_paper_rock")),
-            ("rock", "lizard") => ("win", GetText("rps_rock_lizard")),
-            ("lizard", "spock") => ("win", GetText("rps_lizard_spock")),
-            ("spock", "scissors") => ("win", GetText("rps_spock_scissors")),
-            ("scissors", "lizard") => ("win", GetText("rps_scissors_lizard")),
-            ("lizard", "paper") => ("win", GetText("rps_lizard_paper")),
-            ("paper", "spock") => ("win", GetText("rps_paper_spock")),
-            ("spock", "rock") => ("win", GetText("rps_spock_rock")),
-            ("rock", "scissors") => ("win", GetText("rps_rock_scissors")),
-            ("paper", "scissors") => ("lose", GetText("rps_scissors_paper")),
-            ("rock", "paper") => ("lose", GetText("rps_paper_rock")),
-            ("lizard", "rock") => ("lose", GetText("rps_rock_lizard")),
-            ("spock", "lizard") => ("lose", GetText("rps_lizard_spock")),
-            ("scissors", "spock") => ("lose", GetText("rps_spock_scissors")),
-            ("lizard", "scissors") => ("lose", GetText("rps_scissors_lizard")),
-            ("paper", "lizard") => ("lose", GetText("rps_lizard_paper")),
-            ("spock", "paper") => ("lose", GetText("rps_paper_spock")),
-            ("rock", "spock") => ("lose", GetText("rps_spock_   rock")),
-            ("scissors", "rock") => ("lose", GetText("rps_rock_scissors")),
+            ("scissors", "paper") => ("win", Strings.RpsScissorsPaper(ctx.Guild.Id)),
+            ("paper", "rock") => ("win", Strings.RpsPaperRock(ctx.Guild.Id)),
+            ("rock", "lizard") => ("win", Strings.RpsRockLizard(ctx.Guild.Id)),
+            ("lizard", "spock") => ("win", Strings.RpsLizardSpock(ctx.Guild.Id)),
+            ("spock", "scissors") => ("win", Strings.RpsSpockScissors(ctx.Guild.Id)),
+            ("scissors", "lizard") => ("win", Strings.RpsScissorsLizard(ctx.Guild.Id)),
+            ("lizard", "paper") => ("win", Strings.RpsLizardPaper(ctx.Guild.Id)),
+            ("paper", "spock") => ("win", Strings.RpsPaperSpock(ctx.Guild.Id)),
+            ("spock", "rock") => ("win", Strings.RpsSpockRock(ctx.Guild.Id)),
+            ("rock", "scissors") => ("win", Strings.RpsRockScissors(ctx.Guild.Id)),
+            ("paper", "scissors") => ("lose", Strings.RpsScissorsPaper(ctx.Guild.Id)),
+            ("rock", "paper") => ("lose", Strings.RpsPaperRock(ctx.Guild.Id)),
+            ("lizard", "rock") => ("lose", Strings.RpsRockLizard(ctx.Guild.Id)),
+            ("spock", "lizard") => ("lose", Strings.RpsLizardSpock(ctx.Guild.Id)),
+            ("scissors", "spock") => ("lose", Strings.RpsSpockScissors(ctx.Guild.Id)),
+            ("lizard", "scissors") => ("lose", Strings.RpsScissorsLizard(ctx.Guild.Id)),
+            ("paper", "lizard") => ("lose", Strings.RpsLizardPaper(ctx.Guild.Id)),
+            ("spock", "paper") => ("lose", Strings.RpsPaperSpock(ctx.Guild.Id)),
+            ("rock", "spock") => ("lose", Strings.RpsSpockRock(ctx.Guild.Id)),
+            ("scissors", "rock") => ("lose", Strings.RpsRockScissors(ctx.Guild.Id)),
             _ => throw new ArgumentException("Invalid choice combination")
         };
     }

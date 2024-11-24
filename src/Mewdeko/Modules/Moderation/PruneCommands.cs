@@ -215,12 +215,12 @@ public partial class Moderation
         {
             if (messageCount is > 1000 or < 1)
             {
-                await ctx.Channel.SendErrorAsync("Invalid amount specified. Max is 1000, Minimum is 1.", Config);
+                await ctx.Channel.SendErrorAsync(Strings.PurgeInvalidAmount(ctx.Guild.Id), Config);
                 return;
             }
 
             await ctx.Channel.SendConfirmAsync(
-                $"Searching the last {messageCount} messages in all channels to purge messages from {user.Mention}....");
+                Strings.PurgeUserSearching(ctx.Guild.Id, messageCount, user.Mention));
 
             var successCount = 0;
             var failCount = 0;
@@ -250,20 +250,19 @@ public partial class Moderation
             {
                 case > 0 when failCount is 0:
                     await ctx.Channel.SendConfirmAsync(
-                        $"Deleted {deletedMessageCount} messages from {user.Mention} in {successCount} channels.");
+                        Strings.PurgeUserSuccess(ctx.Guild.Id, deletedMessageCount, user.Mention, successCount));
                     break;
                 case > 0 when failCount > 0:
                     await ctx.Channel.SendConfirmAsync(
-                        $"Deleted {deletedMessageCount} messages from {user.Mention} in {successCount} channels." +
-                        $"\n{failCount} channels were unable to be processed due to permission issues.");
+                        Strings.PurgeUserPartial(ctx.Guild.Id, deletedMessageCount, user.Mention, successCount, failCount));
                     break;
                 case 0 when failCount > 0:
                     await ctx.Channel.SendErrorAsync(
-                        "No messages were processed due to permission issues. Please make sure Mewdeko can see all channels.",
-                        Config);
+                        Strings.PurgeUserFail(ctx.Guild.Id), Config);
                     break;
                 case 0 when failCount is 0:
-                    await ctx.Channel.SendConfirmAsync($"There were no messages to delete from {user.Mention}");
+                    await ctx.Channel.SendConfirmAsync(
+                        Strings.PurgeUserNone(ctx.Guild.Id, user.Mention));
                     break;
             }
         }

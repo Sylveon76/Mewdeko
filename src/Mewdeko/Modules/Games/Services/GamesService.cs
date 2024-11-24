@@ -1,10 +1,11 @@
 ﻿using System.IO;
+using System.Text.Json;
 using Mewdeko.Modules.Games.Common;
 using Mewdeko.Modules.Games.Common.Acrophobia;
 using Mewdeko.Modules.Games.Common.Hangman;
 using Mewdeko.Modules.Games.Common.Nunchi;
 using Mewdeko.Modules.Games.Common.Trivia;
-using Newtonsoft.Json;
+
 using Serilog;
 
 namespace Mewdeko.Modules.Games.Services;
@@ -32,7 +33,7 @@ public class GamesService : INService, IUnloadableService
         try
         {
             TypingArticles =
-                JsonConvert.DeserializeObject<List<TypingArticle>>(File.ReadAllText(TypingArticlesPath));
+                JsonSerializer.Deserialize<List<TypingArticle>>(File.ReadAllText(TypingArticlesPath));
         }
         catch (Exception ex)
         {
@@ -138,7 +139,7 @@ public class GamesService : INService, IUnloadableService
         });
 
         // Save the updated list to the JSON file
-        File.WriteAllText(TypingArticlesPath, JsonConvert.SerializeObject(TypingArticles));
+        File.WriteAllText(TypingArticlesPath, JsonSerializer.Serialize(TypingArticles));
     }
 
     /// <summary>
@@ -165,7 +166,7 @@ public class GamesService : INService, IUnloadableService
         TypingArticles.RemoveAt(index);
 
         // Save the updated list to the JSON file
-        File.WriteAllText(TypingArticlesPath, JsonConvert.SerializeObject(TypingArticles));
+        File.WriteAllText(TypingArticlesPath, JsonSerializer.Serialize(TypingArticles));
         return removed;
     }
 }

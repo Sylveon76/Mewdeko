@@ -9,6 +9,7 @@ using Mewdeko.Common.Collections;
 using Mewdeko.Common.ModuleBehaviors;
 using Mewdeko.Database.DbContextStuff;
 using Mewdeko.Modules.Chat_Triggers.Services;
+using Mewdeko.Modules.Help.Services;
 using Mewdeko.Modules.Permissions.Common;
 using Mewdeko.Modules.Permissions.Services;
 using Mewdeko.Services.Settings;
@@ -601,7 +602,12 @@ public class CommandHandler : INService
         else if (!string.IsNullOrEmpty(error))
         {
             if (info is null)
+            {
+                var serv = Services.GetRequiredService<HelpService>();
+                if (channel is IDMChannel)
+                    await serv.BadCommand(client, null, usrMsg);
                 return;
+            }
 
             await LogCommandExecution(usrMsg, channel as ITextChannel, info, false, execTime, error)
                 .ConfigureAwait(false);
@@ -621,7 +627,7 @@ public class CommandHandler : INService
     }
 
 
-    private async Task<(bool Success, string Error, CommandInfo Info)> ExecuteCommandAsync(CommandContext context,
+    private async Task<(bool Success, string Error, CommandInfo? Info)> ExecuteCommandAsync(CommandContext context,
         string input, int argPos, MultiMatchHandling multiMatchHandling = MultiMatchHandling.Exception)
     {
         var searchResult = commandService.Search(context, input[argPos..]);
@@ -691,10 +697,9 @@ public class CommandHandler : INService
         return (executeResult.IsSuccess, executeResult.ErrorReason, cmd);
     }
 
-    private async Task LogCommandExecution(IMessage usrMsg, ITextChannel channel, CommandInfo? commandInfo,
+    private async Task LogCommandExecution(IMessage usrMsg, ITextChannel? channel, CommandInfo? commandInfo,
         bool success, int executionTime, string errorMessage = null)
     {
-        var gc = await gss.GetGuildConfig(channel.GuildId);
         var logBuilder = new StringBuilder()
             .AppendLine(success ? "Command Executed" : "Command Errored")
             .AppendLine($"User: {usrMsg.Author} [{usrMsg.Author.Id}]")
@@ -733,6 +738,10 @@ public class CommandHandler : INService
                 await logChannel.SendMessageAsync(embed: embed.Build()).ConfigureAwait(false);
         }
 
+        if (channel is null)
+            return;
+
+        var gc = await gss.GetGuildConfig(channel.GuildId);
         if (gc.CommandLogChannel != 0)
         {
             if (await client.Rest.GetChannelAsync(gc.CommandLogChannel) is ITextChannel commandLogChannel)

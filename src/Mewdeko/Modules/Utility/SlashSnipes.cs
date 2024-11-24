@@ -36,7 +36,7 @@ public partial class Utility
             channel ??= ctx.Channel;
             if (!await Service.GetSnipeSet(ctx.Guild.Id))
             {
-                await ReplyErrorLocalizedAsync("snipe_slash_not_enabled").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.SnipeSlashNotEnabled(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
@@ -51,7 +51,7 @@ public partial class Utility
 
             if (msg is null)
             {
-                await ReplyErrorLocalizedAsync("no_snipes").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.NoSnipes(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
@@ -69,7 +69,7 @@ public partial class Utility
                 {
                     IconUrl = ctx.User.GetAvatarUrl(),
                     Text =
-                        GetText("snipe_request", ctx.User.ToString(), (DateTime.UtcNow - msg.DateAdded).Humanize())
+                        Strings.SnipeRequest(ctx.Guild.Id, ctx.User.ToString(), (DateTime.UtcNow - msg.DateAdded).Humanize())
                 },
                 Color = Mewdeko.OkColor
             };
@@ -102,7 +102,7 @@ public partial class Utility
             channel ??= ctx.Channel;
             if (!await Service.GetSnipeSet(ctx.Guild.Id))
             {
-                await ReplyErrorLocalizedAsync("snipe_slash_not_enabled").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.SnipeSlashNotEnabled(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
@@ -117,7 +117,7 @@ public partial class Utility
 
             if (msg is null)
             {
-                await ReplyErrorLocalizedAsync("no_snipes").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.NoSnipes(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
@@ -135,7 +135,7 @@ public partial class Utility
                 {
                     IconUrl = ctx.User.GetAvatarUrl(),
                     Text =
-                        GetText("snipe_request", ctx.User.ToString(), (DateTime.UtcNow - msg.DateAdded).Humanize())
+                        Strings.SnipeRequest(ctx.Guild.Id, ctx.User.ToString(), (DateTime.UtcNow - msg.DateAdded).Humanize())
                 },
                 Color = Mewdeko.OkColor
             };
@@ -176,7 +176,7 @@ public partial class Utility
             var snipeStores = msgs as SnipeStore[] ?? msgs.ToArray();
             if (snipeStores.Length == 0)
             {
-                await ctx.Interaction.SendErrorAsync("There's nothing to snipe!", Config).ConfigureAwait(false);
+                await ctx.Interaction.SendErrorAsync(Strings.NothingToSnipe(ctx.Guild.Id), Config);
                 return;
             }
 
@@ -257,7 +257,7 @@ public partial class Utility
         {
             await Service.SnipeSet(ctx.Guild, enabled).ConfigureAwait(false);
             var t = await Service.GetSnipeSet(ctx.Guild.Id);
-            await ReplyConfirmLocalizedAsync("snipe_set", t ? "Enabled" : "Disabled").ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.SnipeSet(ctx.Guild.Id, t ? "Enabled" : "Disabled")).ConfigureAwait(false);
         }
     }
 }

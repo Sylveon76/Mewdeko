@@ -1,5 +1,6 @@
-﻿using Mewdeko.Common.JsonConverters;
-using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
+using Mewdeko.Common.JsonConverters;
+
 using static Mewdeko.Extensions.StringExtensions;
 
 // ReSharper disable NotNullOrRequiredMemberIsNotInitialized
@@ -14,19 +15,19 @@ public class Author
     /// <summary>
     ///     Gets or sets the name of the author.
     /// </summary>
-    [JsonProperty("name")]
+    [JsonPropertyName("name")]
     public string? Name { get; set; }
 
     /// <summary>
     ///     Gets or sets the URL associated with the author.
     /// </summary>
-    [JsonProperty("url")]
+    [JsonPropertyName("url")]
     public string? Url { get; set; }
 
     /// <summary>
     ///     Gets or sets the icon URL associated with the author.
     /// </summary>
-    [JsonProperty("icon_url")]
+    [JsonPropertyName("icon_url")]
     public string IconUrl { get; set; }
 }
 
@@ -38,7 +39,7 @@ public class Thumbnail
     /// <summary>
     ///     Gets or sets the URL of the thumbnail image.
     /// </summary>
-    [JsonProperty("url")]
+    [JsonPropertyName("url")]
     public string Url { get; set; }
 }
 
@@ -50,7 +51,7 @@ public class Image
     /// <summary>
     ///     Gets or sets the URL of the image.
     /// </summary>
-    [JsonProperty("url")]
+    [JsonPropertyName("url")]
     public string Url { get; set; }
 }
 
@@ -62,13 +63,13 @@ public class Footer
     /// <summary>
     ///     Gets or sets the text of the footer.
     /// </summary>
-    [JsonProperty("text")]
+    [JsonPropertyName("text")]
     public string Text { get; set; }
 
     /// <summary>
     ///     Gets or sets the icon URL of the footer.
     /// </summary>
-    [JsonProperty("icon_url")]
+    [JsonPropertyName("icon_url")]
     public string IconUrl { get; set; }
 }
 
@@ -80,19 +81,19 @@ public class Field
     /// <summary>
     ///     Gets or sets the name of the field.
     /// </summary>
-    [JsonProperty("name")]
+    [JsonPropertyName("name")]
     public string Name { get; set; }
 
     /// <summary>
     ///     Gets or sets the value of the field.
     /// </summary>
-    [JsonProperty("value")]
+    [JsonPropertyName("value")]
     public string Value { get; set; }
 
     /// <summary>
     ///     Gets or sets whether the field is displayed inline.
     /// </summary>
-    [JsonProperty("inline")]
+    [JsonPropertyName("inline")]
     public bool Inline { get; set; }
 }
 
@@ -104,62 +105,62 @@ public class Embed
     /// <summary>
     ///     Gets or sets the title of the embed.
     /// </summary>
-    [JsonProperty("title")]
+    [JsonPropertyName("title")]
     public string? Title { get; set; }
 
     /// <summary>
     ///     Gets or sets the description of the embed.
     /// </summary>
-    [JsonProperty("description")]
+    [JsonPropertyName("description")]
     public string? Description { get; set; }
 
     /// <summary>
     ///     Gets or sets the color of the embed.
     /// </summary>
-    [JsonProperty("color")]
+    [JsonPropertyName("color")]
     [JsonConverter(typeof(StringToIntConverter))]
     public string Color { get; set; }
 
     /// <summary>
     ///     Gets or sets the timestamp of the embed.
     /// </summary>
-    [JsonProperty("timestamp")]
+    [JsonPropertyName("timestamp")]
     public DateTime? Timestamp { get; set; }
 
     /// <summary>
     ///     Gets or sets the URL of the embed.
     /// </summary>
-    [JsonProperty("url")]
+    [JsonPropertyName("url")]
     public string? Url { get; set; }
 
     /// <summary>
     ///     Gets or sets the author of the embed.
     /// </summary>
-    [JsonProperty("author")]
+    [JsonPropertyName("author")]
     public Author? Author { get; set; }
 
     /// <summary>
     ///     Gets or sets the thumbnail image of the embed.
     /// </summary>
-    [JsonProperty("thumbnail")]
+    [JsonPropertyName("thumbnail")]
     public Thumbnail? Thumbnail { get; set; }
 
     /// <summary>
     ///     Gets or sets the image of the embed.
     /// </summary>
-    [JsonProperty("image")]
+    [JsonPropertyName("image")]
     public Image? Image { get; set; }
 
     /// <summary>
     ///     Gets or sets the footer of the embed.
     /// </summary>
-    [JsonProperty("footer")]
+    [JsonPropertyName("footer")]
     public Footer? Footer { get; set; }
 
     /// <summary>
     ///     Gets or sets the fields of the embed.
     /// </summary>
-    [JsonProperty("fields")]
+    [JsonPropertyName("fields")]
     public List<Field>? Fields { get; set; }
 }
 
@@ -171,25 +172,25 @@ public class NewEmbed
     /// <summary>
     ///     Gets or sets the content of the message.
     /// </summary>
-    [JsonProperty("content")]
+    [JsonPropertyName("content")]
     public string? Content { get; set; }
 
     /// <summary>
     ///     Gets or sets the embed of the message.
     /// </summary>
-    [JsonProperty("embed")]
+    [JsonPropertyName("embed")]
     public Embed? Embed { get; set; }
 
     /// <summary>
     ///     Gets or sets the list of embeds of the message.
     /// </summary>
-    [JsonProperty("embeds")]
+    [JsonPropertyName("embeds")]
     public List<Embed>? Embeds { get; set; }
 
     /// <summary>
     ///     Gets or sets the list of components of the message.
     /// </summary>
-    [JsonProperty("components")]
+    [JsonPropertyName("components")]
     public List<NewEmbedComponent>? Components { get; set; }
 
     /// <summary>

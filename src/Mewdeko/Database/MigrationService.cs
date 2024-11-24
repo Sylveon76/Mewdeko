@@ -2,6 +2,7 @@
 using System.IO;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using LinqToDB;
 using LinqToDB.Data;
@@ -12,7 +13,7 @@ using Mewdeko.Services.Impl;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
-using Newtonsoft.Json;
+
 using Serilog;
 
 namespace Mewdeko.Database;
@@ -178,9 +179,10 @@ public class MigrationService
         {
             MigrateToPsql = false
         };
-        var json = JsonConvert.SerializeObject(creds, Formatting.Indented);
 
-        await File.WriteAllTextAsync("./credentials.json", json);
+        // Create a FileStream to write to the file
+        await using var fs = File.Create("./credentials.json");
+        await JsonSerializer.SerializeAsync(fs, creds);
         Helpers.ReadErrorAndExit(0);
     }
 

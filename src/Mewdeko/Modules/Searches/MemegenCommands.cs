@@ -1,11 +1,12 @@
 using System.Collections.Immutable;
 using System.Net.Http;
 using System.Text;
+using System.Text.Json;
 using Discord.Commands;
 using Fergun.Interactive;
 using Fergun.Interactive.Pagination;
 using Mewdeko.Common.Attributes.TextCommands;
-using Newtonsoft.Json;
+
 
 namespace Mewdeko.Modules.Searches;
 
@@ -65,7 +66,7 @@ public partial class Searches
 
             var rawJson = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
 
-            var data = JsonConvert.DeserializeObject<List<MemegenTemplate>>(rawJson);
+            var data = JsonSerializer.Deserialize<List<MemegenTemplate>>(rawJson);
 
             var paginator = new LazyPaginatorBuilder()
                 .AddUser(ctx.User)

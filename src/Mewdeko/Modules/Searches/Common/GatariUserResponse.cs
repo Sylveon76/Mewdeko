@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿
+
+using System.Text.Json.Serialization;
 
 namespace Mewdeko.Modules.Searches.Common;
 
@@ -10,73 +12,73 @@ public class UserData
     /// <summary>
     ///     Gets or sets the abbreviation for the user.
     /// </summary>
-    [JsonProperty("abbr")]
+    [JsonPropertyName("abbr")]
     public object Abbr { get; set; }
 
     /// <summary>
     ///     Gets or sets the clan ID for the user.
     /// </summary>
-    [JsonProperty("clanid")]
+    [JsonPropertyName("clanid")]
     public object Clanid { get; set; }
 
     /// <summary>
     ///     Gets or sets the country of the user.
     /// </summary>
-    [JsonProperty("country")]
+    [JsonPropertyName("country")]
     public string Country { get; set; }
 
     /// <summary>
     ///     Gets or sets the favorite game mode of the user.
     /// </summary>
-    [JsonProperty("favourite_mode")]
+    [JsonPropertyName("favourite_mode")]
     public int FavouriteMode { get; set; }
 
     /// <summary>
     ///     Gets or sets the number of followers of the user.
     /// </summary>
-    [JsonProperty("followers_count")]
+    [JsonPropertyName("followers_count")]
     public int FollowersCount { get; set; }
 
     /// <summary>
     ///     Gets or sets the unique ID of the user.
     /// </summary>
-    [JsonProperty("id")]
+    [JsonPropertyName("id")]
     public int Id { get; set; }
 
     /// <summary>
     ///     Gets or sets the latest activity timestamp of the user.
     /// </summary>
-    [JsonProperty("latest_activity")]
+    [JsonPropertyName("latest_activity")]
     public int LatestActivity { get; set; }
 
     /// <summary>
     ///     Gets or sets the play style of the user.
     /// </summary>
-    [JsonProperty("play_style")]
+    [JsonPropertyName("play_style")]
     public int PlayStyle { get; set; }
 
     /// <summary>
     ///     Gets or sets the privileges of the user.
     /// </summary>
-    [JsonProperty("privileges")]
+    [JsonPropertyName("privileges")]
     public int Privileges { get; set; }
 
     /// <summary>
     ///     Gets or sets the registration timestamp of the user.
     /// </summary>
-    [JsonProperty("registered_on")]
+    [JsonPropertyName("registered_on")]
     public int RegisteredOn { get; set; }
 
     /// <summary>
     ///     Gets or sets the username of the user.
     /// </summary>
-    [JsonProperty("username")]
+    [JsonPropertyName("username")]
     public string Username { get; set; }
 
     /// <summary>
     ///     Gets or sets the alternative known as (aka) username of the user.
     /// </summary>
-    [JsonProperty("username_aka")]
+    [JsonPropertyName("username_aka")]
     public string UsernameAka { get; set; }
 }
 
@@ -88,12 +90,12 @@ public class GatariUserResponse
     /// <summary>
     ///     Gets or sets the response code from the Gatari API.
     /// </summary>
-    [JsonProperty("code")]
+    [JsonPropertyName("code")]
     public int Code { get; set; }
 
     /// <summary>
     ///     Gets or sets the list of user data returned by the Gatari API.
     /// </summary>
-    [JsonProperty("users")]
+    [JsonPropertyName("users")]
     public List<UserData> Users { get; set; }
 }

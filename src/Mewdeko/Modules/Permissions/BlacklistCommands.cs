@@ -119,7 +119,7 @@ public partial class Permissions
         [Aliases]
         public async Task ManualBlacklistCheck()
         {
-            await ctx.Channel.SendConfirmAsync("Sending manual check...");
+            await ctx.Channel.SendConfirmAsync(Strings.SendingManualCheck(ctx.Guild.Id));
             await Service.SendManualCheck();
         }
 
@@ -130,23 +130,23 @@ public partial class Permissions
                 case AddRemove.Add when creds.OwnerIds.Contains(id):
                     return;
                 case AddRemove.Add:
-                    Service.Blacklist(type, id, reason);
+                    await Service.Blacklist(type, id, reason);
                     break;
                 case AddRemove.Rem:
                 default:
-                    Service.UnBlacklist(type, id);
+                    await Service.UnBlacklist(type, id);
                     break;
             }
 
             if (action == AddRemove.Add)
             {
-                await ReplyConfirmLocalizedAsync("blacklisted", Format.Code(type.ToString()),
-                    Format.Code(id.ToString())).ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.Blacklisted(ctx.Guild.Id, Format.Code(type.ToString()),
+                    Format.Code(id.ToString()))).ConfigureAwait(false);
             }
             else
             {
-                await ReplyConfirmLocalizedAsync("unblacklisted", Format.Code(type.ToString()),
-                    Format.Code(id.ToString())).ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.Unblacklisted(ctx.Guild.Id, Format.Code(type.ToString()),
+                    Format.Code(id.ToString()))).ConfigureAwait(false);
             }
         }
     }

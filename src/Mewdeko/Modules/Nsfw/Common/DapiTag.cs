@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿
+
+using System.Text.Json.Serialization;
 
 namespace Mewdeko.Modules.Nsfw.Common;
 

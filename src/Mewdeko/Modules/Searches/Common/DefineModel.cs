@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿
+
+using System.Text.Json.Serialization;
 
 namespace Mewdeko.Modules.Searches.Common;
 
@@ -58,7 +60,7 @@ public class Sens
     /// <summary>
     ///     Gets or sets a list of examples for the sense.
     /// </summary>
-    [JsonProperty("gramatical_info")]
+    [JsonPropertyName("gramatical_info")]
     public GramaticalInfo GramaticalInfo { get; set; }
 }
 
@@ -70,7 +72,7 @@ public class Result
     /// <summary>
     ///     Gets or sets the part of speech for the word or phrase.
     /// </summary>
-    [JsonProperty("part_of_speech")]
+    [JsonPropertyName("part_of_speech")]
     public string PartOfSpeech { get; set; }
 
     /// <summary>

@@ -1,7 +1,4 @@
-﻿// Disabled until google makes their api not shit
-
-
-// using System.Net.Http;
+﻿// using System.Net.Http;
 // using System.Text.RegularExpressions;
 // using Mewdeko.Modules.Searches.Common.StreamNotifications.Models;
 // using Google.Apis.YouTube.v3;
@@ -165,4 +162,4 @@
 //         private static partial Regex MyRegex();
 //     }
 // }
-
+//

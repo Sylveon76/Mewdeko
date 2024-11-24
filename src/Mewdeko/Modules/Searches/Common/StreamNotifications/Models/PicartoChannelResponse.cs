@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿
+
+using System.Text.Json.Serialization;
 
 namespace Mewdeko.Modules.Searches.Common.StreamNotifications.Models;
 
@@ -10,151 +12,151 @@ public class PicartoChannelResponse
     /// <summary>
     ///     The user ID of the channel.
     /// </summary>
-    [JsonProperty("user_id")]
+    [JsonPropertyName("user_id")]
     public int UserId { get; set; }
 
     /// <summary>
     ///     The name of the channel.
     /// </summary>
-    [JsonProperty("name")]
+    [JsonPropertyName("name")]
     public string Name { get; set; }
 
     /// <summary>
     ///     The URL to the channel's avatar image.
     /// </summary>
-    [JsonProperty("avatar")]
+    [JsonPropertyName("avatar")]
     public string Avatar { get; set; }
 
     /// <summary>
     ///     Indicates whether the channel is currently online.
     /// </summary>
-    [JsonProperty("online")]
+    [JsonPropertyName("online")]
     public bool Online { get; set; }
 
     /// <summary>
     ///     The current number of viewers on the channel.
     /// </summary>
-    [JsonProperty("viewers")]
+    [JsonPropertyName("viewers")]
     public int Viewers { get; set; }
 
     /// <summary>
     ///     The total number of viewers the channel has had.
     /// </summary>
-    [JsonProperty("viewers_total")]
+    [JsonPropertyName("viewers_total")]
     public int ViewersTotal { get; set; }
 
     /// <summary>
     ///     The thumbnails for the channel.
     /// </summary>
-    [JsonProperty("thumbnails")]
+    [JsonPropertyName("thumbnails")]
     public Thumbnails Thumbnails { get; set; }
 
     /// <summary>
     ///     The number of followers the channel has.
     /// </summary>
-    [JsonProperty("followers")]
+    [JsonPropertyName("followers")]
     public int Followers { get; set; }
 
     /// <summary>
     ///     The number of subscribers the channel has.
     /// </summary>
-    [JsonProperty("subscribers")]
+    [JsonPropertyName("subscribers")]
     public int Subscribers { get; set; }
 
     /// <summary>
     ///     Indicates whether the channel is marked as adult.
     /// </summary>
-    [JsonProperty("adult")]
+    [JsonPropertyName("adult")]
     public bool Adult { get; set; }
 
     /// <summary>
     ///     The category of the channel.
     /// </summary>
-    [JsonProperty("category")]
+    [JsonPropertyName("category")]
     public string Category { get; set; }
 
     /// <summary>
     ///     The account type of the channel.
     /// </summary>
-    [JsonProperty("account_type")]
+    [JsonPropertyName("account_type")]
     public string AccountType { get; set; }
 
     /// <summary>
     ///     Indicates whether the channel offers commissions.
     /// </summary>
-    [JsonProperty("commissions")]
+    [JsonPropertyName("commissions")]
     public bool Commissions { get; set; }
 
     /// <summary>
     ///     Indicates whether the channel has recordings available.
     /// </summary>
-    [JsonProperty("recordings")]
+    [JsonPropertyName("recordings")]
     public bool Recordings { get; set; }
 
     /// <summary>
     ///     The title of the channel.
     /// </summary>
-    [JsonProperty("title")]
+    [JsonPropertyName("title")]
     public string Title { get; set; }
 
     /// <summary>
     ///     A list of description panels for the channel.
     /// </summary>
-    [JsonProperty("description_panels")]
+    [JsonPropertyName("description_panels")]
     public List<DescriptionPanel> DescriptionPanels { get; set; }
 
     /// <summary>
     ///     Indicates whether the channel is private.
     /// </summary>
-    [JsonProperty("private")]
+    [JsonPropertyName("private")]
     public bool Private { get; set; }
 
     /// <summary>
     ///     The private message associated with the channel.
     /// </summary>
-    [JsonProperty("private_message")]
+    [JsonPropertyName("private_message")]
     public string PrivateMessage { get; set; }
 
     /// <summary>
     ///     Indicates whether the channel is related to gaming.
     /// </summary>
-    [JsonProperty("gaming")]
+    [JsonPropertyName("gaming")]
     public bool Gaming { get; set; }
 
     /// <summary>
     ///     The chat settings for the channel.
     /// </summary>
-    [JsonProperty("chat_settings")]
+    [JsonPropertyName("chat_settings")]
     public ChatSettings ChatSettings { get; set; }
 
     /// <summary>
     ///     The date and time when the channel was last live.
     /// </summary>
-    [JsonProperty("last_live")]
+    [JsonPropertyName("last_live")]
     public DateTime LastLive { get; set; }
 
     /// <summary>
     ///     A list of tags associated with the channel.
     /// </summary>
-    [JsonProperty("tags")]
+    [JsonPropertyName("tags")]
     public List<string> Tags { get; set; }
 
     /// <summary>
     ///     A list of channels this channel is multistreaming with.
     /// </summary>
-    [JsonProperty("multistream")]
+    [JsonPropertyName("multistream")]
     public List<Multistream> Multistream { get; set; }
 
     /// <summary>
     ///     A list of languages the channel streams in.
     /// </summary>
-    [JsonProperty("languages")]
+    [JsonPropertyName("languages")]
     public List<Language> Languages { get; set; }
 
     /// <summary>
     ///     Indicates whether the current user is following the channel.
     /// </summary>
-    [JsonProperty("following")]
+    [JsonPropertyName("following")]
     public bool Following { get; set; }
 }
 
@@ -166,25 +168,25 @@ public class Thumbnails
     /// <summary>
     ///     URL of the web-sized thumbnail.
     /// </summary>
-    [JsonProperty("web")]
+    [JsonPropertyName("web")]
     public string Web { get; set; }
 
     /// <summary>
     ///     URL of the large web-sized thumbnail.
     /// </summary>
-    [JsonProperty("web_large")]
+    [JsonPropertyName("web_large")]
     public string WebLarge { get; set; }
 
     /// <summary>
     ///     URL of the mobile-sized thumbnail.
     /// </summary>
-    [JsonProperty("mobile")]
+    [JsonPropertyName("mobile")]
     public string Mobile { get; set; }
 
     /// <summary>
     ///     URL of the tablet-sized thumbnail.
     /// </summary>
-    [JsonProperty("tablet")]
+    [JsonPropertyName("tablet")]
     public string Tablet { get; set; }
 }
 
@@ -196,43 +198,43 @@ public class DescriptionPanel
     /// <summary>
     ///     Title of the description panel.
     /// </summary>
-    [JsonProperty("title")]
+    [JsonPropertyName("title")]
     public string Title { get; set; }
 
     /// <summary>
     ///     Body text of the description panel.
     /// </summary>
-    [JsonProperty("body")]
+    [JsonPropertyName("body")]
     public string Body { get; set; }
 
     /// <summary>
     ///     URL of an image associated with the description panel.
     /// </summary>
-    [JsonProperty("image")]
+    [JsonPropertyName("image")]
     public string Image { get; set; }
 
     /// <summary>
     ///     URL that the image links to, if any.
     /// </summary>
-    [JsonProperty("image_link")]
+    [JsonPropertyName("image_link")]
     public string ImageLink { get; set; }
 
     /// <summary>
     ///     Text of the button within the panel, if any.
     /// </summary>
-    [JsonProperty("button_text")]
+    [JsonPropertyName("button_text")]
     public string ButtonText { get; set; }
 
     /// <summary>
     ///     URL that the button links to, if any.
     /// </summary>
-    [JsonProperty("button_link")]
+    [JsonPropertyName("button_link")]
     public string ButtonLink { get; set; }
 
     /// <summary>
     ///     Position of the panel among other panels.
     /// </summary>
-    [JsonProperty("position")]
+    [JsonPropertyName("position")]
     public int Position { get; set; }
 }
 
@@ -244,19 +246,19 @@ public class ChatSettings
     /// <summary>
     ///     Indicates whether guests can chat.
     /// </summary>
-    [JsonProperty("guest_chat")]
+    [JsonPropertyName("guest_chat")]
     public bool GuestChat { get; set; }
 
     /// <summary>
     ///     Indicates whether links are allowed in chat.
     /// </summary>
-    [JsonProperty("links")]
+    [JsonPropertyName("links")]
     public bool Links { get; set; }
 
     /// <summary>
     ///     The level of chat filtering.
     /// </summary>
-    [JsonProperty("level")]
+    [JsonPropertyName("level")]
     public int Level { get; set; }
 }
 
@@ -268,25 +270,25 @@ public class Multistream
     /// <summary>
     ///     The user ID of the multistreaming channel.
     /// </summary>
-    [JsonProperty("user_id")]
+    [JsonPropertyName("user_id")]
     public int UserId { get; set; }
 
     /// <summary>
     ///     The name of the multistreaming channel.
     /// </summary>
-    [JsonProperty("name")]
+    [JsonPropertyName("name")]
     public string Name { get; set; }
 
     /// <summary>
     ///     Indicates whether the multistreaming channel is online.
     /// </summary>
-    [JsonProperty("online")]
+    [JsonPropertyName("online")]
     public bool Online { get; set; }
 
     /// <summary>
     ///     Indicates whether the multistreaming channel is marked as adult.
     /// </summary>
-    [JsonProperty("adult")]
+    [JsonPropertyName("adult")]
     public bool Adult { get; set; }
 }
 
@@ -298,12 +300,12 @@ public class Language
     /// <summary>
     ///     The ID of the language.
     /// </summary>
-    [JsonProperty("id")]
+    [JsonPropertyName("id")]
     public int Id { get; set; }
 
     /// <summary>
     ///     The name of the language.
     /// </summary>
-    [JsonProperty("name")]
+    [JsonPropertyName("name")]
     public string Name { get; set; }
 }

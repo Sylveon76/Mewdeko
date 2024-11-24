@@ -89,7 +89,7 @@ public partial class ServerManagement(IHttpClientFactory factory, BotConfigServi
         var imgStream = imgData.ToStream();
         await using var _ = imgStream.ConfigureAwait(false);
         await guild.ModifyAsync(x => x.Splash = new Image(imgStream)).ConfigureAwait(false);
-        await ctx.Channel.SendConfirmAsync("New splash image has been set!").ConfigureAwait(false);
+        await ctx.Channel.SendConfirmAsync(Strings.SplashImageSet(ctx.Guild.Id)).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -110,7 +110,7 @@ public partial class ServerManagement(IHttpClientFactory factory, BotConfigServi
         var imgStream = imgData.ToStream();
         await using var _ = imgStream.ConfigureAwait(false);
         await guild.ModifyAsync(x => x.Icon = new Image(imgStream)).ConfigureAwait(false);
-        await ctx.Channel.SendConfirmAsync("New server icon has been set!").ConfigureAwait(false);
+        await ctx.Channel.SendConfirmAsync(Strings.ServerIconSet(ctx.Guild.Id)).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -131,7 +131,7 @@ public partial class ServerManagement(IHttpClientFactory factory, BotConfigServi
         var imgStream = imgData.ToStream();
         await using var _ = imgStream.ConfigureAwait(false);
         await guild.ModifyAsync(x => x.Banner = new Image(imgStream)).ConfigureAwait(false);
-        await ctx.Channel.SendConfirmAsync("New server banner has been set!").ConfigureAwait(false);
+        await ctx.Channel.SendConfirmAsync(Strings.ServerBannerSet(ctx.Guild.Id)).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -221,7 +221,7 @@ public partial class ServerManagement(IHttpClientFactory factory, BotConfigServi
         }
         catch (HttpException)
         {
-            await ctx.Channel.SendErrorAsync("This emote is not from this guild!", Config).ConfigureAwait(false);
+            await ctx.Channel.SendErrorAsync(Strings.EmoteNotFromGuild(ctx.Guild.Id), Config).ConfigureAwait(false);
         }
     }
 
@@ -239,7 +239,7 @@ public partial class ServerManagement(IHttpClientFactory factory, BotConfigServi
     {
         if (name.StartsWith("<"))
         {
-            await ctx.Channel.SendErrorAsync("You cant use an emote as a name!", Config).ConfigureAwait(false);
+            await ctx.Channel.SendErrorAsync(Strings.EmoteInvalidName(ctx.Guild.Id), Config).ConfigureAwait(false);
             return;
         }
 
@@ -257,7 +257,7 @@ public partial class ServerManagement(IHttpClientFactory factory, BotConfigServi
         }
         catch (HttpException)
         {
-            await ctx.Channel.SendErrorAsync("This emote != from this guild!", Config).ConfigureAwait(false);
+            await ctx.Channel.SendErrorAsync(Strings.EmoteWrongGuild(ctx.Guild.Id), Config).ConfigureAwait(false);
         }
     }
 

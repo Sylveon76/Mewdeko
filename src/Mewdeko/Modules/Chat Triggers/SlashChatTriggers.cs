@@ -71,7 +71,7 @@ public class SlashChatTriggers(IHttpClientFactory clientFactory, InteractiveServ
 
         if (string.IsNullOrWhiteSpace(content))
         {
-            await FollowupAsync(GetText("expr_import_no_input")).ConfigureAwait(false);
+            await FollowupAsync(Strings.ExprImportNoInput(ctx.Guild.Id)).ConfigureAwait(false);
             await FollowupWithTriggerStatus().ConfigureAwait(false);
             return;
         }
@@ -79,12 +79,12 @@ public class SlashChatTriggers(IHttpClientFactory clientFactory, InteractiveServ
         var succ = await Service.ImportCrsAsync(ctx.User as IGuildUser, content).ConfigureAwait(false);
         if (!succ)
         {
-            await FollowupAsync(GetText("expr_import_invalid_data")).ConfigureAwait(false);
+            await FollowupAsync(Strings.ExprImportInvalidData(ctx.Guild.Id)).ConfigureAwait(false);
             await FollowupWithTriggerStatus().ConfigureAwait(false);
             return;
         }
 
-        await FollowupAsync(GetText("expr_import_success")).ConfigureAwait(false);
+        await FollowupAsync(Strings.ExprImportSuccess(ctx.Guild.Id)).ConfigureAwait(false);
         await FollowupWithTriggerStatus().ConfigureAwait(false);
     }
 
@@ -173,17 +173,17 @@ public class SlashChatTriggers(IHttpClientFactory clientFactory, InteractiveServ
         if (cr != null)
         {
             await RespondAsync(embed: new EmbedBuilder().WithOkColor()
-                .WithTitle(GetText("edited_chat_trig"))
+                .WithTitle(Strings.EditedChatTrig(ctx.Guild.Id))
                 .WithDescription($"#{id}")
-                .AddField(efb => efb.WithName(GetText("trigger")).WithValue(cr.Trigger))
+                .AddField(efb => efb.WithName(Strings.Trigger(ctx.Guild.Id)).WithValue(cr.Trigger))
                 .AddField(efb =>
-                    efb.WithName(GetText("response"))
-                        .WithValue(modal.Message.Length > 1024 ? GetText("redacted_too_long") : modal.Message))
+                    efb.WithName(Strings.Response(ctx.Guild.Id))
+                        .WithValue(modal.Message.Length > 1024 ? Strings.RedactedTooLong(ctx.Guild.Id) : modal.Message))
                 .Build()).ConfigureAwait(false);
         }
         else
         {
-            await RespondAsync(GetText("edit_fail")).ConfigureAwait(false);
+            await RespondAsync(Strings.EditFail(ctx.Guild.Id)).ConfigureAwait(false);
         }
 
         await FollowupWithTriggerStatus().ConfigureAwait(false);
@@ -210,11 +210,12 @@ public class SlashChatTriggers(IHttpClientFactory clientFactory, InteractiveServ
 
         if (res is null)
         {
-            await ReplyErrorLocalizedAsync("no_found_id").ConfigureAwait(false);
+            await ReplyErrorAsync(Strings.NoFoundId(ctx.Guild.Id)).ConfigureAwait(false);
         }
         else
         {
-            await RespondAsync(embed: Service.GetEmbed(res, ctx.Guild?.Id, GetText("edited_chat_trig")).Build())
+            await RespondAsync(
+                    embed: Service.GetEmbed(res, ctx.Guild?.Id, Strings.EditedChatTrig(ctx.Guild.Id)).Build())
                 .ConfigureAwait(false);
         }
     }
@@ -240,11 +241,12 @@ public class SlashChatTriggers(IHttpClientFactory clientFactory, InteractiveServ
 
         if (res is null)
         {
-            await ReplyErrorLocalizedAsync("no_found_id").ConfigureAwait(false);
+            await ReplyErrorAsync(Strings.NoFoundId(ctx.Guild.Id)).ConfigureAwait(false);
         }
         else
         {
-            await RespondAsync(embed: Service.GetEmbed(res, ctx.Guild?.Id, GetText("edited_chat_trig")).Build())
+            await RespondAsync(
+                    embed: Service.GetEmbed(res, ctx.Guild?.Id, Strings.EditedChatTrig(ctx.Guild.Id)).Build())
                 .ConfigureAwait(false);
         }
     }
@@ -277,7 +279,7 @@ public class SlashChatTriggers(IHttpClientFactory clientFactory, InteractiveServ
         async Task<PageBuilder> PageFactory(int page)
         {
             await Task.CompletedTask.ConfigureAwait(false);
-            return new PageBuilder().WithColor(Mewdeko.OkColor).WithTitle(GetText("chat_triggers"))
+            return new PageBuilder().WithColor(Mewdeko.OkColor).WithTitle(Strings.ChatTriggers(ctx.Guild.Id))
                 .WithDescription(string.Join("\n",
                     chatTriggers.OrderBy(cr => cr.Trigger).Skip(page * 20)
                         .Take(20).Select(cr =>
@@ -315,7 +317,7 @@ public class SlashChatTriggers(IHttpClientFactory clientFactory, InteractiveServ
 
         if (!chatTriggers.Any())
         {
-            await ctx.Interaction.SendErrorAsync("no_found", config).ConfigureAwait(false);
+            await ctx.Interaction.SendErrorAsync(Strings.NoFound(ctx.Guild.Id), config).ConfigureAwait(false);
         }
         else
         {
@@ -340,7 +342,7 @@ public class SlashChatTriggers(IHttpClientFactory clientFactory, InteractiveServ
             async Task<PageBuilder> PageFactory(int page)
             {
                 await Task.CompletedTask.ConfigureAwait(false);
-                return new PageBuilder().WithColor(Mewdeko.OkColor).WithTitle(GetText("name"))
+                return new PageBuilder().WithColor(Mewdeko.OkColor).WithTitle(Strings.Name(ctx.Guild.Id))
                     .WithDescription(string.Join("\r\n",
                         ordered.Skip(page * 20).Take(20).Select(ct =>
                             $"**{ct.Key.Trim().ToLowerInvariant()}** `x{ct.Count()}`")));
@@ -366,7 +368,7 @@ public class SlashChatTriggers(IHttpClientFactory clientFactory, InteractiveServ
         var found = await Service.GetChatTriggers(ctx.Guild?.Id, id);
 
         if (found == null)
-            await ctx.Interaction.SendErrorAsync(GetText("no_found_id"), config).ConfigureAwait(false);
+            await ctx.Interaction.SendErrorAsync(Strings.NoFoundId(ctx.Guild.Id), config).ConfigureAwait(false);
         else
             await ctx.Interaction.RespondAsync(embed: Service.GetEmbed(found, ctx.Guild?.Id).Build())
                 .ConfigureAwait(false);
@@ -391,15 +393,15 @@ public class SlashChatTriggers(IHttpClientFactory clientFactory, InteractiveServ
         if (ct != null)
         {
             await ctx.Interaction.RespondAsync(embed: new EmbedBuilder().WithOkColor()
-                .WithTitle(GetText("deleted"))
+                .WithTitle(Strings.Deleted(ctx.Guild.Id))
                 .WithDescription($"#{ct.Id}")
-                .AddField(efb => efb.WithName(GetText("trigger")).WithValue(ct.Trigger.TrimTo(1024)))
-                .AddField(efb => efb.WithName(GetText("response")).WithValue(ct.Response.TrimTo(1024)))
+                .AddField(efb => efb.WithName(Strings.Trigger(ctx.Guild.Id)).WithValue(ct.Trigger.TrimTo(1024)))
+                .AddField(efb => efb.WithName(Strings.Response(ctx.Guild.Id)).WithValue(ct.Response.TrimTo(1024)))
                 .Build()).ConfigureAwait(false);
         }
         else
         {
-            await ctx.Interaction.SendErrorAsync(GetText("no_found_id"), config).ConfigureAwait(false);
+            await ctx.Interaction.SendErrorAsync(Strings.NoFoundId(ctx.Guild.Id), config).ConfigureAwait(false);
         }
 
         await FollowupWithTriggerStatus().ConfigureAwait(false);
@@ -426,7 +428,7 @@ public class SlashChatTriggers(IHttpClientFactory clientFactory, InteractiveServ
         var ct = await Service.GetChatTriggers(Context.Guild?.Id, id);
         if (ct is null)
         {
-            await ctx.Interaction.SendErrorAsync(GetText("no_found"), config).ConfigureAwait(false);
+            await ctx.Interaction.SendErrorAsync(Strings.NoFound(ctx.Guild.Id), config).ConfigureAwait(false);
             return;
         }
 
@@ -435,11 +437,11 @@ public class SlashChatTriggers(IHttpClientFactory clientFactory, InteractiveServ
         if (emojiStrs.Length == 0)
         {
             await Service.ResetCrReactions(ctx.Guild?.Id, id).ConfigureAwait(false);
-            await ctx.Interaction.SendErrorAsync(GetText("ctr_reset"), config).ConfigureAwait(false);
+            await ctx.Interaction.SendErrorAsync(Strings.CtrReset(ctx.Guild.Id, id), config).ConfigureAwait(false);
             return;
         }
 
-        await ctx.Interaction.SendConfirmAsync(GetText("ctr_testing_emotes")).ConfigureAwait(false);
+        await ctx.Interaction.SendConfirmAsync(Strings.CtrTestingEmotes(ctx.Guild.Id)).ConfigureAwait(false);
         var message = await ctx.Interaction.GetOriginalResponseAsync().ConfigureAwait(false);
         var succ = new List<string>();
         foreach (var emojiStr in emojiStrs)
@@ -465,14 +467,15 @@ public class SlashChatTriggers(IHttpClientFactory clientFactory, InteractiveServ
         if (succ.Count == 0)
         {
             await message.ModifyAsync(x => x.Embed = new EmbedBuilder().WithErrorColor()
-                .WithDescription(GetText("invalid_emojis", Format.Bold(id.ToString())))
+                .WithDescription(Strings.InvalidEmojis(ctx.Guild.Id))
                 .Build()).ConfigureAwait(false);
             return;
         }
 
         await Service.SetCrReactions(ctx.Guild?.Id, id, succ).ConfigureAwait(false);
 
-        var text = GetText("ctr_set", Format.Bold(id.ToString()), string.Join(',', succ.Select(x => x.ToString())));
+        var text = Strings.CtrSet(ctx.Guild.Id, Format.Bold(id.ToString()),
+            string.Join(',', succ.Select(x => x.ToString())));
         await message.ModifyAsync(x => x.Embed = new EmbedBuilder().WithOkColor().WithDescription(text).Build())
             .ConfigureAwait(false);
 
@@ -500,7 +503,7 @@ public class SlashChatTriggers(IHttpClientFactory clientFactory, InteractiveServ
         var ct = await Service.GetChatTriggers(ctx.Guild?.Id, id);
         if (ct is null)
         {
-            await ReplyErrorLocalizedAsync("no_found_id").ConfigureAwait(false);
+            await ReplyErrorAsync(Strings.NoFoundId(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
@@ -508,18 +511,18 @@ public class SlashChatTriggers(IHttpClientFactory clientFactory, InteractiveServ
 
         if (!success)
         {
-            await ctx.Interaction.SendConfirmAsync(GetText("no_found_id")).ConfigureAwait(false);
+            await ctx.Interaction.SendConfirmAsync(Strings.NoFoundId(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
         if (newVal)
         {
-            await ctx.Interaction.SendConfirmAsync(GetText("option_enabled", Format.Code(option.ToString()),
+            await ctx.Interaction.SendConfirmAsync(Strings.OptionEnabled(ctx.Guild.Id, Format.Code(option.ToString()),
                 Format.Code(id.ToString()))).ConfigureAwait(false);
         }
         else
         {
-            await ctx.Interaction.SendConfirmAsync(GetText("option_disabled", Format.Code(option.ToString()),
+            await ctx.Interaction.SendConfirmAsync(Strings.OptionDisabled(ctx.Guild.Id, Format.Code(option.ToString()),
                 Format.Code(id.ToString()))).ConfigureAwait(false);
         }
 
@@ -548,11 +551,12 @@ public class SlashChatTriggers(IHttpClientFactory clientFactory, InteractiveServ
 
         if (res is null)
         {
-            await ReplyErrorLocalizedAsync("no_found_id").ConfigureAwait(false);
+            await ReplyErrorAsync(Strings.NoFoundId(ctx.Guild.Id)).ConfigureAwait(false);
         }
         else
         {
-            await RespondAsync(embed: Service.GetEmbed(res, ctx.Guild?.Id, GetText("edited_chat_trig")).Build())
+            await RespondAsync(
+                    embed: Service.GetEmbed(res, ctx.Guild?.Id, Strings.EditedChatTrig(ctx.Guild.Id)).Build())
                 .ConfigureAwait(false);
         }
 
@@ -571,11 +575,11 @@ public class SlashChatTriggers(IHttpClientFactory clientFactory, InteractiveServ
     {
         await DeferAsync().ConfigureAwait(false);
         if (await PromptUserConfirmAsync(new EmbedBuilder()
-                .WithTitle(GetText("ct_clear"))
-                .WithDescription(GetText("ct_clear_done")), ctx.User.Id).ConfigureAwait(false))
+                .WithTitle(Strings.CtClear(ctx.Guild.Id))
+                .WithDescription(Strings.CtClearDone(ctx.Guild.Id)), ctx.User.Id).ConfigureAwait(false))
         {
             var count = Service.DeleteAllChatTriggers(ctx.Guild.Id);
-            await ConfirmLocalizedAsync(GetText("cleared", count)).ConfigureAwait(false);
+            await ConfirmAsync(Strings.Cleared(ctx.Guild.Id, count)).ConfigureAwait(false);
         }
 
         await FollowupWithTriggerStatus().ConfigureAwait(false);
@@ -590,8 +594,8 @@ public class SlashChatTriggers(IHttpClientFactory clientFactory, InteractiveServ
         if (!(errors?.Any() ?? false))
             return;
         var embed = new EmbedBuilder()
-            .WithTitle(GetText("ct_interaction_errors_title"))
-            .WithDescription(GetText("ct_interaction_errors_desc"))
+            .WithTitle(Strings.CtInteractionErrorsTitle(ctx.Guild.Id))
+            .WithDescription(Strings.CtInteractionErrorsDesc(ctx.Guild.Id))
             .WithErrorColor();
         await ctx.Interaction.FollowupAsync(embed: embed.Build(), ephemeral: true).ConfigureAwait(false);
     }
@@ -647,17 +651,18 @@ public class SlashChatTriggers(IHttpClientFactory clientFactory, InteractiveServ
             var res = await Service.SetCrosspostingWebhookUrl(ctx.Guild?.Id, id, webhookUrl).ConfigureAwait(false);
             if (!res.Valid)
             {
-                await ReplyErrorLocalizedAsync("ct_webhook_invalid").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.CtWebhookInvalid(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
             if (res.Trigger is null)
             {
-                await ReplyErrorLocalizedAsync("no_found_id").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.NoFoundId(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
-            await RespondAsync(embed: Service.GetEmbed(res.Trigger, ctx.Guild?.Id, GetText("edited_chat_trig")).Build())
+            await RespondAsync(embed: Service.GetEmbed(res.Trigger, ctx.Guild?.Id, Strings.EditedChatTrig(ctx.Guild.Id))
+                    .Build())
                 .ConfigureAwait(false);
 
             await FollowupWithTriggerStatus().ConfigureAwait(false);
@@ -684,11 +689,12 @@ public class SlashChatTriggers(IHttpClientFactory clientFactory, InteractiveServ
             var res = await Service.SetCrosspostingChannelId(ctx.Guild?.Id, id, channel.Id).ConfigureAwait(false);
             if (res is null)
             {
-                await ReplyErrorLocalizedAsync("no_found_id").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.NoFoundId(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
-            await RespondAsync(embed: Service.GetEmbed(res, ctx.Guild?.Id, GetText("edited_chat_trig")).Build())
+            await RespondAsync(
+                    embed: Service.GetEmbed(res, ctx.Guild?.Id, Strings.EditedChatTrig(ctx.Guild.Id)).Build())
                 .ConfigureAwait(false);
 
             await FollowupWithTriggerStatus().ConfigureAwait(false);
@@ -703,8 +709,8 @@ public class SlashChatTriggers(IHttpClientFactory clientFactory, InteractiveServ
             if (!(errors?.Any() ?? false))
                 return;
             var embed = new EmbedBuilder()
-                .WithTitle(GetText("ct_interaction_errors_title"))
-                .WithDescription(GetText("ct_interaction_errors_desc"))
+                .WithTitle(Strings.CtInteractionErrorsTitle(ctx.Guild.Id))
+                .WithDescription(Strings.CtInteractionErrorsDesc(ctx.Guild.Id))
                 .WithErrorColor();
             await ctx.Interaction.FollowupAsync(embed: embed.Build(), ephemeral: true).ConfigureAwait(false);
         }
@@ -738,7 +744,7 @@ public class SlashChatTriggers(IHttpClientFactory clientFactory, InteractiveServ
 
             if (!role.CanManageRole(gUsr))
             {
-                await ReplyErrorLocalizedAsync("cant_manage_role").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.CantManageRole(ctx.Guild.Id)).ConfigureAwait(false);
                 await FollowupWithTriggerStatus().ConfigureAwait(false);
                 return;
             }
@@ -747,7 +753,7 @@ public class SlashChatTriggers(IHttpClientFactory clientFactory, InteractiveServ
 
             if (ct is null)
             {
-                await ReplyErrorLocalizedAsync("no_found_id").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.NoFoundId(ctx.Guild.Id)).ConfigureAwait(false);
                 await FollowupWithTriggerStatus().ConfigureAwait(false);
                 return;
             }
@@ -756,17 +762,19 @@ public class SlashChatTriggers(IHttpClientFactory clientFactory, InteractiveServ
 
             await Service.ToggleGrantedRole(ct, role.Id).ConfigureAwait(false);
 
-            var str = toggleDisabled
-                ? "ct_role_toggle_disabled"
-                : ct.IsToggled(role.Id)
-                    ? "ct_role_toggle_enabled"
-                    : ct.IsGranted(role.Id)
-                        ? "ct_role_add_enabled"
-                        : "ct_role_add_disabled";
+            var text = toggleDisabled
+                ?
+                Strings.CtRoleToggleDisabled(ctx.Guild.Id, Format.Bold(role.Name), Format.Code(id.ToString()))
+                :
+                ct.IsToggled(role.Id)
+                    ? Strings.CtRoleToggleEnabled(ctx.Guild.Id, Format.Bold(role.Name), Format.Code(id.ToString()))
+                    :
+                    ct.IsGranted(role.Id)
+                        ? Strings.CtRoleAddEnabled(ctx.Guild.Id, Format.Bold(role.Name), Format.Code(id.ToString()))
+                        :
+                        Strings.CtRoleAddDisabled(ctx.Guild.Id, Format.Bold(role.Name), Format.Code(id.ToString()));
 
-            await ReplyConfirmLocalizedAsync(str, Format.Bold(role.Name), Format.Code(id.ToString()))
-                .ConfigureAwait(false);
-
+            await ReplyConfirmAsync(text).ConfigureAwait(false);
             await FollowupWithTriggerStatus().ConfigureAwait(false);
         }
 
@@ -792,14 +800,16 @@ public class SlashChatTriggers(IHttpClientFactory clientFactory, InteractiveServ
 
             if (!role.CanManageRole(gUsr))
             {
-                await ReplyErrorLocalizedAsync("cant_manage_role").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.CantManageRole(ctx.Guild.Id)).ConfigureAwait(false);
+                await FollowupWithTriggerStatus().ConfigureAwait(false);
                 return;
             }
 
             var ct = await Service.GetChatTriggers(ctx.Guild?.Id, id);
             if (ct is null)
             {
-                await ReplyErrorLocalizedAsync("no_found_id").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.NoFoundId(ctx.Guild.Id)).ConfigureAwait(false);
+                await FollowupWithTriggerStatus().ConfigureAwait(false);
                 return;
             }
 
@@ -807,19 +817,22 @@ public class SlashChatTriggers(IHttpClientFactory clientFactory, InteractiveServ
 
             await Service.ToggleRemovedRole(ct, role.Id).ConfigureAwait(false);
 
-            var str = toggleDisabled
-                ? "ct_role_toggle_disabled"
-                : ct.IsToggled(role.Id)
-                    ? "ct_role_toggle_enabled"
-                    : ct.IsRemoved(role.Id)
-                        ? "ct_role_remove_enabled"
-                        : "cr_role_remove_disabled";
+            var text = toggleDisabled
+                ?
+                Strings.CtRoleToggleDisabled(ctx.Guild.Id, Format.Bold(role.Name), Format.Code(id.ToString()))
+                :
+                ct.IsToggled(role.Id)
+                    ? Strings.CtRoleToggleEnabled(ctx.Guild.Id, Format.Bold(role.Name), Format.Code(id.ToString()))
+                    :
+                    ct.IsRemoved(role.Id)
+                        ? Strings.CtRoleRemoveEnabled(ctx.Guild.Id, Format.Bold(role.Name), Format.Code(id.ToString()))
+                        :
+                        Strings.CtRoleRemoveDisabled(ctx.Guild.Id, Format.Bold(role.Name), Format.Code(id.ToString()));
 
-            await ReplyConfirmLocalizedAsync(str, Format.Bold(role.Name), Format.Code(id.ToString()))
-                .ConfigureAwait(false);
-
+            await ReplyConfirmAsync(text).ConfigureAwait(false);
             await FollowupWithTriggerStatus().ConfigureAwait(false);
         }
+
 
         /// <summary>
         ///     Changes the way roles are added to chat triggers.
@@ -840,11 +853,12 @@ public class SlashChatTriggers(IHttpClientFactory clientFactory, InteractiveServ
 
             if (res is null)
             {
-                await ReplyErrorLocalizedAsync("no_found_id").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.NoFoundId(ctx.Guild.Id)).ConfigureAwait(false);
             }
             else
             {
-                await RespondAsync(embed: Service.GetEmbed(res, ctx.Guild?.Id, GetText("edited_chat_trig")).Build())
+                await RespondAsync(embed: Service.GetEmbed(res, ctx.Guild?.Id, Strings.EditedChatTrig(ctx.Guild.Id))
+                        .Build())
                     .ConfigureAwait(false);
             }
 
@@ -860,8 +874,8 @@ public class SlashChatTriggers(IHttpClientFactory clientFactory, InteractiveServ
             if (!(errors?.Any() ?? false))
                 return;
             var embed = new EmbedBuilder()
-                .WithTitle(GetText("ct_interaction_errors_title"))
-                .WithDescription(GetText("ct_interaction_errors_desc"))
+                .WithTitle(Strings.CtInteractionErrorsTitle(ctx.Guild.Id))
+                .WithDescription(Strings.CtInteractionErrorsDesc(ctx.Guild.Id))
                 .WithErrorColor();
             await ctx.Interaction.FollowupAsync(embed: embed.Build(), ephemeral: true).ConfigureAwait(false);
         }
@@ -891,7 +905,7 @@ public class SlashChatTriggers(IHttpClientFactory clientFactory, InteractiveServ
             var ct = await Service.GetChatTriggers(ctx.Guild?.Id, id);
             if (ct is null)
             {
-                await ReplyErrorLocalizedAsync("no_found_id").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.NoFoundId(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
@@ -899,7 +913,7 @@ public class SlashChatTriggers(IHttpClientFactory clientFactory, InteractiveServ
             if (type != CtApplicationCommandType.None && !ChatTriggersService.IsValidName(type,
                     string.IsNullOrWhiteSpace(ct.ApplicationCommandName) ? ct.Trigger : ct.ApplicationCommandName))
             {
-                await ReplyErrorLocalizedAsync("ct_interaction_name_invalid").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.CtInteractionNameInvalid(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
@@ -907,11 +921,12 @@ public class SlashChatTriggers(IHttpClientFactory clientFactory, InteractiveServ
 
             if (res is null)
             {
-                await ReplyErrorLocalizedAsync("no_found_id").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.NoFoundId(ctx.Guild.Id)).ConfigureAwait(false);
             }
             else
             {
-                await RespondAsync(embed: Service.GetEmbed(res, ctx.Guild?.Id, GetText("edited_chat_trig")).Build())
+                await RespondAsync(embed: Service.GetEmbed(res, ctx.Guild?.Id, Strings.EditedChatTrig(ctx.Guild.Id))
+                        .Build())
                     .ConfigureAwait(false);
             }
 
@@ -937,11 +952,12 @@ public class SlashChatTriggers(IHttpClientFactory clientFactory, InteractiveServ
 
             if (res is null)
             {
-                await ReplyErrorLocalizedAsync("no_found_id").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.NoFoundId(ctx.Guild.Id)).ConfigureAwait(false);
             }
             else
             {
-                await RespondAsync(embed: Service.GetEmbed(res, ctx.Guild?.Id, GetText("edited_chat_trig")).Build())
+                await RespondAsync(embed: Service.GetEmbed(res, ctx.Guild?.Id, Strings.EditedChatTrig(ctx.Guild.Id))
+                        .Build())
                     .ConfigureAwait(false);
             }
 
@@ -968,11 +984,12 @@ public class SlashChatTriggers(IHttpClientFactory clientFactory, InteractiveServ
 
             if (res is null)
             {
-                await ReplyErrorLocalizedAsync("no_found_id").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.NoFoundId(ctx.Guild.Id)).ConfigureAwait(false);
             }
             else
             {
-                await RespondAsync(embed: Service.GetEmbed(res, ctx.Guild?.Id, GetText("edited_chat_trig")).Build())
+                await RespondAsync(embed: Service.GetEmbed(res, ctx.Guild?.Id, Strings.EditedChatTrig(ctx.Guild.Id))
+                        .Build())
                     .ConfigureAwait(false);
             }
 
@@ -998,11 +1015,12 @@ public class SlashChatTriggers(IHttpClientFactory clientFactory, InteractiveServ
 
             if (res is null)
             {
-                await ReplyErrorLocalizedAsync("no_found_id").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.NoFoundId(ctx.Guild.Id)).ConfigureAwait(false);
             }
             else
             {
-                await RespondAsync(embed: Service.GetEmbed(res, ctx.Guild?.Id, GetText("edited_chat_trig")).Build())
+                await RespondAsync(embed: Service.GetEmbed(res, ctx.Guild?.Id, Strings.EditedChatTrig(ctx.Guild.Id))
+                        .Build())
                     .ConfigureAwait(false);
             }
 
@@ -1016,8 +1034,8 @@ public class SlashChatTriggers(IHttpClientFactory clientFactory, InteractiveServ
             if (!(errors?.Any() ?? false))
                 return;
             var embed = new EmbedBuilder()
-                .WithTitle(GetText("ct_interaction_errors_title"))
-                .WithDescription(GetText("ct_interaction_errors_desc"))
+                .WithTitle(Strings.CtInteractionErrorsTitle(ctx.Guild.Id))
+                .WithDescription(Strings.CtInteractionErrorsDesc(ctx.Guild.Id))
                 .WithErrorColor();
             await ctx.Interaction.FollowupAsync(embed: embed.Build(), ephemeral: true).ConfigureAwait(false);
         }
@@ -1037,18 +1055,44 @@ public class SlashChatTriggers(IHttpClientFactory clientFactory, InteractiveServ
             var cb = new ComponentBuilder().WithButton("Support Server", style: ButtonStyle.Link,
                 url: "https://discord.gg/Mewdeko",
                 emote: Emote.Parse("<:IconInvite:778931752835088426>"));
+
             if (errors?.Any() ?? false)
             {
                 eb.WithFields(errors.Select(x =>
-                        new EmbedFieldBuilder().WithName(GetText($"ct_interr_{x.ErrorKey}")).WithValue(
-                            GetText($"ct_interr_{x.ErrorKey}_body", x.CtRealNames.Select(s => $" - {s}").Join('\n')))))
-                    .WithTitle(GetText("ct_interaction_errors_info_title", errors.Count))
-                    .WithDescription(GetText("ct_interaction_errors_info_desc")).WithErrorColor();
+                    {
+                        var title = x.ErrorKey switch
+                        {
+                            "duplicate" => Strings.CtInterrDuplicate(ctx.Guild.Id),
+                            "invalid_name" => Strings.CtInterrInvalidName(ctx.Guild.Id),
+                            "subcommand_match_parent" => Strings.CtInterrSubcommandMatchParent(ctx.Guild.Id),
+                            "too_many_children" => Strings.CtInterrTooManyChildren(ctx.Guild.Id),
+                            _ => x.ErrorKey
+                        };
+
+                        var body = x.ErrorKey switch
+                        {
+                            "duplicate" => Strings.CtInterrDuplicateBody(ctx.Guild.Id,
+                                x.CtRealNames.Select(s => $" - {s}").Join('\n')),
+                            "invalid_name" => Strings.CtInterrInvalidNameBody(ctx.Guild.Id,
+                                x.CtRealNames.Select(s => $" - {s}").Join('\n')),
+                            "subcommand_match_parent" => Strings.CtInterrSubcommandMatchParentBody(ctx.Guild.Id,
+                                x.CtRealNames.Select(s => $" - {s}").Join('\n')),
+                            "too_many_children" => Strings.CtInterrTooManyChildrenBody(ctx.Guild.Id,
+                                x.CtRealNames.Select(s => $" - {s}").Join('\n')),
+                            _ => x.ErrorKey
+                        };
+
+                        return new EmbedFieldBuilder().WithName(title).WithValue(body);
+                    }))
+                    .WithTitle(Strings.CtInteractionErrorsInfoTitle(ctx.Guild.Id, errors.Count))
+                    .WithDescription(Strings.CtInteractionErrorsInfoDesc(ctx.Guild.Id))
+                    .WithErrorColor();
             }
             else
             {
-                eb.WithOkColor().WithTitle(GetText("ct_interaction_errors_none"))
-                    .WithDescription(GetText("ct_interaction_errors_none_desc"));
+                eb.WithOkColor()
+                    .WithTitle(Strings.CtInteractionErrorsNone(ctx.Guild.Id))
+                    .WithDescription(Strings.CtInteractionErrorsNoneDesc(ctx.Guild.Id));
             }
 
             await RespondAsync(embed: eb.Build(), components: cb.Build());

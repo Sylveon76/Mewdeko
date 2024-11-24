@@ -315,7 +315,7 @@ public class MessageCountService : INService, IReadyExecutor
     /// <param name="guildId"></param>
     /// <param name="days"></param>
     /// <returns></returns>
-    public async Task<IEnumerable<(int Hour, int Count)>> GetBusiestHours(ulong guildId, int days = 7)
+    public async Task<IEnumerable<(int Hour, int Count)>?> GetBusiestHours(ulong guildId, int days = 7)
     {
         await using var db = await dbContext.GetContextAsync();
         var startDate = DateTime.UtcNow.AddDays(-Math.Min(days, 30));
@@ -345,7 +345,7 @@ public class MessageCountService : INService, IReadyExecutor
     /// <param name="guildId"></param>
     /// <param name="weeks"></param>
     /// <returns></returns>
-    public async Task<IEnumerable<(DayOfWeek Day, int Count)>> GetBusiestDays(ulong guildId, int weeks = 4)
+    public async Task<IEnumerable<(DayOfWeek Day, int Count)>?> GetBusiestDays(ulong guildId, int weeks = 4)
     {
         await using var db = await dbContext.GetContextAsync();
         var startDate = DateTime.UtcNow.AddDays(-Math.Min(7 * weeks, 30));

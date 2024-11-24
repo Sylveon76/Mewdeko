@@ -59,7 +59,7 @@ public partial class Administration
             {
                 await Task.CompletedTask.ConfigureAwait(false);
                 return new PageBuilder().WithColor(Mewdeko.OkColor)
-                    .WithTitle(GetText("timezones_available"))
+                    .WithTitle(Strings.TimezonesAvailable(ctx.Guild.Id))
                     .WithDescription(string.Join("\n",
                         timezoneStrings.Skip(page * timezonesPerPage)
                             .Take(timezonesPerPage)));
@@ -74,7 +74,7 @@ public partial class Administration
         [RequireContext(ContextType.Guild)]
         public async Task Timezone()
         {
-            await ReplyConfirmLocalizedAsync("timezone_guild", Service.GetTimeZoneOrUtc(ctx.Guild.Id))
+            await ReplyConfirmAsync(Strings.TimezoneGuild(ctx.Guild.Id, Service.GetTimeZoneOrUtc(ctx.Guild.Id)))
                 .ConfigureAwait(false);
         }
 
@@ -101,7 +101,7 @@ public partial class Administration
 
             if (tz == null)
             {
-                await ReplyErrorLocalizedAsync("timezone_not_found").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.TimezoneNotFound(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 

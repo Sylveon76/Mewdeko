@@ -29,7 +29,7 @@ public partial class Administration
         public async Task BoostMsg()
         {
             var boostMessage = await Service.GetBoostMessage(ctx.Guild.Id);
-            await ReplyConfirmLocalizedAsync("boostmsg_cur", boostMessage.SanitizeMentions());
+            await ReplyConfirmAsync(Strings.BoostmsgCur(ctx.Guild.Id, boostMessage.SanitizeMentions()));
         }
 
         /// <summary>
@@ -48,9 +48,9 @@ public partial class Administration
             var enabled = await Service.SetBoost(ctx.Guild.Id, ctx.Channel.Id).ConfigureAwait(false);
 
             if (enabled)
-                await ReplyConfirmLocalizedAsync("boost_on").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.BoostOn(ctx.Guild.Id)).ConfigureAwait(false);
             else
-                await ReplyConfirmLocalizedAsync("boost_off").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.BoostOff(ctx.Guild.Id)).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -69,16 +69,16 @@ public partial class Administration
         {
             if (timer is < 0 or > 600)
             {
-                await ctx.Channel.SendErrorAsync(GetText("maxdeletetime", "600 seconds"), Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.Maxdeletetime(ctx.Guild.Id, "600 seconds"), Config).ConfigureAwait(false);
                 return;
             }
 
             await Service.SetBoostDel(ctx.Guild.Id, timer).ConfigureAwait(false);
 
             if (timer > 0)
-                await ReplyConfirmLocalizedAsync("boostdel_on", timer).ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.BoostdelOn(ctx.Guild.Id, timer)).ConfigureAwait(false);
             else
-                await ReplyConfirmLocalizedAsync("boostdel_off").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.BoostdelOff(ctx.Guild.Id)).ConfigureAwait(false);
         }
 
 
@@ -104,9 +104,9 @@ public partial class Administration
 
             var sendBoostEnabled = await Service.SetBoostMessage(ctx.Guild.Id, text);
 
-            await ReplyConfirmLocalizedAsync("boostmsg_new").ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.BoostmsgNew(ctx.Guild.Id)).ConfigureAwait(false);
             if (!sendBoostEnabled)
-                await ReplyConfirmLocalizedAsync("boostmsg_enable", $"{await guildSettings.GetPrefix(ctx.Guild)}boost")
+                await ReplyConfirmAsync(Strings.BoostmsgEnable(ctx.Guild.Id, $"{await guildSettings.GetPrefix(ctx.Guild)}boost"))
                     .ConfigureAwait(false);
         }
 
@@ -141,7 +141,7 @@ public partial class Administration
             if (text?.ToLower() == "disable")
             {
                 await Service.SetWebLeaveUrl(ctx.Guild, "").ConfigureAwait(false);
-                await ctx.Channel.SendConfirmAsync(GetText("leavehookdisabled")).ConfigureAwait(false);
+                await ctx.Channel.SendConfirmAsync(Strings.Leavehookdisabled(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
@@ -160,8 +160,8 @@ public partial class Administration
             }
 
             var enabled = await Service.SetBye(ctx.Guild.Id, ctx.Channel.Id).ConfigureAwait(false);
-            var message = enabled ? "leavehookset" : "leavehookset2";
-            await ctx.Channel.SendConfirmAsync(GetText(message, await guildSettings.GetPrefix(Context.Guild)))
+            var message = enabled ? Strings.Leavehookset(ctx.Guild.Id) : Strings.Leavehooksettwo(ctx.Guild.Id, await guildSettings.GetPrefix(ctx.Guild.Id));
+            await ctx.Channel.SendConfirmAsync(message)
                 .ConfigureAwait(false);
         }
 
@@ -197,16 +197,16 @@ public partial class Administration
         {
             if (!ctx.Client.CurrentUser.Flags.HasFlag(UserProperties.VerifiedBot))
             {
-                if (!await PromptUserConfirmAsync(GetText("dmgreetcheck"), ctx.User.Id))
+                if (!await PromptUserConfirmAsync(Strings.Dmgreetcheck(ctx.Guild.Id), ctx.User.Id))
                     return;
             }
 
             var enabled = await Service.SetGreetDm(ctx.Guild.Id).ConfigureAwait(false);
 
             if (enabled)
-                await ReplyConfirmLocalizedAsync("greetdm_on").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.GreetdmOn(ctx.Guild.Id)).ConfigureAwait(false);
             else
-                await ReplyConfirmLocalizedAsync("greetdm_off").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.GreetdmOff(ctx.Guild.Id)).ConfigureAwait(false);
         }
 
 
@@ -224,7 +224,7 @@ public partial class Administration
         public async Task GreetDmMsg()
         {
             var dmGreetMsg = await Service.GetDmGreetMsg(ctx.Guild.Id);
-            await ReplyConfirmLocalizedAsync("greetdmmsg_cur", dmGreetMsg.SanitizeMentions());
+            await ReplyConfirmAsync(Strings.GreetdmmsgCur(ctx.Guild.Id, dmGreetMsg.SanitizeMentions()));
         }
 
         /// <summary>
@@ -249,10 +249,10 @@ public partial class Administration
 
             var sendGreetEnabled = await Service.SetGreetDmMessage(ctx.Guild.Id, text);
 
-            await ReplyConfirmLocalizedAsync("greetdmmsg_new").ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.GreetdmmsgNew(ctx.Guild.Id)).ConfigureAwait(false);
             if (!sendGreetEnabled)
-                await ReplyConfirmLocalizedAsync("greetdmmsg_enable",
-                    $"`{await guildSettings.GetPrefix(ctx.Guild)}greetdm`").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.GreetdmmsgEnable(ctx.Guild.Id,
+                    $"`{await guildSettings.GetPrefix(ctx.Guild)}greetdm`")).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -271,9 +271,9 @@ public partial class Administration
             var enabled = await Service.SetBye(ctx.Guild.Id, ctx.Channel.Id).ConfigureAwait(false);
 
             if (enabled)
-                await ReplyConfirmLocalizedAsync("bye_on").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.ByeOn(ctx.Guild.Id)).ConfigureAwait(false);
             else
-                await ReplyConfirmLocalizedAsync("bye_off").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.ByeOff(ctx.Guild.Id)).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -290,7 +290,7 @@ public partial class Administration
         public async Task ByeMsg()
         {
             var byeMsg = await Service.GetByeMessage(ctx.Guild.Id);
-            await ReplyConfirmLocalizedAsync("byemsg_cur", byeMsg.SanitizeMentions());
+            await ReplyConfirmAsync(Strings.ByemsgCur(ctx.Guild.Id, byeMsg.SanitizeMentions()));
         }
 
         /// <summary>
@@ -315,9 +315,9 @@ public partial class Administration
 
             var sendByeEnabled = await Service.SetByeMessage(ctx.Guild.Id, text);
 
-            await ReplyConfirmLocalizedAsync("byemsg_new").ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.ByemsgNew(ctx.Guild.Id)).ConfigureAwait(false);
             if (!sendByeEnabled)
-                await ReplyConfirmLocalizedAsync("byemsg_enable", $"`{await guildSettings.GetPrefix(ctx.Guild)}bye`")
+                await ReplyConfirmAsync(Strings.ByemsgEnable(ctx.Guild.Id, $"`{await guildSettings.GetPrefix(ctx.Guild)}bye`"))
                     .ConfigureAwait(false);
         }
 
@@ -338,9 +338,9 @@ public partial class Administration
             await Service.SetByeDel(ctx.Guild.Id, timer).ConfigureAwait(false);
 
             if (timer > 0)
-                await ReplyConfirmLocalizedAsync("byedel_on", timer).ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.ByedelOn(ctx.Guild.Id, timer)).ConfigureAwait(false);
             else
-                await ReplyConfirmLocalizedAsync("byedel_off").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.ByedelOff(ctx.Guild.Id)).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -363,7 +363,7 @@ public partial class Administration
             await Service.ByeTest((ITextChannel)Context.Channel, user).ConfigureAwait(false);
             var enabled = await Service.GetByeEnabled(Context.Guild.Id);
             if (!enabled)
-                await ReplyConfirmLocalizedAsync("byemsg_enable", $"`{await guildSettings.GetPrefix(ctx.Guild)}bye`")
+                await ReplyConfirmAsync(Strings.ByemsgEnable(ctx.Guild.Id, $"`{await guildSettings.GetPrefix(ctx.Guild)}bye`"))
                     .ConfigureAwait(false);
         }
 
@@ -387,8 +387,8 @@ public partial class Administration
             await Service.BoostTest(ctx.Channel as ITextChannel, user).ConfigureAwait(false);
             var enabled = await Service.GetBoostEnabled(Context.Guild.Id);
             if (!enabled)
-                await ReplyConfirmLocalizedAsync("boostmsg_enable",
-                    $"`{await guildSettings.GetPrefix(ctx.Guild)}greet`").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.BoostmsgEnable(ctx.Guild.Id,
+                    $"`{await guildSettings.GetPrefix(ctx.Guild)}greet`")).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -417,8 +417,8 @@ public partial class Administration
                 await Context.WarningAsync().ConfigureAwait(false);
             var enabled = await Service.GetGreetDmEnabled(Context.Guild.Id);
             if (!enabled)
-                await ReplyConfirmLocalizedAsync("greetdmmsg_enable",
-                    $"`{await guildSettings.GetPrefix(ctx.Guild)}greetdm`").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.GreetdmmsgEnable(ctx.Guild.Id,
+                    $"`{await guildSettings.GetPrefix(ctx.Guild)}greetdm`")).ConfigureAwait(false);
         }
     }
 }

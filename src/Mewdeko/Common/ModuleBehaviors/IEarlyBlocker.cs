@@ -25,7 +25,7 @@ public interface IEarlyBehavior
     ///     A task that represents the asynchronous operation. The task result contains a boolean indicating whether the
     ///     module blocked the execution.
     /// </returns>
-    Task<bool> RunBehavior(DiscordShardedClient socketClient, IGuild guild, IUserMessage msg);
+    Task<bool> RunBehavior(DiscordShardedClient socketClient, IGuild? guild, IUserMessage msg);
 }
 
 /// <summary>

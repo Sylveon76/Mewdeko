@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿
+
+using System.Text.Json.Serialization;
 
 namespace Mewdeko.Modules.Searches.Common;
 
@@ -10,121 +12,121 @@ public class UserStats
     /// <summary>
     ///     Gets or sets the count of A ranks.
     /// </summary>
-    [JsonProperty("a_count")]
+    [JsonPropertyName("a_count")]
     public int ACount { get; set; }
 
     /// <summary>
     ///     Gets or sets the average accuracy.
     /// </summary>
-    [JsonProperty("avg_accuracy")]
+    [JsonPropertyName("avg_accuracy")]
     public double AvgAccuracy { get; set; }
 
     /// <summary>
     ///     Gets or sets the average hits per play.
     /// </summary>
-    [JsonProperty("avg_hits_play")]
+    [JsonPropertyName("avg_hits_play")]
     public double AvgHitsPlay { get; set; }
 
     /// <summary>
     ///     Gets or sets the country rank.
     /// </summary>
-    [JsonProperty("country_rank")]
+    [JsonPropertyName("country_rank")]
     public int CountryRank { get; set; }
 
     /// <summary>
     ///     Gets or sets the user ID.
     /// </summary>
-    [JsonProperty("id")]
+    [JsonPropertyName("id")]
     public int Id { get; set; }
 
     /// <summary>
     ///     Gets or sets the user level.
     /// </summary>
-    [JsonProperty("level")]
+    [JsonPropertyName("level")]
     public int Level { get; set; }
 
     /// <summary>
     ///     Gets or sets the level progress.
     /// </summary>
-    [JsonProperty("level_progress")]
+    [JsonPropertyName("level_progress")]
     public int LevelProgress { get; set; }
 
     /// <summary>
     ///     Gets or sets the maximum combo achieved.
     /// </summary>
-    [JsonProperty("max_combo")]
+    [JsonPropertyName("max_combo")]
     public int MaxCombo { get; set; }
 
     /// <summary>
     ///     Gets or sets the total play count.
     /// </summary>
-    [JsonProperty("playcount")]
+    [JsonPropertyName("playcount")]
     public int Playcount { get; set; }
 
     /// <summary>
     ///     Gets or sets the total playtime.
     /// </summary>
-    [JsonProperty("playtime")]
+    [JsonPropertyName("playtime")]
     public int Playtime { get; set; }
 
     /// <summary>
     ///     Gets or sets the performance points (PP).
     /// </summary>
-    [JsonProperty("pp")]
+    [JsonPropertyName("pp")]
     public int Pp { get; set; }
 
     /// <summary>
     ///     Gets or sets the overall rank.
     /// </summary>
-    [JsonProperty("rank")]
+    [JsonPropertyName("rank")]
     public int Rank { get; set; }
 
     /// <summary>
     ///     Gets or sets the ranked score.
     /// </summary>
-    [JsonProperty("ranked_score")]
+    [JsonPropertyName("ranked_score")]
     public int RankedScore { get; set; }
 
     /// <summary>
     ///     Gets or sets the count of replays watched.
     /// </summary>
-    [JsonProperty("replays_watched")]
+    [JsonPropertyName("replays_watched")]
     public int ReplaysWatched { get; set; }
 
     /// <summary>
     ///     Gets or sets the count of S ranks.
     /// </summary>
-    [JsonProperty("s_count")]
+    [JsonPropertyName("s_count")]
     public int SCount { get; set; }
 
     /// <summary>
     ///     Gets or sets the count of SH ranks.
     /// </summary>
-    [JsonProperty("sh_count")]
+    [JsonPropertyName("sh_count")]
     public int ShCount { get; set; }
 
     /// <summary>
     ///     Gets or sets the total hits.
     /// </summary>
-    [JsonProperty("total_hits")]
+    [JsonPropertyName("total_hits")]
     public int TotalHits { get; set; }
 
     /// <summary>
     ///     Gets or sets the total score.
     /// </summary>
-    [JsonProperty("total_score")]
+    [JsonPropertyName("total_score")]
     public long TotalScore { get; set; }
 
     /// <summary>
     ///     Gets or sets the count of X ranks.
     /// </summary>
-    [JsonProperty("x_count")]
+    [JsonPropertyName("x_count")]
     public int XCount { get; set; }
 
     /// <summary>
     ///     Gets or sets the count of XH ranks.
     /// </summary>
-    [JsonProperty("xh_count")]
+    [JsonPropertyName("xh_count")]
     public int XhCount { get; set; }
 }
 
@@ -136,12 +138,12 @@ public class GatariUserStatsResponse
     /// <summary>
     ///     Gets or sets the response code.
     /// </summary>
-    [JsonProperty("code")]
+    [JsonPropertyName("code")]
     public int Code { get; set; }
 
     /// <summary>
     ///     Gets or sets the user statistics.
     /// </summary>
-    [JsonProperty("stats")]
+    [JsonPropertyName("stats")]
     public UserStats Stats { get; set; }
 }

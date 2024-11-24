@@ -143,8 +143,7 @@ public partial class Xp(
             }
             else
             {
-                await ctx.Channel.SendErrorAsync("Please provide a valid URL or attachment.", Config)
-                    .ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.ProvideValidUrl(ctx.Guild.Id), Config);
                 return;
             }
         }
@@ -158,7 +157,7 @@ public partial class Xp(
         }
 
         await Service.SetImageUrl(Context.Guild.Id, url);
-        await ctx.Channel.SendConfirmAsync("XP image URL has been set.").ConfigureAwait(false);
+        await ctx.Channel.SendConfirmAsync(Strings.XpImageSet(ctx.Guild.Id));
     }
 
     /// <summary>
@@ -275,8 +274,7 @@ public partial class Xp(
             if (value is 999999999 or 0)
             {
                 await Service.XpTxtRateSet(ctx.Guild, 0).ConfigureAwait(false);
-                await ctx.Channel.SendConfirmAsync("User xp per message will now be the global default.")
-                    .ConfigureAwait(false);
+                await ctx.Channel.SendConfirmAsync(Strings.XpPerMessageDefault(ctx.Guild.Id));
             }
 
             return;
@@ -294,8 +292,8 @@ public partial class Xp(
             if (value is 999999999 or 0)
             {
                 await Service.XpTxtTimeoutSet(ctx.Guild, 0).ConfigureAwait(false);
-                await ctx.Channel.SendConfirmAsync("XP Timeout will now follow the global default.")
-                    .ConfigureAwait(false);
+                await ctx.Channel.SendConfirmAsync(Strings.XpTimeoutDefault(ctx.Guild.Id));
+
             }
 
             return;
@@ -315,7 +313,7 @@ public partial class Xp(
             {
                 await Service.XpVoiceRateSet(ctx.Guild, 0).ConfigureAwait(false);
                 await Service.XpVoiceTimeoutSet(ctx.Guild, 0).ConfigureAwait(false);
-                await ctx.Channel.SendConfirmAsync("Voice XP Disabled.").ConfigureAwait(false);
+                await ctx.Channel.SendConfirmAsync(Strings.VoiceXpDisabled(ctx.Guild.Id));
             }
 
             return;
@@ -335,7 +333,7 @@ public partial class Xp(
             {
                 await Service.XpVoiceRateSet(ctx.Guild, 0).ConfigureAwait(false);
                 await Service.XpVoiceTimeoutSet(ctx.Guild, 0).ConfigureAwait(false);
-                await ctx.Channel.SendConfirmAsync("Voice XP Disabled.").ConfigureAwait(false);
+                await ctx.Channel.SendConfirmAsync(Strings.VoiceXpDisabled(ctx.Guild.Id));
             }
         }
         else
@@ -405,7 +403,7 @@ public partial class Xp(
             {
                 var str = ctx.Guild.GetRole(x.RoleId)?.ToString();
                 if (str != null)
-                    str = GetText("role_reward", Format.Bold(str));
+                    str = Strings.RoleReward(ctx.Guild.Id, Format.Bold(str));
                 return (x.Level, RoleStr: str);
             })
             .Where(x => x.RoleStr != null)
@@ -428,7 +426,7 @@ public partial class Xp(
         {
             await Task.CompletedTask.ConfigureAwait(false);
             var embed = new PageBuilder()
-                .WithTitle(GetText("level_up_rewards"))
+                .WithTitle(Strings.LevelUpRewards(ctx.Guild.Id))
                 .WithOkColor();
 
             var localRewards = allRewards
@@ -437,11 +435,11 @@ public partial class Xp(
                 .ToList();
 
             if (localRewards.Count == 0)
-                return embed.WithDescription(GetText("no_level_up_rewards"));
+                return embed.WithDescription(Strings.NoLevelUpRewards(ctx.Guild.Id));
 
             foreach (var reward in localRewards)
             {
-                embed.AddField(GetText("level_x", reward.Key),
+                embed.AddField(Strings.LevelX(ctx.Guild.Id, reward.Key),
                     string.Join("\n", reward.Select(y => y.Item2)));
             }
 
@@ -474,11 +472,11 @@ public partial class Xp(
 
         if (role == null)
         {
-            await ReplyConfirmLocalizedAsync("role_reward_cleared", level).ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.RoleRewardCleared(ctx.Guild.Id, level)).ConfigureAwait(false);
         }
         else
         {
-            await ReplyConfirmLocalizedAsync("role_reward_added", level, Format.Bold(role.ToString()))
+            await ReplyConfirmAsync(Strings.RoleRewardAdded(ctx.Guild.Id, level, Format.Bold(role.ToString())))
                 .ConfigureAwait(false);
         }
     }
@@ -487,9 +485,9 @@ public partial class Xp(
     {
         return loc switch
         {
-            XpNotificationLocation.Channel => GetText("xpn_notif_channel"),
-            XpNotificationLocation.Dm => GetText("xpn_notif_dm"),
-            _ => GetText("xpn_notif_disabled")
+            XpNotificationLocation.Channel => Strings.XpnNotifChannel(ctx.Guild.Id),
+            XpNotificationLocation.Dm => Strings.XpnNotifDm(ctx.Guild.Id),
+            _ => Strings.XpnNotifDisabled(ctx.Guild.Id)
         };
     }
 
@@ -511,7 +509,7 @@ public partial class Xp(
 
         var embed = new EmbedBuilder()
             .WithOkColor()
-            .AddField(GetText("xpn_setting_server"), GetNotifLocationString(serverSetting));
+            .AddField(Strings.XpnSettingServer(ctx.Guild.Id), GetNotifLocationString(serverSetting));
 
         await Context.Channel.EmbedAsync(embed).ConfigureAwait(false);
     }
@@ -554,8 +552,9 @@ public partial class Xp(
     {
         var ex = await Service.ToggleExcludeServer(ctx.Guild.Id);
 
-        await ReplyConfirmLocalizedAsync(ex ? "excluded" : "not_excluded", Format.Bold(ctx.Guild.ToString()))
-            .ConfigureAwait(false);
+        await ReplyConfirmAsync(ex
+            ? Strings.Excluded(ctx.Guild.Id, Format.Bold(ctx.Guild.ToString()))
+            : Strings.NotExcluded(ctx.Guild.Id, Format.Bold(ctx.Guild.ToString()))).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -575,8 +574,9 @@ public partial class Xp(
     {
         var ex = await Service.ToggleExcludeRole(ctx.Guild.Id, role.Id);
 
-        await ReplyConfirmLocalizedAsync(ex ? "excluded" : "not_excluded", Format.Bold(role.ToString()))
-            .ConfigureAwait(false);
+        await ReplyConfirmAsync(ex
+            ? Strings.Excluded(ctx.Guild.Id, Format.Bold(role.ToString()))
+            : Strings.NotExcluded(ctx.Guild.Id, Format.Bold(role.ToString()))).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -600,8 +600,9 @@ public partial class Xp(
 
         var ex = await Service.ToggleExcludeChannel(ctx.Guild.Id, channel.Id);
 
-        await ReplyConfirmLocalizedAsync(ex ? "excluded" : "not_excluded", Format.Bold(channel.ToString()))
-            .ConfigureAwait(false);
+        await ReplyConfirmAsync(ex
+            ? Strings.Excluded(ctx.Guild.Id, Format.Bold(channel.ToString()))
+            : Strings.NotExcluded(ctx.Guild.Id, Format.Bold(channel.ToString()))).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -635,8 +636,8 @@ public partial class Xp(
         var rolesStr = roles.Count > 0 ? $"{string.Join("\n", roles)}\n" : string.Empty;
         var chansStr = chans.Count > 0 ? $"{string.Join("\n", chans)}\n" : string.Empty;
         var desc = Format.Code(serverExcluded
-            ? GetText("server_is_excluded")
-            : GetText("server_is_not_excluded"));
+            ? Strings.ServerIsExcluded(ctx.Guild.Id)
+            : Strings.ServerIsNotExcluded(ctx.Guild.Id));
 
         desc += $"\n\n{rolesStr}{chansStr}";
 
@@ -656,7 +657,7 @@ public partial class Xp(
         {
             await Task.CompletedTask.ConfigureAwait(false);
             return new PageBuilder()
-                .WithTitle(GetText("exclusion_list"))
+                .WithTitle(Strings.ExclusionList(ctx.Guild.Id))
                 .WithDescription(string.Join('\n', lines.Skip(15 * page).Take(15)))
                 .WithOkColor();
         }
@@ -715,7 +716,7 @@ public partial class Xp(
         {
             await Task.CompletedTask.ConfigureAwait(false);
             var embed = new PageBuilder()
-                .WithTitle(GetText("server_leaderboard"))
+                .WithTitle(Strings.ServerLeaderboard(ctx.Guild.Id))
                 .WithOkColor();
 
             List<UserXpStats> users;
@@ -741,7 +742,7 @@ public partial class Xp(
 
                 embed.AddField(
                     $"#{i + 1 + page * 9} {user?.ToString() ?? users[i].UserId.ToString()}",
-                    $"{GetText("level_x", levelStats.Level)} - {levelStats.TotalXp}xp {awardStr}");
+                    $"{Strings.LevelX(ctx.Guild.Id, levelStats.Level)} - {levelStats.TotalXp}xp {awardStr}");
             }
 
             return embed;
@@ -769,7 +770,7 @@ public partial class Xp(
         await Service.AddXp(userId, ctx.Guild.Id, amount);
         var usr = ((SocketGuild)ctx.Guild).GetUser(userId)?.ToString()
                   ?? userId.ToString();
-        await ReplyConfirmLocalizedAsync("modified", Format.Bold(usr), Format.Bold(amount.ToString()))
+        await ReplyConfirmAsync(Strings.Modified(ctx.Guild.Id, Format.Bold(usr), Format.Bold(amount.ToString())))
             .ConfigureAwait(false);
     }
 
@@ -903,7 +904,7 @@ public partial class Xp(
 
                 if (subPropertyInfo.Name is "Id" or "DateAdded" or "GuildId")
                 {
-                    await ctx.Channel.SendErrorAsync("No.", Config);
+                    await ctx.Channel.SendErrorAsync(Strings.No(ctx.Guild.Id), Config);
                     return;
                 }
 
@@ -925,7 +926,7 @@ public partial class Xp(
                 // No subproperty is specified, user wants to set a property of Template directly
                 if (propertyInfo.Name is "Id" or "DateAdded" or "GuildId")
                 {
-                    await ctx.Channel.SendErrorAsync("No.", Config);
+                    await ctx.Channel.SendErrorAsync(Strings.No(ctx.Guild.Id), Config);
                     return;
                 }
 
@@ -948,7 +949,7 @@ public partial class Xp(
             // Save changes to the database
             dbContext.Templates.Update(template);
             await dbContext.SaveChangesAsync();
-            await ctx.Channel.SendConfirmAsync("Configuration updated successfully!");
+            await ctx.Channel.SendConfirmAsync(Strings.ConfigUpdated(ctx.Guild.Id));
         }
     }
 

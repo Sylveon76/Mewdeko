@@ -22,7 +22,7 @@ public partial class Utility
         {
             var units = Service.Units;
             var res = units.GroupBy(x => x.UnitType)
-                .Aggregate(new EmbedBuilder().WithTitle(GetText("convertlist"))
+                .Aggregate(new EmbedBuilder().WithTitle(Strings.Convertlist(ctx.Guild.Id))
                         .WithOkColor(),
                     (embed, g) => embed.AddField(efb =>
                         efb.WithName(g.Key.ToTitleCase())
@@ -49,15 +49,15 @@ public partial class Utility
                 x.Triggers.Select(y => y.ToUpperInvariant()).Contains(target.ToUpperInvariant()));
             if (originUnit == null || targetUnit == null)
             {
-                await ReplyErrorLocalizedAsync("convert_not_found", Format.Bold(origin), Format.Bold(target))
+                await ReplyErrorAsync(Strings.ConvertNotFound(ctx.Guild.Id, Format.Bold(origin), Format.Bold(target)))
                     .ConfigureAwait(false);
                 return;
             }
 
             if (originUnit.UnitType != targetUnit.UnitType)
             {
-                await ReplyErrorLocalizedAsync("convert_type_error", Format.Bold(originUnit.Triggers.First()),
-                    Format.Bold(targetUnit.Triggers.First())).ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.ConvertTypeError(ctx.Guild.Id, Format.Bold(originUnit.Triggers.First()),
+                    Format.Bold(targetUnit.Triggers.First()))).ConfigureAwait(false);
                 return;
             }
 
@@ -95,7 +95,7 @@ public partial class Utility
             res = Math.Round(res, 4);
 
             await ctx.Channel
-                .SendConfirmAsync(GetText("convert", value, originUnit.Triggers.Last(), res,
+                .SendConfirmAsync(Strings.Convert(ctx.Guild.Id, value, originUnit.Triggers.Last(), res,
                     targetUnit.Triggers.Last())).ConfigureAwait(false);
         }
     }

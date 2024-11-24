@@ -5,7 +5,8 @@ using Mewdeko.Modules.Giveaways.Services;
 using Mewdeko.Services.Impl;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
+using System.Text.Json;
+
 
 namespace Mewdeko.Controllers;
 
@@ -128,8 +129,8 @@ public class GiveawaysController(
 
         var response = await client.PostAsync(
             "https://challenges.cloudflare.com/turnstile/v0/siteverify", content);
-        var responseString = await response.Content.ReadAsStringAsync();
-        return JsonConvert.DeserializeObject<TurnstileVerificationResponse>(responseString);
+        var responseString = await response.Content.ReadAsStreamAsync();
+        return await JsonSerializer.DeserializeAsync<TurnstileVerificationResponse>(responseString);
     }
 }
 

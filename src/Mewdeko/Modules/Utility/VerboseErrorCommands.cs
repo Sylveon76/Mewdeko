@@ -25,9 +25,9 @@ public partial class Utility
             var state = await Service.ToggleVerboseErrors(ctx.Guild.Id, newstate);
 
             if (state)
-                await ReplyConfirmLocalizedAsync("verbose_errors_enabled").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.VerboseErrorsEnabled(ctx.Guild.Id)).ConfigureAwait(false);
             else
-                await ReplyConfirmLocalizedAsync("verbose_errors_disabled").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.VerboseErrorsDisabled(ctx.Guild.Id)).ConfigureAwait(false);
         }
     }
 }

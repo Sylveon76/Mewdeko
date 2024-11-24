@@ -66,7 +66,7 @@ public partial class Games
                 return;
             }
 
-            await ctx.Channel.SendErrorAsync($"{GetText("trivia_already_running")}\n{trivia.CurrentQuestion}", Config)
+            await ctx.Channel.SendErrorAsync($"{Strings.TriviaAlreadyRunning(ctx.Guild.Id)}\n{trivia.CurrentQuestion}", Config)
                 .ConfigureAwait(false);
         }
 
@@ -83,12 +83,12 @@ public partial class Games
 
             if (Service.RunningTrivias.TryGetValue(channel.Guild.Id, out var trivia))
             {
-                await channel.SendConfirmAsync(GetText("leaderboard"), trivia.GetLeaderboard())
+                await channel.SendConfirmAsync(Strings.Leaderboard(ctx.Guild.Id), trivia.GetLeaderboard())
                     .ConfigureAwait(false);
                 return;
             }
 
-            await ReplyErrorLocalizedAsync("trivia_none").ConfigureAwait(false);
+            await ReplyErrorAsync(Strings.TriviaNone(ctx.Guild.Id)).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -108,7 +108,7 @@ public partial class Games
                 return;
             }
 
-            await ReplyErrorLocalizedAsync("trivia_none").ConfigureAwait(false);
+            await ReplyErrorAsync(Strings.TriviaNone(ctx.Guild.Id)).ConfigureAwait(false);
         }
     }
 }

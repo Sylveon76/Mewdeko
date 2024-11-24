@@ -34,13 +34,11 @@ public class SlashRoleGreets(InteractiveService interactivity, HttpClient httpCl
         switch (await Service.AddRoleGreet(ctx.Guild.Id, channel.Id, role.Id))
         {
             case true:
-                await ctx.Interaction.SendConfirmAsync($"Added {role.Mention} to greet in {channel.Mention}!")
+                await ctx.Channel.SendConfirmAsync(Strings.RolegreetAddSuccess(ctx.Guild.Id, role.Mention, channel.Mention))
                     .ConfigureAwait(false);
                 break;
             case false:
-                await ctx.Interaction.SendErrorAsync(
-                        "Seems like you have reached your max of 10 RoleGreets! Please remove one to add another one.",
-                        Config)
+                await ctx.Channel.SendErrorAsync(Strings.RolegreetMaxLimit(ctx.Guild.Id), Config)
                     .ConfigureAwait(false);
                 break;
         }
@@ -60,13 +58,13 @@ public class SlashRoleGreets(InteractiveService interactivity, HttpClient httpCl
         var greet = (await Service.GetGreets(ctx.Guild.Id)).ElementAt(num - 1);
         if (greet is null)
         {
-            await ctx.Interaction.SendErrorAsync("That RoleGreet does not exist!", Config).ConfigureAwait(false);
+            await ctx.Interaction.SendErrorAsync(Strings.RgNexist(ctx.Guild.Id), Config);
             return;
         }
 
         await Service.ChangeRgGb(greet, enabled).ConfigureAwait(false);
-        await ctx.Interaction.SendConfirmAsync($"RoleGreet {num} GreetBots set to {enabled}").ConfigureAwait(false);
-    }
+        await ctx.Interaction.SendConfirmAsync(Strings.RolegreetGreetbotsSet(ctx.Guild.Id, num, enabled))
+            .ConfigureAwait(false);    }
 
     /// <summary>
     ///     Removes a greet message by its ID.
@@ -81,12 +79,12 @@ public class SlashRoleGreets(InteractiveService interactivity, HttpClient httpCl
         var greet = (await Service.GetGreets(ctx.Guild.Id)).ElementAt(id - 1);
         if (greet is null)
         {
-            await ctx.Interaction.SendErrorAsync("No greet with that ID found!", Config).ConfigureAwait(false);
+            await ctx.Interaction.SendErrorAsync(Strings.RgNfound(ctx.Guild.Id), Config);
             return;
         }
 
         await Service.RemoveRoleGreetInternal(greet).ConfigureAwait(false);
-        await ctx.Interaction.SendConfirmAsync("RoleGreet removed!").ConfigureAwait(false);
+        await ctx.Interaction.SendConfirmAsync(Strings.RgRemoved(ctx.Guild.Id));
     }
 
     /// <summary>
@@ -103,18 +101,18 @@ public class SlashRoleGreets(InteractiveService interactivity, HttpClient httpCl
         var greet = (await Service.GetGreets(ctx.Guild.Id)).Where(x => x.RoleId == role.Id);
         if (!greet.Any())
         {
-            await ctx.Interaction.SendErrorFollowupAsync("There are no greets for that role!", Config)
+            await ctx.Interaction.SendErrorFollowupAsync(Strings.RolegreetNoGreetsForRole(ctx.Guild.Id), Config)
                 .ConfigureAwait(false);
             return;
         }
 
         if (await PromptUserConfirmAsync(
-                    new EmbedBuilder().WithOkColor()
-                        .WithDescription("Are you sure you want to remove all RoleGreets for this role?"), ctx.User.Id)
-                .ConfigureAwait(false))
+                new EmbedBuilder().WithOkColor()
+                    .WithDescription(Strings.RolegreetConfirmRemove(ctx.Guild.Id)), ctx.User.Id))
         {
-            await Service.MultiRemoveRoleGreetInternal(greet.ToArray()).ConfigureAwait(false);
-            await ctx.Interaction.SendConfirmFollowupAsync("RoleGreets removed!").ConfigureAwait(false);
+            await Service.MultiRemoveRoleGreetInternal(greet.ToArray());
+            await ctx.Interaction.SendConfirmFollowupAsync(Strings.RolegreetConfirmRemoved(ctx.Guild.Id))
+                .ConfigureAwait(false);
         }
     }
 
@@ -135,7 +133,8 @@ public class SlashRoleGreets(InteractiveService interactivity, HttpClient httpCl
         var greet = (await Service.GetGreets(ctx.Guild.Id)).ElementAt(id - 1);
         if (greet is null)
         {
-            await ctx.Interaction.SendErrorAsync("No RoleGreet found for that Id!", Config).ConfigureAwait(false);
+            await ctx.Interaction.SendErrorAsync(Strings.RgNid(ctx.Guild.Id), Config);
+
             return;
         }
 
@@ -143,12 +142,13 @@ public class SlashRoleGreets(InteractiveService interactivity, HttpClient httpCl
         if (howlong > 0)
         {
             await ctx.Interaction.SendConfirmAsync(
-                    $"Successfully updated RoleGreet #{id} to delete after {TimeSpan.FromSeconds(howlong).Humanize()}.")
+                    Strings.RolegreetDeleteSuccess(ctx.Guild.Id, id, TimeSpan.FromSeconds(howlong).Humanize()))
                 .ConfigureAwait(false);
         }
         else
         {
-            await ctx.Interaction.SendConfirmAsync($"RoleGreet #{id} will no longer delete.").ConfigureAwait(false);
+            await ctx.Interaction.SendConfirmAsync(Strings.RolegreetDeleteDisabled(ctx.Guild.Id, id))
+                .ConfigureAwait(false);
         }
     }
 
@@ -166,12 +166,14 @@ public class SlashRoleGreets(InteractiveService interactivity, HttpClient httpCl
         var greet = (await Service.GetGreets(ctx.Guild.Id)).ElementAt(num - 1);
         if (greet is null)
         {
-            await ctx.Interaction.SendErrorAsync("That RoleGreet does not exist!", Config).ConfigureAwait(false);
+            await ctx.Interaction.SendErrorAsync(Strings.RgNexist(ctx.Guild.Id), Config);
             return;
         }
 
         await Service.RoleGreetDisable(greet, enabled).ConfigureAwait(false);
-        await ctx.Interaction.SendConfirmAsync($"RoleGreet {num} set to {(enabled ? "Enabled" : "Disabled")}").ConfigureAwait(false);
+        await ctx.Interaction.SendConfirmAsync(Strings.RolegreetDisableStatus(ctx.Guild.Id, num, enabled ? "Enabled" : "Disabled"))
+            .ConfigureAwait(false);
+
     }
 
     /// <summary>
@@ -190,14 +192,15 @@ public class SlashRoleGreets(InteractiveService interactivity, HttpClient httpCl
         var greet = (await Service.GetGreets(ctx.Guild.Id)).ElementAt(id - 1);
         if (greet is null)
         {
-            await ctx.Interaction.SendErrorAsync("No RoleGreet found for that Id!", Config).ConfigureAwait(false);
+            await ctx.Interaction.SendErrorAsync(Strings.RgNid(ctx.Guild.Id), Config);
             return;
         }
 
         if (name is null)
         {
             await Service.ChangeMgWebhook(greet, null).ConfigureAwait(false);
-            await ctx.Interaction.SendConfirmAsync($"Webhook disabled for RoleGreet #{id}!").ConfigureAwait(false);
+            await ctx.Interaction.SendConfirmAsync(Strings.RolegreetWebhookDisabled(ctx.Guild.Id, id))
+                .ConfigureAwait(false);
             return;
         }
 
@@ -206,8 +209,7 @@ public class SlashRoleGreets(InteractiveService interactivity, HttpClient httpCl
         {
             if (!Uri.IsWellFormedUriString(avatar, UriKind.Absolute))
             {
-                await ctx.Interaction.SendErrorAsync(
-                        "The avatar url used is not a direct url or is invalid! Please use a different url.", Config)
+                await ctx.Interaction.SendErrorAsync(Strings.RolegreetWebhookInvalidAvatar(ctx.Guild.Id), Config)
                     .ConfigureAwait(false);
                 return;
             }
@@ -220,14 +222,14 @@ public class SlashRoleGreets(InteractiveService interactivity, HttpClient httpCl
             var webhook = await channel.CreateWebhookAsync(name, imgStream).ConfigureAwait(false);
             await Service.ChangeMgWebhook(greet, $"https://discord.com/api/webhooks/{webhook.Id}/{webhook.Token}")
                 .ConfigureAwait(false);
-            await ctx.Interaction.SendConfirmAsync("Webhook set!").ConfigureAwait(false);
+            await ctx.Interaction.SendConfirmAsync(Strings.WebhookSet(ctx.Guild.Id));
         }
         else
         {
             var webhook = await channel.CreateWebhookAsync(name).ConfigureAwait(false);
             await Service.ChangeMgWebhook(greet, $"https://discord.com/api/webhooks/{webhook.Id}/{webhook.Token}")
                 .ConfigureAwait(false);
-            await ctx.Interaction.SendConfirmAsync("Webhook set!").ConfigureAwait(false);
+            await ctx.Interaction.SendConfirmAsync(Strings.WebhookSet(ctx.Guild.Id));
         }
     }
 
@@ -255,9 +257,12 @@ public class SlashRoleGreets(InteractiveService interactivity, HttpClient httpCl
 
         if (message is null)
         {
-            var components = new ComponentBuilder().WithButton("Preview", "preview").WithButton("Regular", "regular");
+            var components = new ComponentBuilder()
+                .WithButton(Strings.RolegreetButtonPreview(ctx.Guild.Id), "preview")
+                .WithButton(Strings.RolegreetButtonRegular(ctx.Guild.Id), "regular");
+
             var msg = await ctx.Interaction.SendConfirmFollowupAsync(
-                "Would you like to view this as regular text or would you like to preview how it actually looks?",
+                Strings.RolegreetMessagePreviewPrompt(ctx.Guild.Id),
                 components).ConfigureAwait(false);
             var response = await GetButtonInputAsync(ctx.Interaction.Id, msg.Id, ctx.User.Id).ConfigureAwait(false);
             switch (response)
@@ -303,7 +308,8 @@ public class SlashRoleGreets(InteractiveService interactivity, HttpClient httpCl
         var greets = await Service.GetGreets(ctx.Guild.Id);
         if (greets.Length == 0)
         {
-            await ctx.Interaction.SendErrorAsync("No RoleGreets setup!", Config).ConfigureAwait(false);
+            await ctx.Interaction.SendErrorAsync(Strings.RgNone(ctx.Guild.Id), Config);
+            return;
         }
 
         var paginator = new LazyPaginatorBuilder()

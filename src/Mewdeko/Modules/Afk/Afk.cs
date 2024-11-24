@@ -12,8 +12,7 @@ namespace Mewdeko.Modules.Afk;
 ///     Module for managing AFK.
 /// </summary>
 /// <param name="serv">The interactivity service for doing embed pagination.</param>
-/// <param name="client">The discord client.</param>
-public class Afk(InteractiveService serv, DiscordShardedClient client) : MewdekoModuleBase<AfkService>
+public class Afk(InteractiveService serv) : MewdekoModuleBase<AfkService>
 {
     /// <summary>
     ///     Enumerates different types of AFK (Away From Keyboard) settings.
@@ -55,7 +54,7 @@ public class Afk(InteractiveService serv, DiscordShardedClient client) : Mewdeko
     {
         if (Environment.GetEnvironmentVariable("AFK_CACHED") != "1")
         {
-            await ReplyErrorLocalizedAsync("afk_still_starting").ConfigureAwait(false);
+            await ReplyErrorAsync(Strings.AfkStillStarting(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
@@ -65,7 +64,7 @@ public class Afk(InteractiveService serv, DiscordShardedClient client) : Mewdeko
             if (string.IsNullOrEmpty(afkmsg?.Message))
             {
                 await Service.AfkSet(ctx.Guild.Id, ctx.User.Id, "_ _").ConfigureAwait(false);
-                await ReplyConfirmLocalizedAsync("afk_enabled_no_message").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.AfkEnabledNoMessage(ctx.Guild.Id)).ConfigureAwait(false);
                 try
                 {
                     var user = await ctx.Guild.GetUserAsync(ctx.User.Id).ConfigureAwait(false);
@@ -84,7 +83,7 @@ public class Afk(InteractiveService serv, DiscordShardedClient client) : Mewdeko
             }
 
             await Service.AfkSet(ctx.Guild.Id, ctx.User.Id, "").ConfigureAwait(false);
-            await ReplyConfirmLocalizedAsync("afk_disabled").ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.AfkDisabled(ctx.Guild.Id)).ConfigureAwait(false);
             try
             {
                 var user = await ctx.Guild.GetUserAsync(ctx.User.Id).ConfigureAwait(false);
@@ -101,13 +100,13 @@ public class Afk(InteractiveService serv, DiscordShardedClient client) : Mewdeko
 
         if (message.Length != 0 && message.Length > await Service.GetAfkLength(ctx.Guild.Id))
         {
-            await ReplyErrorLocalizedAsync("afk_message_too_long", Service.GetAfkLength(ctx.Guild.Id))
+            await ReplyErrorAsync(Strings.AfkMessageTooLong(ctx.Guild.Id, Service.GetAfkLength(ctx.Guild.Id)))
                 .ConfigureAwait(false);
             return;
         }
 
         await Service.AfkSet(ctx.Guild.Id, ctx.User.Id, message.EscapeWeirdStuff()).ConfigureAwait(false);
-        await ReplyConfirmLocalizedAsync("afk_enabled", message).ConfigureAwait(false);
+        await ReplyConfirmAsync(Strings.AfkEnabled(ctx.Guild.Id, message)).ConfigureAwait(false);
         try
         {
             var user1 = await ctx.Guild.GetUserAsync(ctx.User.Id).ConfigureAwait(false);
@@ -137,18 +136,18 @@ public class Afk(InteractiveService serv, DiscordShardedClient client) : Mewdeko
     {
         if (Environment.GetEnvironmentVariable("AFK_CACHED") != "1")
         {
-            await ReplyErrorLocalizedAsync("afk_still_starting").ConfigureAwait(false);
+            await ReplyErrorAsync(Strings.AfkStillStarting(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
         if (await Service.GetAfkDel(ctx.Guild.Id) == 0)
         {
-            await ReplyConfirmLocalizedAsync("afk_messages_nodelete").ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.AfkMessagesNodelete(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
-        await ReplyConfirmLocalizedAsync("afk_messages_delete",
-                TimeSpan.FromSeconds(await Service.GetAfkDel(ctx.Guild.Id)).Humanize(maxUnit: TimeUnit.Minute))
+        await ReplyConfirmAsync(Strings.AfkMessagesDelete(ctx.Guild.Id,
+                TimeSpan.FromSeconds(await Service.GetAfkDel(ctx.Guild.Id))).Humanize())
             .ConfigureAwait(false);
     }
 
@@ -164,7 +163,7 @@ public class Afk(InteractiveService serv, DiscordShardedClient client) : Mewdeko
     {
         if (Environment.GetEnvironmentVariable("AFK_CACHED") != "1")
         {
-            await ErrorLocalizedAsync("afk_still_starting").ConfigureAwait(false);
+            await ErrorAsync(Strings.AfkStillStarting(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
@@ -174,11 +173,11 @@ public class Afk(InteractiveService serv, DiscordShardedClient client) : Mewdeko
                 return;
             case 0:
                 await Service.AfkDelSet(ctx.Guild, 0).ConfigureAwait(false);
-                await ConfirmLocalizedAsync("afk_deletion_disabled").ConfigureAwait(false);
+                await ConfirmAsync(Strings.AfkDeletionDisabled(ctx.Guild.Id)).ConfigureAwait(false);
                 break;
             default:
                 await Service.AfkDelSet(ctx.Guild, num).ConfigureAwait(false);
-                await ConfirmLocalizedAsync("afk_deletion_set", num).ConfigureAwait(false);
+                await ConfirmAsync(Strings.AfkDeletionSet(ctx.Guild.Id, num)).ConfigureAwait(false);
                 break;
         }
     }
@@ -197,19 +196,19 @@ public class Afk(InteractiveService serv, DiscordShardedClient client) : Mewdeko
     {
         if (Environment.GetEnvironmentVariable("AFK_CACHED") != "1")
         {
-            await ErrorLocalizedAsync("afk_still_starting").ConfigureAwait(false);
+            await ErrorAsync(Strings.AfkStillStarting(ctx.Guild.Id)).ConfigureAwait(false);
         }
 
         if (message.Length != 0 && message.Length > await Service.GetAfkLength(ctx.Guild.Id))
         {
-            await ReplyErrorLocalizedAsync("afk_message_too_long", Service.GetAfkLength(ctx.Guild.Id))
+            await ReplyErrorAsync(Strings.AfkMessageTooLong(ctx.Guild.Id, Service.GetAfkLength(ctx.Guild.Id)))
                 .ConfigureAwait(false);
             return;
         }
 
         await Service.AfkSet(ctx.Guild.Id, ctx.User.Id, message, true, DateTime.UtcNow + time.Time);
-        await ConfirmLocalizedAsync("afk_timed_set",
-            TimestampTag.FromDateTimeOffset(DateTimeOffset.UtcNow + time.Time, TimestampTagStyles.Relative), message);
+        await ConfirmAsync(Strings.AfkTimedSet(ctx.Guild.Id,
+            TimestampTag.FromDateTimeOffset(DateTimeOffset.UtcNow + time.Time, TimestampTagStyles.Relative), message));
     }
 
     /// <summary>
@@ -227,12 +226,12 @@ public class Afk(InteractiveService serv, DiscordShardedClient client) : Mewdeko
         if (embedCode == "-")
         {
             await Service.SetCustomAfkMessage(ctx.Guild, "-").ConfigureAwait(false);
-            await ConfirmLocalizedAsync("afk_message_default").ConfigureAwait(false);
+            await ConfirmAsync(Strings.AfkMessageDefault(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
         await Service.SetCustomAfkMessage(ctx.Guild, embedCode).ConfigureAwait(false);
-        await ConfirmLocalizedAsync("afk_message_updated").ConfigureAwait(false);
+        await ConfirmAsync(Strings.AfkMessageUpdated(ctx.Guild.Id)).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -246,14 +245,14 @@ public class Afk(InteractiveService serv, DiscordShardedClient client) : Mewdeko
     {
         if (Environment.GetEnvironmentVariable("AFK_CACHED") != "1")
         {
-            await ErrorLocalizedAsync("afk_still_starting").ConfigureAwait(false);
+            await ErrorAsync(Strings.AfkStillStarting(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
         var afks = await Service.GetAfkUsers(ctx.Guild).ConfigureAwait(false);
         if (afks.Count == 0)
         {
-            await ErrorLocalizedAsync("afk_users_none").ConfigureAwait(false);
+            await ErrorAsync(Strings.AfkUsersNone(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
@@ -272,7 +271,7 @@ public class Afk(InteractiveService serv, DiscordShardedClient client) : Mewdeko
         {
             await Task.CompletedTask.ConfigureAwait(false);
             return new PageBuilder().WithOkColor()
-                .WithTitle($"{Format.Bold(GetText("active_afks"))} - {afks.ToArray().Length}")
+                .WithTitle($"{Format.Bold(Strings.ActiveAfks(ctx.Guild.Id))} - {afks.ToArray().Length}")
                 .WithDescription(string.Join("\n", afks.ToArray().Skip(page * 20).Take(20)));
         }
     }
@@ -292,18 +291,18 @@ public class Afk(InteractiveService serv, DiscordShardedClient client) : Mewdeko
             return;
         if (Environment.GetEnvironmentVariable("AFK_CACHED") != "1")
         {
-            await ErrorLocalizedAsync("afk_still_starting").ConfigureAwait(false);
+            await ErrorAsync(Strings.AfkStillStarting(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
         if (!await Service.IsAfk(user.Guild.Id, user.Id))
         {
-            await ErrorLocalizedAsync("afk_user_none").ConfigureAwait(false);
+            await ErrorAsync(Strings.AfkUserNone(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
         var msg = await Service.GetAfk(user.Guild.Id, user.Id);
-        await ConfirmLocalizedAsync("afk_user", user, msg.Message);
+        await ConfirmAsync(Strings.AfkUser(ctx.Guild.Id, user, msg.Message));
     }
 
 
@@ -321,7 +320,7 @@ public class Afk(InteractiveService serv, DiscordShardedClient client) : Mewdeko
         var chans = await Service.GetDisabledAfkChannels(ctx.Guild.Id);
         if (string.IsNullOrEmpty(chans) || chans == "0")
         {
-            await ErrorLocalizedAsync("afk_disabled_none").ConfigureAwait(false);
+            await ErrorAsync(Strings.AfkDisabledNone(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
@@ -346,8 +345,7 @@ public class Afk(InteractiveService serv, DiscordShardedClient client) : Mewdeko
         {
             await Task.CompletedTask.ConfigureAwait(false);
             return new PageBuilder().WithOkColor()
-                .WithTitle(
-                    $"{Format.Bold(GetText("disabled_afk_channels"))} - {mentions.ToArray().Length}")
+                .WithTitle(Strings.DisabledAfkChannels(ctx.Guild.Id, mentions.ToArray().Length))
                 .WithDescription(string.Join("\n", mentions.ToArray().Skip(page * 20).Take(20)));
         }
     }
@@ -365,18 +363,18 @@ public class Afk(InteractiveService serv, DiscordShardedClient client) : Mewdeko
     {
         if (Environment.GetEnvironmentVariable("AFK_CACHED") != "1")
         {
-            await ErrorLocalizedAsync("afk_still_starting").ConfigureAwait(false);
+            await ErrorAsync(Strings.AfkStillStarting(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
         if (num > 4096)
         {
-            await ErrorLocalizedAsync("afk_max_length_too_large").ConfigureAwait(false);
+            await ErrorAsync(Strings.AfkMaxLengthTooLarge(ctx.Guild.Id)).ConfigureAwait(false);
         }
         else
         {
             await Service.AfkLengthSet(ctx.Guild, num).ConfigureAwait(false);
-            await ConfirmLocalizedAsync("afk_max_length_set", num).ConfigureAwait(false);
+            await ConfirmAsync(Strings.AfkMaxLengthSet(ctx.Guild.Id, num)).ConfigureAwait(false);
         }
     }
 
@@ -393,12 +391,12 @@ public class Afk(InteractiveService serv, DiscordShardedClient client) : Mewdeko
     {
         if (Environment.GetEnvironmentVariable("AFK_CACHED") != "1")
         {
-            await ReplyErrorLocalizedAsync("afk_still_starting").ConfigureAwait(false);
+            await ReplyErrorAsync(Strings.AfkStillStarting(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
         await Service.AfkTypeSet(ctx.Guild, (int)afkTypeEnum).ConfigureAwait(false);
-        await ReplyConfirmLocalizedAsync("afk_type_set", afkTypeEnum).ConfigureAwait(false);
+        await ReplyConfirmAsync(Strings.AfkTypeSet(ctx.Guild.Id, afkTypeEnum)).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -414,18 +412,18 @@ public class Afk(InteractiveService serv, DiscordShardedClient client) : Mewdeko
     {
         if (Environment.GetEnvironmentVariable("AFK_CACHED") != "1")
         {
-            await ReplyErrorLocalizedAsync("afk_still_starting").ConfigureAwait(false);
+            await ReplyErrorAsync(Strings.AfkStillStarting(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
         if (time.Time < TimeSpan.FromSeconds(1) || time.Time > TimeSpan.FromHours(2))
         {
-            await ErrorLocalizedAsync("afk_timeout_invalid").ConfigureAwait(false);
+            await ErrorAsync(Strings.AfkTimeoutInvalid(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
         await Service.AfkTimeoutSet(ctx.Guild, Convert.ToInt32(time.Time.TotalSeconds)).ConfigureAwait(false);
-        await ConfirmLocalizedAsync("afk_timeout_set", time.Time.Humanize());
+        await ConfirmAsync(Strings.AfkTimeoutSet(ctx.Guild.Id, time.Time.Humanize()));
     }
 
 
@@ -441,7 +439,7 @@ public class Afk(InteractiveService serv, DiscordShardedClient client) : Mewdeko
     {
         if (Environment.GetEnvironmentVariable("AFK_CACHED") != "1")
         {
-            await ReplyErrorLocalizedAsync("afk_still_starting").ConfigureAwait(false);
+            await ReplyErrorAsync(Strings.AfkStillStarting(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
@@ -450,7 +448,7 @@ public class Afk(InteractiveService serv, DiscordShardedClient client) : Mewdeko
         var chans = await Service.GetDisabledAfkChannels(ctx.Guild.Id);
         if (string.IsNullOrWhiteSpace(chans) || chans == "0")
         {
-            await ErrorLocalizedAsync("afk_disabled_channels_none").ConfigureAwait(false);
+            await ErrorAsync(Strings.AfkDisabledChannelsNone(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
@@ -467,19 +465,19 @@ public class Afk(InteractiveService serv, DiscordShardedClient client) : Mewdeko
 
         if (mentions.Count == 0)
         {
-            await ErrorLocalizedAsync("afk_disabled_channels_noneset").ConfigureAwait(false);
+            await ErrorAsync(Strings.AfkDisabledChannelsNoneset(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
         if (!list.Except(toremove).Any())
         {
             await Service.AfkDisabledSet(ctx.Guild, "0").ConfigureAwait(false);
-            await ErrorLocalizedAsync("afk_ignoring_no_longer_disabled").ConfigureAwait(false);
+            await ErrorAsync(Strings.AfkIgnoringNoLongerDisabled(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
         await Service.AfkDisabledSet(ctx.Guild, string.Join(",", list.Except(toremove))).ConfigureAwait(false);
-        await ConfirmLocalizedAsync("afk_disabled_channels_removed", string.Join(",", mentions));
+        await ConfirmAsync(Strings.AfkDisabledChannelsRemoved(ctx.Guild.Id, string.Join(",", mentions)));
     }
 
     /// <summary>
@@ -494,7 +492,7 @@ public class Afk(InteractiveService serv, DiscordShardedClient client) : Mewdeko
     {
         if (Environment.GetEnvironmentVariable("AFK_CACHED") != "1")
         {
-            await ReplyErrorLocalizedAsync("afk_still_starting").ConfigureAwait(false);
+            await ReplyErrorAsync(Strings.AfkStillStarting(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
@@ -512,7 +510,7 @@ public class Afk(InteractiveService serv, DiscordShardedClient client) : Mewdeko
             }
 
             await Service.AfkDisabledSet(ctx.Guild, string.Join(",", list)).ConfigureAwait(false);
-            await ConfirmLocalizedAsync("afk_disabled_in", string.Join(",", mentions));
+            await ConfirmAsync(Strings.AfkDisabledIn(ctx.Guild.Id, string.Join(",", mentions)));
         }
         else
         {
@@ -534,12 +532,12 @@ public class Afk(InteractiveService serv, DiscordShardedClient client) : Mewdeko
 
             if (mentions.Count > 0)
             {
-                await ErrorLocalizedAsync("afk_already_in_list");
+                await ErrorAsync(Strings.AfkAlreadyInList(ctx.Guild.Id));
                 return;
             }
 
             await Service.AfkDisabledSet(ctx.Guild, string.Join(",", list)).ConfigureAwait(false);
-            await ConfirmLocalizedAsync("afk_channels_updated", string.Join(",", mentions));
+            await ConfirmAsync(Strings.AfkChannelsUpdated(ctx.Guild.Id, string.Join(",", mentions)));
         }
     }
 
@@ -562,7 +560,7 @@ public class Afk(InteractiveService serv, DiscordShardedClient client) : Mewdeko
 
         if (Environment.GetEnvironmentVariable("AFK_CACHED") != "1")
         {
-            await ReplyErrorLocalizedAsync("afk_still_starting").ConfigureAwait(false);
+            await ReplyErrorAsync(Strings.AfkStillStarting(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
@@ -595,16 +593,16 @@ public class Afk(InteractiveService serv, DiscordShardedClient client) : Mewdeko
         switch (users)
         {
             case > 0 when erroredusers == 0:
-                await ReplyConfirmLocalizedAsync("afk_rm_multi_success", users).ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.AfkRmMultiSuccess(ctx.Guild.Id, users)).ConfigureAwait(false);
                 break;
             case 0 when erroredusers == 0:
-                await ReplyErrorLocalizedAsync("afk_rm_fail_noafk").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.AfkRmFailNoafk(ctx.Guild.Id)).ConfigureAwait(false);
                 break;
             case > 0 when erroredusers > 0:
-                await ReplyConfirmLocalizedAsync("afk_success_hierarchy", users, erroredusers).ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.AfkSuccessHierarchy(ctx.Guild.Id, users, erroredusers)).ConfigureAwait(false);
                 break;
             case 0 when erroredusers >= 1:
-                await ReplyErrorLocalizedAsync("afk_rm_fail_hierarchy").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.AfkRmFailHierarchy(ctx.Guild.Id)).ConfigureAwait(false);
                 break;
         }
     }

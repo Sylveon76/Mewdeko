@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿
+
+using System.Text.Json.Serialization;
 
 namespace Mewdeko.Modules.Searches.Common;
 
@@ -26,19 +28,19 @@ public class AnimeResult
     /// <summary>
     ///     Gets or sets the airing status parsed from the JSON property.
     /// </summary>
-    [JsonProperty("airing_status")]
+    [JsonPropertyName("airing_status")]
     public string AiringStatusParsed { get; set; }
 
     /// <summary>
     ///     Gets or sets the English title of the anime.
     /// </summary>
-    [JsonProperty("title_english")]
+    [JsonPropertyName("title_english")]
     public string TitleEnglish { get; set; }
 
     /// <summary>
     ///     Gets or sets the total number of episodes of the anime.
     /// </summary>
-    [JsonProperty("total_episodes")]
+    [JsonPropertyName("total_episodes")]
     public int TotalEpisodes { get; set; }
 
     /// <summary>
@@ -49,7 +51,7 @@ public class AnimeResult
     /// <summary>
     ///     Gets or sets the URL to a large image of the anime.
     /// </summary>
-    [JsonProperty("image_url_lge")]
+    [JsonPropertyName("image_url_lge")]
     public string ImageUrlLarge { get; set; }
 
     /// <summary>
@@ -60,7 +62,7 @@ public class AnimeResult
     /// <summary>
     ///     Gets or sets the average score of the anime.
     /// </summary>
-    [JsonProperty("average_score")]
+    [JsonPropertyName("average_score")]
     public string AverageScore { get; set; }
 
     /// <summary>

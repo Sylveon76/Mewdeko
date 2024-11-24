@@ -33,17 +33,17 @@ public partial class Administration
             // The user can't auto-assign the role which is higher or equal to their highest role.
             if (ctx.User.Id != guser.Guild.OwnerId && guser.GetRoles().Max(x => x.Position) <= role.Position)
             {
-                await ReplyErrorLocalizedAsync("hierarchy").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.Hierarchy(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
             var roles = await Service.ToggleAarAsync(ctx.Guild.Id, role.Id).ConfigureAwait(false);
             if (roles.Count == 0)
-                await ReplyConfirmLocalizedAsync("aar_disabled").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.AarDisabled(ctx.Guild.Id)).ConfigureAwait(false);
             else if (roles.Contains(role.Id))
                 await AutoAssignRole().ConfigureAwait(false);
             else
-                await ReplyConfirmLocalizedAsync("aar_role_removed", Format.Bold(role.Mention)).ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.AabrRoleRemoved(ctx.Guild.Id, Format.Bold(role.Mention))).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -62,7 +62,7 @@ public partial class Administration
             var roles = await Service.TryGetNormalRoles(ctx.Guild.Id);
             if (!roles.Any())
             {
-                await ReplyConfirmLocalizedAsync("aar_none").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.AarNone(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
@@ -72,8 +72,8 @@ public partial class Administration
             if (existing.Count != roles.Count())
                 await Service.SetAarRolesAsync(ctx.Guild.Id, existing.Select(x => x.Id)).ConfigureAwait(false);
 
-            await ReplyConfirmLocalizedAsync("aar_roles",
-                $"\n{existing.Select(x => Format.Bold(x.Mention)).JoinWith("\n")}").ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.AabrRoles(ctx.Guild.Id,
+                $"\n{existing.Select(x => Format.Bold(x.Mention)).JoinWith("\n")}")).ConfigureAwait(false);
         }
 
 
@@ -98,17 +98,17 @@ public partial class Administration
             // The user can't auto-assign the role which is higher or equal to their highest role.
             if (ctx.User.Id != guser.Guild.OwnerId && guser.GetRoles().Max(x => x.Position) <= role.Position)
             {
-                await ReplyErrorLocalizedAsync("hierarchy").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.Hierarchy(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
             var roles = await Service.ToggleAabrAsync(ctx.Guild.Id, role.Id).ConfigureAwait(false);
             if (roles.Count == 0)
-                await ReplyConfirmLocalizedAsync("aabr_disabled").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.AabrDisabled(ctx.Guild.Id)).ConfigureAwait(false);
             else if (roles.Contains(role.Id))
                 await AutoAssignBotRole().ConfigureAwait(false);
             else
-                await ReplyConfirmLocalizedAsync("aabr_role_removed", Format.Bold(role.Mention)).ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.AabrRoleRemoved(ctx.Guild.Id, Format.Bold(role.Mention))).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -127,7 +127,7 @@ public partial class Administration
             var roles = await Service.TryGetBotRoles(ctx.Guild.Id);
             if (!roles.Any())
             {
-                await ReplyConfirmLocalizedAsync("aabr_none").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.AabrNone(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
@@ -137,8 +137,8 @@ public partial class Administration
             if (existing.Count != roles.Count())
                 await Service.SetAabrRolesAsync(ctx.Guild.Id, existing.Select(x => x.Id)).ConfigureAwait(false);
 
-            await ReplyConfirmLocalizedAsync("aabr_roles",
-                $"\n{existing.Select(x => Format.Bold(x.Mention)).JoinWith("\n")}").ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.AabrRoles(ctx.Guild.Id,
+                $"\n{existing.Select(x => Format.Bold(x.Mention)).JoinWith("\n")}")).ConfigureAwait(false);
         }
     }
 }

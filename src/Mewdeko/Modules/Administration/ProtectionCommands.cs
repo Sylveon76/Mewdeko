@@ -29,11 +29,11 @@ public partial class Administration
         {
             if (await Service.TryStopAntiAlt(ctx.Guild.Id).ConfigureAwait(false))
             {
-                await ReplyConfirmLocalizedAsync("prot_disable", "Anti-Alt").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.ProtDisable(ctx.Guild.Id, "Anti-Alt")).ConfigureAwait(false);
                 return;
             }
 
-            await ReplyErrorLocalizedAsync("protection_not_running", "Anti-Alt").ConfigureAwait(false);
+            await ReplyErrorAsync(Strings.ProtectionNotRunning(ctx.Guild.Id, "Anti-Alt")).ConfigureAwait(false);
         }
 
 
@@ -61,10 +61,10 @@ public partial class Administration
             switch (action)
             {
                 case PunishmentAction.Timeout when punishTime.Time.Days > 28:
-                    await ReplyErrorLocalizedAsync("timeout_length_too_long").ConfigureAwait(false);
+                    await ReplyErrorAsync(Strings.TimeoutLengthTooLong(ctx.Guild.Id)).ConfigureAwait(false);
                     return;
                 case PunishmentAction.Timeout when punishTime.Time == TimeSpan.Zero:
-                    await ReplyErrorLocalizedAsync("timeout_needs_time").ConfigureAwait(false);
+                    await ReplyErrorAsync(Strings.TimeoutNeedsTime(ctx.Guild.Id)).ConfigureAwait(false);
                     return;
             }
 
@@ -115,9 +115,9 @@ public partial class Administration
         public async Task AntiRaid()
         {
             if (await Service.TryStopAntiRaid(ctx.Guild.Id))
-                await ReplyConfirmLocalizedAsync("prot_disable", "Anti-Raid");
+                await ReplyConfirmAsync(Strings.ProtDisable(ctx.Guild.Id, "Anti-Raid"));
             else
-                await ReplyErrorLocalizedAsync("protection_not_running", "Anti-Raid");
+                await ReplyErrorAsync(Strings.ProtectionNotRunning(ctx.Guild.Id, "Anti-Raid"));
         }
 
         /// <summary>
@@ -169,35 +169,35 @@ public partial class Administration
             switch (action)
             {
                 case PunishmentAction.Timeout when punishTime.Time.Days > 28:
-                    await ReplyErrorLocalizedAsync("timeout_length_too_long").ConfigureAwait(false);
+                    await ReplyErrorAsync(Strings.TimeoutLengthTooLong(ctx.Guild.Id)).ConfigureAwait(false);
                     return;
                 case PunishmentAction.Timeout when punishTime.Time == TimeSpan.Zero:
-                    await ReplyErrorLocalizedAsync("timeout_needs_time").ConfigureAwait(false);
+                    await ReplyErrorAsync(Strings.TimeoutNeedsTime(ctx.Guild.Id)).ConfigureAwait(false);
                     return;
             }
 
             if (action == PunishmentAction.AddRole)
             {
-                await ReplyErrorLocalizedAsync("punishment_unsupported", action).ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.PunishmentUnsupported(ctx.Guild.Id, action)).ConfigureAwait(false);
                 return;
             }
 
             if (userThreshold is < 2 or > 30)
             {
-                await ReplyErrorLocalizedAsync("raid_cnt", 2, 30).ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.RaidCnt(ctx.Guild.Id, 2, 30)).ConfigureAwait(false);
                 return;
             }
 
             if (seconds is < 2 or > 300)
             {
-                await ReplyErrorLocalizedAsync("raid_time", 2, 300).ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.RaidTime(ctx.Guild.Id, 2, 300)).ConfigureAwait(false);
                 return;
             }
 
             if (punishTime is not null)
             {
                 if (!ProtectionService.IsDurationAllowed(action))
-                    await ReplyErrorLocalizedAsync("prot_cant_use_time").ConfigureAwait(false);
+                    await ReplyErrorAsync(Strings.ProtCantUseTime(ctx.Guild.Id)).ConfigureAwait(false);
             }
 
             var time = (int?)punishTime?.Time.TotalMinutes ?? 0;
@@ -209,7 +209,7 @@ public partial class Administration
 
             if (stats == null) return;
 
-            await ctx.Channel.SendConfirmAsync(GetText("prot_enable", "Anti-Raid"),
+            await ctx.Channel.SendConfirmAsync(Strings.ProtEnable(ctx.Guild.Id, "Anti-Raid"),
                     $"{ctx.User.Mention} {GetAntiRaidString(stats)}")
                 .ConfigureAwait(false);
         }
@@ -227,9 +227,9 @@ public partial class Administration
         public async Task AntiSpam()
         {
             if (await Service.TryStopAntiSpam(ctx.Guild.Id))
-                await ReplyConfirmLocalizedAsync("prot_disable", "Anti-Spam");
+                await ReplyConfirmAsync(Strings.ProtDisable(ctx.Guild.Id, "Anti-Spam"));
             else
-                await ReplyErrorLocalizedAsync("protection_not_running", "Anti-Spam");
+                await ReplyErrorAsync(Strings.ProtectionNotRunning(ctx.Guild.Id, "Anti-Spam"));
         }
 
         /// <summary>
@@ -321,7 +321,7 @@ public partial class Administration
             {
                 if (!ProtectionService.IsDurationAllowed(action))
                 {
-                    await ReplyErrorLocalizedAsync("prot_cant_use_time").ConfigureAwait(false);
+                    await ReplyErrorAsync(Strings.ProtCantUseTime(ctx.Guild.Id)).ConfigureAwait(false);
                     return;
                 }
             }
@@ -333,17 +333,17 @@ public partial class Administration
             switch (action)
             {
                 case PunishmentAction.Timeout when timeData.Time.Days > 28:
-                    await ReplyErrorLocalizedAsync("timeout_length_too_long").ConfigureAwait(false);
+                    await ReplyErrorAsync(Strings.TimeoutLengthTooLong(ctx.Guild.Id)).ConfigureAwait(false);
                     return;
                 case PunishmentAction.Timeout when timeData.Time == TimeSpan.Zero:
-                    await ReplyErrorLocalizedAsync("timeout_needs_time").ConfigureAwait(false);
+                    await ReplyErrorAsync(Strings.TimeoutNeedsTime(ctx.Guild.Id)).ConfigureAwait(false);
                     return;
             }
 
             var stats = await Service.StartAntiSpamAsync(ctx.Guild.Id, messageCount, action, time, role?.Id)
                 .ConfigureAwait(false);
 
-            await ctx.Channel.SendConfirmAsync(GetText("prot_enable", "Anti-Spam"),
+            await ctx.Channel.SendConfirmAsync(Strings.ProtEnable(ctx.Guild.Id, "Anti-Spam"),
                 $"{ctx.User.Mention} {GetAntiSpamString(stats)}").ConfigureAwait(false);
         }
 
@@ -362,11 +362,11 @@ public partial class Administration
 
             if (added is null)
             {
-                await ReplyErrorLocalizedAsync("protection_not_running", "Anti-Spam").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.ProtectionNotRunning(ctx.Guild.Id, "Anti-Spam")).ConfigureAwait(false);
                 return;
             }
 
-            await ReplyConfirmLocalizedAsync(added.Value ? "spam_ignore" : "spam_not_ignore", "Anti-Spam")
+            await ReplyConfirmAsync(added.Value ? Strings.SpamIgnore(ctx.Guild.Id, "Anti-Spam") : Strings.SpamNotIgnore(ctx.Guild.Id, "Anti-Spam"))
                 .ConfigureAwait(false);
         }
 
@@ -384,11 +384,11 @@ public partial class Administration
         {
             if (await Service.TryStopAntiMassMention(ctx.Guild.Id).ConfigureAwait(false))
             {
-                await ReplyConfirmLocalizedAsync("prot_disable", "Anti-Mass-Mention").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.ProtDisable(ctx.Guild.Id, "Anti-Mass-Mention")).ConfigureAwait(false);
                 return;
             }
 
-            await ReplyErrorLocalizedAsync("protection_not_running", "Anti-Mass-Mention").ConfigureAwait(false);
+            await ReplyErrorAsync(Strings.ProtectionNotRunning(ctx.Guild.Id, "Anti-Mass-Mention")).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -422,10 +422,10 @@ public partial class Administration
             switch (action)
             {
                 case PunishmentAction.Timeout when punishTime.Time.Days > 28:
-                    await ReplyErrorLocalizedAsync("timeout_length_too_long").ConfigureAwait(false);
+                    await ReplyErrorAsync(Strings.TimeoutLengthTooLong(ctx.Guild.Id)).ConfigureAwait(false);
                     return;
                 case PunishmentAction.Timeout when punishTime.Time == TimeSpan.Zero:
-                    await ReplyErrorLocalizedAsync("timeout_needs_time").ConfigureAwait(false);
+                    await ReplyErrorAsync(Strings.TimeoutNeedsTime(ctx.Guild.Id)).ConfigureAwait(false);
                     return;
             }
 
@@ -484,12 +484,12 @@ public partial class Administration
 
             if (spam is null && raid is null && alt is null && massMention is null)
             {
-                await ReplyConfirmLocalizedAsync("prot_none").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.ProtNone(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
             var embed = new EmbedBuilder().WithOkColor()
-                .WithTitle(GetText("prot_active"));
+                .WithTitle(Strings.ProtActive(ctx.Guild.Id));
 
             if (spam != null)
             {
@@ -530,7 +530,7 @@ public partial class Administration
             if (settings.MuteTime > 0)
                 add = $" ({TimeSpan.FromMinutes(settings.MuteTime).Humanize()})";
 
-            return GetText("mass_mention_stats",
+            return Strings.MassMentionStats(ctx.Guild.Id,
                 Format.Bold(settings.MentionThreshold.ToString()),
                 Format.Bold(settings.MaxMentionsInTimeWindow.ToString()),
                 Format.Bold(settings.TimeWindowSeconds.ToString()),
@@ -541,7 +541,7 @@ public partial class Administration
 
         private string? GetAntiAltString(AntiAltStats alt)
         {
-            return GetText("anti_alt_status",
+            return Strings.AntiAltStatus(ctx.Guild.Id,
                 Format.Bold(TimeSpan.Parse(alt.MinAge).ToString(@"dd\d\ hh\h\ mm\m\ ")),
                 Format.Bold(alt.Action.ToString()),
                 Format.Bold(alt.Counter.ToString()));
@@ -558,7 +558,7 @@ public partial class Administration
             var add = "";
             if (settings.MuteTime > 0) add = $" ({TimeSpan.FromMinutes(settings.MuteTime).Humanize()})";
 
-            return GetText("spam_stats",
+            return Strings.SpamStats(ctx.Guild.Id,
                 Format.Bold(settings.MessageThreshold.ToString()),
                 Format.Bold(settings.Action + add),
                 ignoredString);
@@ -571,7 +571,7 @@ public partial class Administration
             if (stats.AntiRaidSettings.PunishDuration > 0)
                 actionString += $" **({TimeSpan.FromMinutes(stats.AntiRaidSettings.PunishDuration).Humanize()})**";
 
-            return GetText("raid_stats",
+            return Strings.RaidStats(ctx.Guild.Id,
                 Format.Bold(stats.AntiRaidSettings.UserThreshold.ToString()),
                 Format.Bold(stats.AntiRaidSettings.Seconds.ToString()),
                 actionString);

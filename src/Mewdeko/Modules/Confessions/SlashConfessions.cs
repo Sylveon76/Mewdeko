@@ -40,7 +40,7 @@ public class SlashConfessions : MewdekoSlashModuleBase<ConfessionService>
         var attachUrl = attachment?.Url;
         if ((await guildSettings.GetGuildConfig(ctx.Guild.Id)).ConfessionChannel is 0)
         {
-            await EphemeralReplyErrorLocalizedAsync("confessions_none").ConfigureAwait(false);
+            await EphemeralReplyErrorAsync(Strings.ConfessionsNone(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
@@ -48,7 +48,7 @@ public class SlashConfessions : MewdekoSlashModuleBase<ConfessionService>
         {
             if (blacklists.Contains(ctx.User.Id.ToString()))
             {
-                await EphemeralReplyErrorLocalizedAsync("confessions_blacklisted").ConfigureAwait(false);
+                await EphemeralReplyErrorAsync(Strings.ConfessionsBlacklisted(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
@@ -76,7 +76,7 @@ public class SlashConfessions : MewdekoSlashModuleBase<ConfessionService>
         if (channel is null)
         {
             await Service.SetConfessionChannel(ctx.Guild, 0).ConfigureAwait(false);
-            await ConfirmLocalizedAsync("confessions_disabled").ConfigureAwait(false);
+            await ConfirmAsync(Strings.ConfessionsDisabled(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
@@ -84,11 +84,11 @@ public class SlashConfessions : MewdekoSlashModuleBase<ConfessionService>
         var perms = currentUser.GetPermissions(channel);
         if (!perms.SendMessages || !perms.EmbedLinks)
         {
-            await ErrorLocalizedAsync("confessions_invalid_perms").ConfigureAwait(false);
+            await ErrorAsync(Strings.ConfessionsInvalidPerms(ctx.Guild.Id)).ConfigureAwait(false);
         }
 
         await Service.SetConfessionChannel(ctx.Guild, channel.Id).ConfigureAwait(false);
-        await ConfirmLocalizedAsync("confessions_channel_set", channel.Mention).ConfigureAwait(false);
+        await ConfirmAsync(Strings.ConfessionsChannelSet(ctx.Guild.Id, channel.Mention)).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -105,7 +105,7 @@ public class SlashConfessions : MewdekoSlashModuleBase<ConfessionService>
         if (channel is null)
         {
             await Service.SetConfessionLogChannel(ctx.Guild, 0).ConfigureAwait(false);
-            await ConfirmLocalizedAsync("confessions_logging_disabled").ConfigureAwait(false);
+            await ConfirmAsync(Strings.ConfessionsLoggingDisabled(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
@@ -113,11 +113,11 @@ public class SlashConfessions : MewdekoSlashModuleBase<ConfessionService>
         var perms = currentUser.GetPermissions(channel);
         if (!perms.SendMessages || !perms.EmbedLinks)
         {
-            await ErrorLocalizedAsync("confessions_invalid_perms").ConfigureAwait(false);
+            await ErrorAsync(Strings.ConfessionsInvalidPerms(ctx.Guild.Id)).ConfigureAwait(false);
         }
 
         await Service.SetConfessionLogChannel(ctx.Guild, channel.Id).ConfigureAwait(false);
-        await ErrorLocalizedAsync("confessions_spleen").ConfigureAwait(false);
+        await ErrorAsync(Strings.ConfessionsSpleen(ctx.Guild.Id, channel.Mention)).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -136,12 +136,12 @@ public class SlashConfessions : MewdekoSlashModuleBase<ConfessionService>
         {
             if (blacklists.Contains(user.Id.ToString()))
             {
-                await ErrorLocalizedAsync("confessions_blacklisted_already").ConfigureAwait(false);
+                await ErrorAsync(Strings.ConfessionsBlacklistedAlready(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
             await Service.ToggleUserBlacklistAsync(ctx.Guild.Id, user.Id).ConfigureAwait(false);
-            await ConfirmLocalizedAsync("confessions_blacklisted_added", user.Mention).ConfigureAwait(false);
+            await ConfirmAsync(Strings.ConfessionsBlacklistedAdded(ctx.Guild.Id, user.Mention)).ConfigureAwait(false);
         }
     }
 
@@ -161,12 +161,12 @@ public class SlashConfessions : MewdekoSlashModuleBase<ConfessionService>
         {
             if (!blacklists.Contains(user.Id.ToString()))
             {
-                await ErrorLocalizedAsync("confessions_blacklisted_not").ConfigureAwait(false);
+                await ErrorAsync(Strings.ConfessionsBlacklistedNot(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
             await Service.ToggleUserBlacklistAsync(ctx.Guild.Id, user.Id).ConfigureAwait(false);
-            await ConfirmLocalizedAsync("confessions_blacklisted_removed", user.Mention).ConfigureAwait(false);
+            await ConfirmAsync(Strings.ConfessionsBlacklistedRemoved(ctx.Guild.Id, user.Mention)).ConfigureAwait(false);
         }
     }
 
@@ -185,7 +185,7 @@ public class SlashConfessions : MewdekoSlashModuleBase<ConfessionService>
     {
         if (!ulong.TryParse(stringServerId, out var serverId))
         {
-            await ErrorLocalizedAsync("confessions_invalid_id").ConfigureAwait(false);
+            await ErrorAsync(Strings.ConfessionsInvalidId(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
@@ -193,21 +193,21 @@ public class SlashConfessions : MewdekoSlashModuleBase<ConfessionService>
         var channel =
             await ((DiscordShardedClient)ctx.Client).Rest.GetChannelAsync(credentials.ConfessionReportChannelId)
                 .ConfigureAwait(false) as ITextChannel;
-        var eb = new EmbedBuilder().WithErrorColor().WithTitle(GetText("confessions_report_received"))
-            .AddField(GetText("confessions_report"), how)
-            .AddField(GetText("confessions_report_user"), $"{ctx.User} | {ctx.User.Id}")
-            .AddField(GetText("confessions_server_id"), serverId);
+        var eb = new EmbedBuilder().WithErrorColor().WithTitle(Strings.ConfessionsReportReceived(ctx.Guild.Id))
+            .AddField(Strings.ConfessionsReport(ctx.Guild.Id), how)
+            .AddField(Strings.ConfessionsReportUser(ctx.Guild.Id), $"{ctx.User} | {ctx.User.Id}")
+            .AddField(Strings.ConfessionsServerId(ctx.Guild.Id), serverId);
         try
         {
             var invites = await reportedGuild.GetInvitesAsync().ConfigureAwait(false);
-            eb.AddField(GetText("confessions_server_invite"), invites.FirstOrDefault().Url);
+            eb.AddField(Strings.ConfessionsServerInvite(ctx.Guild.Id), invites.FirstOrDefault().Url);
         }
         catch
         {
-            eb.AddField(GetText("confessions_server_invite"), GetText("confessions_missing_invite"));
+            eb.AddField(Strings.ConfessionsServerInvite(ctx.Guild.Id), Strings.ConfessionsMissingInvite(ctx.Guild.Id));
         }
 
         await channel.SendMessageAsync(embed: eb.Build()).ConfigureAwait(false);
-        await EphemeralReplyErrorLocalizedAsync("confessions_report_sent").ConfigureAwait(false);
+        await EphemeralReplyErrorAsync(Strings.ConfessionsReportSent(ctx.Guild.Id)).ConfigureAwait(false);
     }
 }

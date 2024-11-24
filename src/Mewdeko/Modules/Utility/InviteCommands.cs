@@ -36,7 +36,7 @@ public partial class Utility
         {
             user ??= Context.User;
             var invites = await Service.GetInviteCount(user.Id, Context.Guild.Id);
-            await ReplyConfirmLocalizedAsync("user_invite_count", user, invites);
+            await ReplyConfirmAsync(Strings.UserInviteCount(ctx.Guild.Id, user, invites));
         }
 
         /// <summary>
@@ -49,10 +49,10 @@ public partial class Utility
         public async Task InviteSettings()
         {
             var settings = await Service.GetInviteCountSettingsAsync(Context.Guild.Id);
-            await ReplyConfirmLocalizedAsync("invite_settings",
+            await ReplyConfirmAsync(Strings.InviteSettings(ctx.Guild.Id,
                 GetEnDis(settings.IsEnabled),
                 GetEnDis(settings.RemoveInviteOnLeave),
-                    settings.MinAccountAge);
+                    settings.MinAccountAge));
         }
 
         /// <summary>
@@ -66,7 +66,9 @@ public partial class Utility
         {
             var newState = await Service.SetInviteTrackingEnabledAsync(Context.Guild.Id,
                 !(await Service.GetInviteCountSettingsAsync(Context.Guild.Id)).IsEnabled);
-            await ReplyConfirmLocalizedAsync(newState ? "invite_tracking_enabled" : "invite_tracking_disabled");
+            await ReplyConfirmAsync(newState
+                ? Strings.InviteTrackingEnabled(Context.Guild.Id)
+                : Strings.InviteTrackingDisabled(Context.Guild.Id));
         }
 
         /// <summary>
@@ -80,9 +82,9 @@ public partial class Utility
         {
             var newState = await Service.SetRemoveInviteOnLeaveAsync(Context.Guild.Id,
                 !(await Service.GetInviteCountSettingsAsync(Context.Guild.Id)).RemoveInviteOnLeave);
-            await ReplyConfirmLocalizedAsync(newState
-                ? "remove_invite_on_leave_enabled"
-                : "remove_invite_on_leave_disabled");
+            await ReplyConfirmAsync(newState
+                ? Strings.RemoveInviteOnLeaveEnabled(Context.Guild.Id)
+                : Strings.RemoveInviteOnLeaveDisabled(Context.Guild.Id));
         }
 
         /// <summary>
@@ -97,7 +99,7 @@ public partial class Utility
         {
             var minAge = TimeSpan.FromDays(days);
             await Service.SetMinAccountAgeAsync(Context.Guild.Id, minAge);
-            await ReplyConfirmLocalizedAsync("min_account_age_set", days);
+            await ReplyConfirmAsync(Strings.MinAccountAgeSet(ctx.Guild.Id, days));
         }
 
         /// <summary>
@@ -112,7 +114,7 @@ public partial class Utility
 
             if (leaderboard.Count == 0)
             {
-                await ReplyErrorLocalizedAsync("no_invite_data");
+                await ReplyErrorAsync(Strings.NoInviteData(ctx.Guild.Id));
                 return;
             }
 
@@ -133,7 +135,7 @@ public partial class Utility
             {
                 await Task.CompletedTask.ConfigureAwait(false);
                 return new PageBuilder().WithOkColor()
-                    .WithTitle(GetText("invite_leaderboard_title"))
+                    .WithTitle(Strings.InviteLeaderboardTitle(ctx.Guild.Id))
                     .WithDescription(string.Join("\n", leaderboard.Skip(page * 20).Take(20)
                         .Select((x, i) => $"{i + 1 + page * 20}. {x.Username} - {x.InviteCount} invites")));
             }
@@ -152,9 +154,9 @@ public partial class Utility
             var inviter = await Service.GetInviter(user.Id, Context.Guild);
 
             if (inviter == null)
-                await ReplyErrorLocalizedAsync("no_inviter_found", user.Username);
+                await ReplyErrorAsync(Strings.NoInviterFound(ctx.Guild.Id, user.Username));
             else
-                await ReplyConfirmLocalizedAsync("inviter_found", user.Username, inviter.Username);
+                await ReplyConfirmAsync(Strings.InviterFound(ctx.Guild.Id, user.Username, inviter.Username));
         }
 
         /// <summary>
@@ -171,7 +173,7 @@ public partial class Utility
 
             if (invitedUsers.Count == 0)
             {
-                await ReplyErrorLocalizedAsync("no_invited_users", user.Username);
+                await ReplyErrorAsync(Strings.NoInvitedUsers(ctx.Guild.Id, user.Username));
                 return;
             }
 
@@ -192,7 +194,7 @@ public partial class Utility
             {
                 await Task.CompletedTask.ConfigureAwait(false);
                 return new PageBuilder().WithOkColor()
-                    .WithTitle(GetText("invited_users_title", user.Username))
+                    .WithTitle(Strings.InvitedUsersTitle(ctx.Guild.Id, user.Username))
                     .WithDescription(string.Join("\n",
                         invitedUsers.Skip(page * 20).Take(20).Select(x => x.ToString())));
             }

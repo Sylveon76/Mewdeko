@@ -24,7 +24,7 @@ public partial class Utility
         var user = await client.Rest.GetUserAsync(usr.Id);
         if (user.GetBannerUrl(size: 2048) == null && guildUser.GetBannerUrl() == null)
         {
-            await ReplyErrorLocalizedAsync("avatar_none", usr.ToString()).ConfigureAwait(false);
+            await ReplyErrorAsync(Strings.AvatarNone(ctx.Guild.Id, usr.ToString())).ConfigureAwait(false);
             return;
         }
 
@@ -191,7 +191,7 @@ public partial class Utility
 
             var component = new ComponentBuilder().WithButton("More Info", "moresinfo");
             var embed = new EmbedBuilder()
-                .WithAuthor(eab => eab.WithName(GetText("server_info")))
+                .WithAuthor(eab => eab.WithName(Strings.ServerInfo(ctx.Guild.Id)))
                 .WithTitle(guild.Name)
                 .AddField("Id", guild.Id.ToString())
                 .AddField("Owner", ownername.Mention)
@@ -205,7 +205,7 @@ public partial class Utility
             if (guild.Emotes.Count > 0)
             {
                 embed.AddField(fb =>
-                    fb.WithName($"{GetText("custom_emojis")}({guild.Emotes.Count})")
+                    fb.WithName($"{Strings.CustomEmojis(ctx.Guild.Id)}({guild.Emotes.Count})")
                         .WithValue(string.Join(" ", guild.Emotes
                                 .Shuffle()
                                 .Take(30)
@@ -230,9 +230,9 @@ public partial class Utility
             var ch = channel ?? (ITextChannel)ctx.Channel;
             var embed = new EmbedBuilder()
                 .WithTitle(ch.Name)
-                .AddField(GetText("id"), ch.Id.ToString())
-                .AddField(GetText("created_at"), TimestampTag.FromDateTimeOffset(ch.CreatedAt))
-                .AddField(GetText("users"), (await ch.GetUsersAsync().FlattenAsync().ConfigureAwait(false)).Count())
+                .AddField(Strings.Id(ctx.Guild.Id), ch.Id.ToString())
+                .AddField(Strings.CreatedAt(ctx.Guild.Id), TimestampTag.FromDateTimeOffset(ch.CreatedAt))
+                .AddField(Strings.Users(ctx.Guild.Id), (await ch.GetUsersAsync().FlattenAsync().ConfigureAwait(false)).Count())
                 .AddField("NSFW", ch.IsNsfw)
                 .AddField("Slowmode Interval", TimeSpan.FromSeconds(ch.SlowModeInterval).Humanize())
                 .AddField("Default Thread Archive Duration", ch.DefaultArchiveDuration)
@@ -329,7 +329,7 @@ public partial class Utility
 
             if (avatarUrl == null)
             {
-                await ReplyErrorLocalizedAsync("avatar_none", usr.ToString()).ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.AvatarNone(ctx.Guild.Id, usr.ToString())).ConfigureAwait(false);
                 return;
             }
 

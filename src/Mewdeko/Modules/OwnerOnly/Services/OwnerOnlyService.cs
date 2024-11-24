@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading;
 using LinqToDB.EntityFrameworkCore;
 using Mewdeko.Common.Configs;
@@ -10,8 +11,9 @@ using Mewdeko.Common.ModuleBehaviors;
 using Mewdeko.Database.DbContextStuff;
 using Mewdeko.Services.Settings;
 using Mewdeko.Services.strings;
+using Mewdeko.Services.Strings;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
+
 using Octokit;
 using Serilog;
 using StackExchange.Redis;
@@ -38,7 +40,7 @@ public class OwnerOnlyService : ILateExecutor, IReadyExecutor, INService
     private readonly GuildSettingsService guildSettings;
     private readonly IHttpClientFactory httpFactory;
     private readonly Replacer rep;
-    private readonly IBotStrings strings;
+    private readonly GeneratedBotStrings Strings;
 
 #pragma warning disable CS8714
     private ConcurrentDictionary<ulong?, ConcurrentDictionary<int, Timer>> autoCommands =
@@ -71,14 +73,14 @@ public class OwnerOnlyService : ILateExecutor, IReadyExecutor, INService
     ///     and checking for updates. It also listens for commands to leave guilds or reload images via Redis subscriptions.
     /// </remarks>
     public OwnerOnlyService(DiscordShardedClient client, CommandHandler cmdHandler, DbContextProvider dbProvider,
-        IBotStrings strings, IBotCredentials creds, IDataCache cache, IHttpClientFactory factory,
+        GeneratedBotStrings strings, IBotCredentials creds, IDataCache cache, IHttpClientFactory factory,
         BotConfigService bss, IEnumerable<IPlaceholderProvider> phProviders, Mewdeko bot,
         GuildSettingsService guildSettings, EventHandler handler)
     {
         var redis = cache.Redis;
         this.cmdHandler = cmdHandler;
         this.dbProvider = dbProvider;
-        this.strings = strings;
+        this.Strings = strings;
         this.client = client;
         this.creds = creds;
         this.cache = cache;
@@ -148,9 +150,9 @@ public class OwnerOnlyService : ILateExecutor, IReadyExecutor, INService
         var bs = bss.Data;
         if (msg.Channel is IDMChannel && bss.Data.ForwardMessages && ownerChannels.Count > 0)
         {
-            var title = $"{strings.GetText("dm_from")} [{msg.Author}]({msg.Author.Id})";
+            var title = $"{Strings.DmFrom(guild.Id)} [{msg.Author}]({msg.Author.Id})";
 
-            var attachamentsTxt = strings.GetText("attachments");
+            var attachamentsTxt = Strings.Attachments(guild.Id);
 
             var toSend = msg.Content;
 
@@ -287,8 +289,8 @@ public class OwnerOnlyService : ILateExecutor, IReadyExecutor, INService
                         var user = await client.Rest.GetUserAsync(i);
                         if (user is null) continue;
                         var channel = await user.CreateDMChannelAsync();
-                        await channel.SendMessageAsync(
-                            $"Quarantined in {value.Guild.Name} [{value.Guild.Id}]");
+                        await channel.SendMessageAsync(Strings.QuarantineNotification(args.Value.Guild.Id, arsg2.Guild.Name, value.Guild.Id));
+
                     }
                 }
                 else
@@ -297,8 +299,7 @@ public class OwnerOnlyService : ILateExecutor, IReadyExecutor, INService
                     if (user is not null)
                     {
                         var channel = await user.CreateDMChannelAsync();
-                        await channel.SendMessageAsync(
-                            $"Quarantined in {value.Guild.Name} [{value.Guild.Id}]");
+                        await channel.SendMessageAsync(Strings.QuarantineNotification(args.Value.Guild.Id, arsg2.Guild.Name, value.Guild.Id));
                     }
                 }
             }
@@ -320,28 +321,28 @@ public class OwnerOnlyService : ILateExecutor, IReadyExecutor, INService
                 case UpdateCheckType.Release:
                     var latestRelease = await github.Repository.Release.GetLatest("SylveonDeko", "Mewdeko");
                     var eb = new EmbedBuilder()
-                        .WithAuthor($"New Release found: {latestRelease.TagName}",
+                        .WithAuthor(Strings.NewReleaseTitle(null, latestRelease.TagName),
                             "https://seeklogo.com/images/G/github-logo-5F384D0265-seeklogo.com.png",
                             latestRelease.HtmlUrl)
-                        .WithDescription(
-                            $"- If on Windows, you can download the new release [here]({latestRelease.Assets[0].BrowserDownloadUrl})\n" +
-                            $"- If running source just run the `{bss.Data.Prefix}update command and the bot will do the rest for you.`")
+                        .WithDescription(Strings.NewReleaseDesc(null,
+                            latestRelease.Assets[0].BrowserDownloadUrl,
+                            bss.Data.Prefix))
                         .WithOkColor();
                     var list = await redis.StringGetAsync($"{creds.RedisKey()}_ReleaseList");
                     if (!list.HasValue)
                     {
                         await redis.StringSetAsync($"{creds.RedisKey()}_ReleaseList",
-                            JsonConvert.SerializeObject(latestRelease));
+                            JsonSerializer.Serialize(latestRelease));
                         Log.Information("Setting latest release to {ReleaseTag}", latestRelease.TagName);
                     }
                     else
                     {
-                        var release = JsonConvert.DeserializeObject<Release>(list);
+                        var release = JsonSerializer.Deserialize<Release>(list);
                         if (release.TagName != latestRelease.TagName)
                         {
                             Log.Information("New release found: {ReleaseTag}", latestRelease.TagName);
                             await redis.StringSetAsync($"{creds.RedisKey()}_ReleaseList",
-                                JsonConvert.SerializeObject(latestRelease));
+                                JsonSerializer.Serialize(latestRelease));
                             if (bss.Data.ForwardToAllOwners)
                             {
                                 foreach (var i in creds.OwnerIds)
@@ -445,12 +446,16 @@ public class OwnerOnlyService : ILateExecutor, IReadyExecutor, INService
                 if (UserConversations.TryGetValue(args.Author.Id, out _))
                 {
                     ClearConversation(args.Author.Id);
-                    await args.Channel.SendConfirmAsync("Conversation deleted.");
+                    await args.Channel.SendConfirmAsync(
+                        Strings.ConversationDeleted(guildChannel.Guild.Id)
+                    );
                     return;
                 }
 
-                await args.Channel.SendErrorAsync("You dont have a conversation saved.", bss.Data);
-                return;
+                await args.Channel.SendErrorAsync(
+                    Strings.NoConversation(guildChannel.Guild.Id),
+                    bss.Data
+                );                return;
             }
 
             await using var dbContext = await dbProvider.GetContextAsync();
@@ -538,7 +543,7 @@ public class OwnerOnlyService : ILateExecutor, IReadyExecutor, INService
 
             if (!line.StartsWith("data: ")) continue;
             var json = line[6..];
-            var chatResponse = JsonConvert.DeserializeObject<ChatCompletionChunkResponse>(json);
+            var chatResponse = JsonSerializer.Deserialize<ChatCompletionChunkResponse>(json);
             lastResponse = chatResponse;
             if (chatResponse?.Choices is not { Count: > 0 }) continue;
             var conversationContent = chatResponse.Choices[0].Delta?.Content;
@@ -983,7 +988,7 @@ public class OwnerOnlyService : ILateExecutor, IReadyExecutor, INService
 
         var pub = cache.Redis.GetSubscriber();
         pub.Publish($"{creds.RedisKey()}_shardcoord_stop",
-            JsonConvert.SerializeObject(shardId),
+            JsonSerializer.Serialize(shardId),
             CommandFlags.FireAndForget);
 
         return true;
@@ -1014,58 +1019,58 @@ public class OwnerOnlyService : ILateExecutor, IReadyExecutor, INService
 
     private class Choice
     {
-        [JsonProperty("delta", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("delta")]
         public Delta Delta;
 
-        [JsonProperty("finish_reason", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("finish_reason")]
         public object FinishReason;
 
-        [JsonProperty("index", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("index")]
         public int? Index;
 
-        [JsonProperty("logprobs", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("logprobs")]
         public object Logprobs;
     }
 
     private class Delta
     {
-        [JsonProperty("content", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("content")]
         public string Content;
     }
 
     private class ChatCompletionChunkResponse
     {
-        [JsonProperty("choices", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("choices")]
         public List<Choice> Choices;
 
-        [JsonProperty("created", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("created")]
         public int? Created;
 
-        [JsonProperty("id", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("id")]
         public string Id;
 
-        [JsonProperty("model", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("model")]
         public string Model;
 
-        [JsonProperty("object", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("object")]
         public string Object;
 
-        [JsonProperty("system_fingerprint", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("system_fingerprint")]
         public string SystemFingerprint;
 
-        [JsonProperty("usage", NullValueHandling = NullValueHandling.Include)]
+        [JsonPropertyName("usage")]
         public Usage? Usage;
     }
 
     private class Usage
     {
-        [JsonProperty("completion_tokens", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("completion_tokens")]
         public int CompletionTokens;
 
-        [JsonProperty("prompt_tokens", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("prompt_tokens")]
         public int PromptTokens;
 
-        [JsonProperty("total_tokens", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("total_tokens")]
         public int TotalTokens;
     }
 

@@ -27,7 +27,7 @@ public class VoteSlashCommands(InteractiveService interactivity) : MewdekoSlashM
     public async Task VoteChannel(ITextChannel channel)
     {
         await Service.SetVoteChannel(ctx.Guild.Id, channel.Id);
-        await ctx.Interaction.SendConfirmAsync("Sucessfully set the vote channel!");
+        await ctx.Interaction.SendConfirmAsync(Strings.VoteChannelSet(ctx.Guild.Id));
     }
 
     /// <summary>
@@ -47,7 +47,7 @@ public class VoteSlashCommands(InteractiveService interactivity) : MewdekoSlashM
         var votes = await Service.GetVotes(ctx.Guild.Id, ctx.User.Id);
         switch (message)
         {
-            case null when await PromptUserConfirmAsync("Do you want to preview your embed?", ctx.User.Id):
+            case null when await PromptUserConfirmAsync(Strings.PreviewEmbedConfirm(ctx.Guild.Id), ctx.User.Id):
             {
                 if (string.IsNullOrWhiteSpace(voteMessage))
                 {
@@ -140,7 +140,7 @@ public class VoteSlashCommands(InteractiveService interactivity) : MewdekoSlashM
             }
             catch
             {
-                await ctx.Interaction.SendErrorAsync("Invalid time input. Format is 1d3h2s", Config);
+                await ctx.Interaction.SendErrorAsync(Strings.InvalidTimeFormat(ctx.Guild.Id), Config);
                 return;
             }
         }
@@ -193,7 +193,7 @@ public class VoteSlashCommands(InteractiveService interactivity) : MewdekoSlashM
         }
         catch
         {
-            await ctx.Interaction.SendErrorAsync("Invalid time input. Format is 1d3h2s", Config);
+            await ctx.Interaction.SendErrorAsync(Strings.InvalidTimeFormat(ctx.Guild.Id), Config);
             return;
         }
 
@@ -234,7 +234,7 @@ public class VoteSlashCommands(InteractiveService interactivity) : MewdekoSlashM
     [RequireContext(ContextType.Guild)]
     public async Task VotePassModal(VotePasswordModal modal)
     {
-        await ctx.Interaction.SendEphemeralConfirmAsync("Vote password set.");
+        await ctx.Interaction.SendEphemeralConfirmAsync(Strings.VotePasswordSet(ctx.Guild.Id));
         await Service.SetVotePassword(ctx.Guild.Id, modal.Password);
     }
 

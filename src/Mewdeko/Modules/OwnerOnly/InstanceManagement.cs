@@ -27,23 +27,23 @@ public class InstanceManagement(InteractiveService interactiveService, DbContext
             if (added.Item1)
             {
                 var eb = new EmbedBuilder()
-                    .WithTitle($"{GetText("instance_added")} {added.Item2.BotName}")
+                    .WithTitle($"{Strings.InstanceAdded(ctx.Guild.Id)} {added.Item2.BotName}")
                     .WithThumbnailUrl(added.Item2.BotAvatar)
-                    .WithDescription($"{GetText("instance_status")} {added.Item2.BotStatus}" +
-                                     $"\n {GetText("instance_version", added.Item2.BotVersion)}" +
-                                     $"\n {GetText("instance_command_count", added.Item2.CommandsCount)}" +
-                                     $"\n {GetText("instance_modules_count", added.Item2.ModulesCount)}" +
-                                     $"\n {GetText("instance_user_count", added.Item2.UserCount)}")
+                    .WithDescription($"{Strings.InstanceStatus(ctx.Guild.Id)} {added.Item2.BotStatus}" +
+                                     $"\n {Strings.InstanceVersion(ctx.Guild.Id, added.Item2.BotVersion)}" +
+                                     $"\n {Strings.InstanceCommandCount(ctx.Guild.Id, added.Item2.CommandsCount)}" +
+                                     $"\n {Strings.InstanceModulesCount(ctx.Guild.Id, added.Item2.ModulesCount)}" +
+                                     $"\n {Strings.InstanceUserCount(ctx.Guild.Id, added.Item2.UserCount)}")
                     .WithOkColor();
                 await ctx.Channel.SendMessageAsync(embed: eb.Build());
 
             }
             else
-                await ErrorLocalizedAsync("instance_not_added", added.Item3);
+                await ErrorAsync(Strings.InstanceNotAdded(ctx.Guild.Id, added.Item3));
         }
         catch (UriFormatException)
         {
-            await ErrorLocalizedAsync("invalid_instance_url");
+            await ErrorAsync(Strings.InvalidInstanceUrl(ctx.Guild.Id));
         }
     }
 

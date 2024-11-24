@@ -57,7 +57,7 @@ public class Starboard(GuildSettingsService guildSettings) : MewdekoSubmodule<St
         if (chn is null)
         {
             await Service.SetStarboardChannel(ctx.Guild, 0).ConfigureAwait(false);
-            await ctx.Channel.SendMessageAsync("Starboard has been disabled.").ConfigureAwait(false);
+            await ctx.Channel.SendConfirmAsync(Strings.StarboardDisabled(ctx.Guild.Id));
             return;
         }
 
@@ -76,7 +76,7 @@ public class Starboard(GuildSettingsService guildSettings) : MewdekoSubmodule<St
     {
         if (num == 0)
         {
-            await ctx.Channel.SendErrorAsync("Reposting has been disabled!", Config).ConfigureAwait(false);
+            await ctx.Channel.SendErrorAsync(Strings.RepostingDisabled(ctx.Guild.Id), Config);
             await Service.SetRepostThreshold(ctx.Guild, 0).ConfigureAwait(false);
             return;
         }
@@ -115,7 +115,7 @@ public class Starboard(GuildSettingsService guildSettings) : MewdekoSubmodule<St
             var maybeEmote = (await Service.GetStar(ctx.Guild.Id)).ToIEmote();
             if (maybeEmote.Name is null)
             {
-                await ctx.Channel.SendErrorAsync("You don't have an emote set!", Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.NoEmoteSet(ctx.Guild.Id), Config);
                 return;
             }
 
@@ -131,7 +131,7 @@ public class Starboard(GuildSettingsService guildSettings) : MewdekoSubmodule<St
         }
         catch
         {
-            await ctx.Channel.SendErrorAsync("I'm unable to use that emote! Please use a different one.", Config)
+            await ctx.Channel.SendErrorAsync(Strings.InvalidEmote(ctx.Guild.Id), Config)
                 .ConfigureAwait(false);
             return;
         }
@@ -175,12 +175,12 @@ public class Starboard(GuildSettingsService guildSettings) : MewdekoSubmodule<St
         if (mode > 0)
         {
             await Service.SetCheckMode(ctx.Guild, true).ConfigureAwait(false);
-            await ctx.Channel.SendConfirmAsync("Starboard Blacklist has been enabled").ConfigureAwait(false);
+            await ctx.Channel.SendConfirmAsync(Strings.StarboardBlacklistEnabled(ctx.Guild.Id));
         }
         else
         {
             await Service.SetCheckMode(ctx.Guild, false).ConfigureAwait(false);
-            await ctx.Channel.SendConfirmAsync("Starboard Whitelist mode has been enabled").ConfigureAwait(false);
+            await ctx.Channel.SendConfirmAsync(Strings.StarboardWhitelistEnabled(ctx.Guild.Id));
         }
     }
 
@@ -195,11 +195,10 @@ public class Starboard(GuildSettingsService guildSettings) : MewdekoSubmodule<St
     {
         await Service.SetRemoveOnClear(ctx.Guild, enabled).ConfigureAwait(false);
         if (enabled)
-            await ctx.Channel
-                .SendConfirmAsync("Starboard posts will now be removed when the message's reactions are cleared.")
+            await ctx.Channel.SendConfirmAsync(Strings.StarboardReactionsClearRemoveEnabled(ctx.Guild.Id))
                 .ConfigureAwait(false);
         else
-            await ctx.Channel.SendConfirmAsync("Starboard posts will no longer be removed upon clearing reactions.")
+            await ctx.Channel.SendConfirmAsync(Strings.StarboardReactionsClearRemoveDisabled(ctx.Guild.Id))
                 .ConfigureAwait(false);
     }
 
@@ -214,12 +213,10 @@ public class Starboard(GuildSettingsService guildSettings) : MewdekoSubmodule<St
     {
         await Service.SetRemoveOnDelete(ctx.Guild, enabled).ConfigureAwait(false);
         if (enabled)
-            await ctx.Channel
-                .SendConfirmAsync("Starboard posts will now be removed when the original message is deleted.")
+            await ctx.Channel.SendConfirmAsync(Strings.StarboardDeleteRemoveEnabled(ctx.Guild.Id))
                 .ConfigureAwait(false);
         else
-            await ctx.Channel
-                .SendConfirmAsync("Starboard posts will no longer be removed upon original message deletion.")
+            await ctx.Channel.SendConfirmAsync(Strings.StarboardDeleteRemoveDisabled(ctx.Guild.Id))
                 .ConfigureAwait(false);
     }
 
@@ -257,8 +254,8 @@ public class Starboard(GuildSettingsService guildSettings) : MewdekoSubmodule<St
     {
         await Service.SetStarboardAllowBots(ctx.Guild, enabled).ConfigureAwait(false);
         if (enabled)
-            await ctx.Channel.SendConfirmAsync("Starboard will no longer ignore bots.").ConfigureAwait(false);
+            await ctx.Channel.SendConfirmAsync(Strings.StarboardBotsEnabled(ctx.Guild.Id));
         else
-            await ctx.Channel.SendConfirmAsync("Starboard will now ignore bots.").ConfigureAwait(false);
+            await ctx.Channel.SendConfirmAsync(Strings.StarboardBotsDisabled(ctx.Guild.Id));
     }
 }

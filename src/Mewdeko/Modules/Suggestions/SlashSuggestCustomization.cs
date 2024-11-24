@@ -32,13 +32,13 @@ public partial class SlashSuggestions
             if (embed == "-")
             {
                 await Service.SetSuggestionMessage(ctx.Guild, embed).ConfigureAwait(false);
-                await ctx.Interaction.SendConfirmAsync("Suggestions will now have the default look.")
+                await ctx.Interaction.SendConfirmAsync(Strings.SuggestionsDefaultLook(ctx.Guild.Id))
                     .ConfigureAwait(false);
                 return;
             }
 
             await Service.SetSuggestionMessage(ctx.Guild, embed).ConfigureAwait(false);
-            await ctx.Interaction.SendConfirmAsync("Sucessfully updated suggestion message!").ConfigureAwait(false);
+            await ctx.Interaction.SendConfirmAsync(Strings.SuggestionMessageUpdated(ctx.Guild.Id));
         }
 
         /// <summary>
@@ -54,9 +54,7 @@ public partial class SlashSuggestions
         {
             if (length >= 2048)
             {
-                await ctx.Interaction
-                    .SendErrorAsync("Can't set this value because it means users will not be able to suggest anything!",
-                        Config)
+                await ctx.Interaction.SendErrorAsync(Strings.SuggestionLengthInvalid(ctx.Guild.Id), Config)
                     .ConfigureAwait(false);
                 return;
             }
@@ -78,9 +76,7 @@ public partial class SlashSuggestions
         {
             if (length <= 0)
             {
-                await ctx.Interaction
-                    .SendErrorAsync("Cant set this value because it means users will not be able to suggest anything!",
-                        Config)
+                await ctx.Interaction.SendErrorAsync(Strings.SuggestionLengthInvalid(ctx.Guild.Id), Config)
                     .ConfigureAwait(false);
                 return;
             }
@@ -103,13 +99,13 @@ public partial class SlashSuggestions
             if (embed == "-")
             {
                 await Service.SetAcceptMessage(ctx.Guild, embed).ConfigureAwait(false);
-                await ctx.Interaction.SendConfirmAsync("Accepted Suggestions will now have the default look.")
+                await ctx.Interaction.SendConfirmAsync(Strings.AcceptedSuggestionsDefaultLook(ctx.Guild.Id))
                     .ConfigureAwait(false);
                 return;
             }
 
             await Service.SetAcceptMessage(ctx.Guild, embed).ConfigureAwait(false);
-            await ctx.Interaction.SendConfirmAsync("Sucessfully updated accepted suggestion message!")
+            await ctx.Interaction.SendConfirmAsync(Strings.AcceptedMessageUpdated(ctx.Guild.Id))
                 .ConfigureAwait(false);
         }
 
@@ -127,13 +123,13 @@ public partial class SlashSuggestions
             if (embed == "-")
             {
                 await Service.SetImplementMessage(ctx.Guild, embed).ConfigureAwait(false);
-                await ctx.Interaction.SendConfirmAsync("Implemented Suggestions will now have the default look.")
+                await ctx.Interaction.SendConfirmAsync(Strings.ImplementedSuggestionsDefaultLook(ctx.Guild.Id))
                     .ConfigureAwait(false);
                 return;
             }
 
             await Service.SetImplementMessage(ctx.Guild, embed).ConfigureAwait(false);
-            await ctx.Interaction.SendConfirmAsync("Sucessfully updated implemented suggestion message!")
+            await ctx.Interaction.SendConfirmAsync(Strings.ImplementedMessageUpdated(ctx.Guild.Id))
                 .ConfigureAwait(false);
         }
 
@@ -151,13 +147,13 @@ public partial class SlashSuggestions
             if (embed == "-")
             {
                 await Service.SetDenyMessage(ctx.Guild, embed).ConfigureAwait(false);
-                await ctx.Interaction.SendConfirmAsync("Denied Suggestions will now have the default look.")
+                await ctx.Interaction.SendConfirmAsync(Strings.DeniedSuggestionsDefaultLook(ctx.Guild.Id))
                     .ConfigureAwait(false);
                 return;
             }
 
             await Service.SetDenyMessage(ctx.Guild, embed).ConfigureAwait(false);
-            await ctx.Interaction.SendConfirmAsync("Sucessfully updated denied suggestion message!")
+            await ctx.Interaction.SendConfirmAsync(Strings.DeniedMessageUpdated(ctx.Guild.Id))
                 .ConfigureAwait(false);
         }
 
@@ -175,13 +171,13 @@ public partial class SlashSuggestions
             if (embed == "-")
             {
                 await Service.SetConsiderMessage(ctx.Guild, embed).ConfigureAwait(false);
-                await ctx.Interaction.SendConfirmAsync("Considered Suggestions will now have the default look.")
+                await ctx.Interaction.SendConfirmAsync(Strings.ConsideredSuggestionsDefaultLook(ctx.Guild.Id))
                     .ConfigureAwait(false);
                 return;
             }
 
             await Service.SetConsiderMessage(ctx.Guild, embed).ConfigureAwait(false);
-            await ctx.Interaction.SendConfirmAsync("Sucessfully updated considered suggestion message!")
+            await ctx.Interaction.SendConfirmAsync(Strings.ConsideredMessageUpdated(ctx.Guild.Id))
                 .ConfigureAwait(false);
         }
 
@@ -249,7 +245,7 @@ public partial class SlashSuggestions
         {
             await Service.SetAcceptChannel(ctx.Guild, channel?.Id ?? 0).ConfigureAwait(false);
             if (channel is null)
-                await ctx.Interaction.SendConfirmAsync("Accept Channel Disabled.").ConfigureAwait(false);
+                await ctx.Interaction.SendConfirmAsync(Strings.AcceptChannelDisabled(ctx.Guild.Id));
             else
                 await ctx.Interaction.SendConfirmAsync($"Accept channel set to {channel.Mention}")
                     .ConfigureAwait(false);
@@ -268,7 +264,7 @@ public partial class SlashSuggestions
         {
             await Service.SetDenyChannel(ctx.Guild, channel?.Id ?? 0).ConfigureAwait(false);
             if (channel is null)
-                await ctx.Interaction.SendConfirmAsync("Deny Channel Disabled.").ConfigureAwait(false);
+                await ctx.Interaction.SendConfirmAsync(Strings.DenyChannelDisabled(ctx.Guild.Id));
             else
                 await ctx.Interaction.SendConfirmAsync($"Deny channel set to {channel.Mention}").ConfigureAwait(false);
         }
@@ -286,7 +282,7 @@ public partial class SlashSuggestions
         {
             await Service.SetConsiderChannel(ctx.Guild, channel?.Id ?? 0).ConfigureAwait(false);
             if (channel is null)
-                await ctx.Interaction.SendConfirmAsync("Consider Channel Disabled.").ConfigureAwait(false);
+                await ctx.Interaction.SendConfirmAsync(Strings.ConsiderChannelDisabled(ctx.Guild.Id));
             else
                 await ctx.Interaction.SendConfirmAsync($"Consider channel set to {channel.Mention}")
                     .ConfigureAwait(false);
@@ -305,7 +301,7 @@ public partial class SlashSuggestions
         {
             await Service.SetImplementChannel(ctx.Guild, channel?.Id ?? 0).ConfigureAwait(false);
             if (channel is null)
-                await ctx.Interaction.SendConfirmAsync("Implement Channel Disabled.").ConfigureAwait(false);
+                await ctx.Interaction.SendConfirmAsync(Strings.ImplementChannelDisabled(ctx.Guild.Id));
             else
                 await ctx.Interaction.SendConfirmAsync($"Implement channel set to {channel.Mention}")
                     .ConfigureAwait(false);

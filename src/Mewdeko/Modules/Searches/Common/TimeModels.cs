@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿
+
+using System.Text.Json.Serialization;
 
 namespace Mewdeko.Modules.Searches.Common;
 
@@ -10,13 +12,13 @@ public class TimeZoneResult
     /// <summary>
     ///     Gets or sets the time zone abbreviation.
     /// </summary>
-    [JsonProperty("abbreviation")]
+    [JsonPropertyName("abbreviation")]
     public string TimezoneName { get; set; }
 
     /// <summary>
     ///     Gets or sets the timestamp.
     /// </summary>
-    [JsonProperty("timestamp")]
+    [JsonPropertyName("timestamp")]
     public int Timestamp { get; set; }
 }
 
@@ -38,6 +40,6 @@ public class LocationIqResponse
     /// <summary>
     ///     Gets or sets the display name associated with the location.
     /// </summary>
-    [JsonProperty("display_name")]
+    [JsonPropertyName("display_name")]
     public string DisplayName { get; set; }
 }

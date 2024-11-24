@@ -12,6 +12,7 @@ using Mewdeko.Modules.Permissions.Common;
 using Mewdeko.Modules.Permissions.Services;
 using Mewdeko.Services.Settings;
 using Mewdeko.Services.strings;
+using Mewdeko.Services.Strings;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using YamlDotNet.Serialization;
@@ -115,6 +116,7 @@ public sealed class ChatTriggersService : IEarlyBehavior, INService, IReadyExecu
     private readonly TypedKey<CTModel> crAdded = new("cr.added");
     private readonly IBotCredentials creds;
     private readonly TypedKey<bool> crsReloadedKey = new("crs.reloaded");
+    private readonly GeneratedBotStrings Strings;
 
     private readonly DbContextProvider dbProvider;
     private readonly DiscordPermOverrideService discordPermOverride;
@@ -252,7 +254,7 @@ public sealed class ChatTriggersService : IEarlyBehavior, INService, IReadyExecu
                 {
                     if (pc.Verbose)
                     {
-                        var returnMsg = strings.GetText("perm_prevent", sg.Id,
+                        var returnMsg = Strings.PermPrevent(guild.Id,
                             index + 1,
                             Format.Bold(pc.Permissions[index].GetCommand(await guildSettings.GetPrefix(guild), sg)));
                         try
@@ -508,7 +510,7 @@ public sealed class ChatTriggersService : IEarlyBehavior, INService, IReadyExecu
                             // If verbose mode is enabled, provide a detailed message about the prevented action.
                             if (!pc.Verbose)
                                 return;
-                            var returnMsg = strings.GetText("perm_prevent", guild.Id,
+                            var returnMsg = Strings.PermPrevent(guild.Id,
                                 index + 1,
                                 Format.Bold(pc.Permissions[index]
                                     .GetCommand(await guildSettings.GetPrefix(guild), guild)));
@@ -1752,54 +1754,54 @@ public sealed class ChatTriggersService : IEarlyBehavior, INService, IReadyExecu
         var eb = new EmbedBuilder().WithOkColor() // Create a new embed builder
             .WithTitle(title) // Set the title
             .WithDescription($"#{ct.Id}") // Set the description
-            .AddField(strings.GetText("ct_interaction_type_title", gId), // Add fields for various trigger properties
-                strings.GetText("ct_interaction_type_body", gId, ct.ApplicationCommandType.ToString()))
-            .AddField(strings.GetText("ct_realname", gId), ct.RealName)
-            .AddField(efb => efb.WithName(strings.GetText("trigger", gId)).WithValue(ct.Trigger.TrimTo(1024)))
+            .AddField(Strings.CtInteractionTypeTitle(gId), // Add fields for various trigger properties
+                Strings.CtInteractionTypeBody(gId, ct.ApplicationCommandType.ToString()))
+            .AddField(Strings.CtRealname(gId), ct.RealName)
+            .AddField(efb => efb.WithName(Strings.Trigger(gId)).WithValue(ct.Trigger.TrimTo(1024)))
             .AddField(efb =>
-                efb.WithName(strings.GetText("response", gId))
+                efb.WithName(Strings.Response(gId))
                     .WithValue($"{(ct.Response + "\n```css\n" + ct.Response).TrimTo(1024 - 11)}```"))
-            .AddField(strings.GetText("ct_prefix_type"), ct.PrefixType);
+            .AddField(Strings.CtPrefixType(gId), ct.PrefixType);
 
         var reactions = ct.GetReactions(); // Get trigger reactions
         if (reactions.Length >= 1)
-            eb.AddField(strings.GetText("trigger_reactions", gId), string.Concat(reactions)); // Add trigger reactions
+            eb.AddField(Strings.TriggerReactions(gId), string.Concat(reactions)); // Add trigger reactions
 
         var addedRoles = ct.GetGrantedRoles(); // Get granted roles
         if (addedRoles.Count >= 1)
-            eb.AddField(strings.GetText("added_roles", gId),
+            eb.AddField(Strings.AddedRoles(gId),
                 addedRoles.Select(x => $"<@&{x}>").Aggregate((x, y) => $"{x}, {y}")); // Add granted roles
 
         var removedRoles = ct.GetRemovedRoles(); // Get removed roles
         if (removedRoles.Count >= 1)
-            eb.AddField(strings.GetText("removed_roles", gId),
+            eb.AddField(Strings.RemovedRoles(gId),
                 removedRoles.Select(x => $"<@&{x}>").Aggregate((x, y) => $"{x}, {y}")); // Add removed roles
 
         if (addedRoles.Count >= 1 || removedRoles.Count >= 1)
-            eb.AddField(strings.GetText("role_grant_type", gId), ct.RoleGrantType); // Add role grant type
+            eb.AddField(Strings.RoleGrantType(gId), ct.RoleGrantType); // Add role grant type
 
         if (!ct.ApplicationCommandDescription.IsNullOrWhiteSpace())
-            eb.AddField(strings.GetText("ct_interaction_description", gId),
+            eb.AddField(Strings.CtInteractionDescription(gId),
                 ct.ApplicationCommandDescription); // Add interaction description
 
         if (ct.ApplicationCommandId != 0)
-            eb.AddField(strings.GetText("ct_interaction_id", gId),
+            eb.AddField(Strings.CtInteractionId(gId),
                 ct.ApplicationCommandId.ToString()); // Add interaction ID
 
         if (ct.ValidTriggerTypes != (ChatTriggerType)0b1111)
-            eb.AddField(strings.GetText("ct_valid_fields", gId),
+            eb.AddField(Strings.CtValidFields(gId),
                 ct.ValidTriggerTypes.ToString()); // Add valid trigger types
 
         if (!ct.CrosspostingWebhookUrl.IsNullOrWhiteSpace())
-            eb.AddField(strings.GetText("ct_crossposting", gId),
-                strings.GetText("ct_crossposting_webhook")); // Add crossposting webhook
+            eb.AddField(Strings.CtCrossposting(gId),
+                Strings.CtCrosspostingWebhook(gId)); // Add crossposting webhook
 
         if (ct.CrosspostingChannelId != 0)
-            eb.AddField(strings.GetText("ct_crossposting", gId),
-                strings.GetText("ct_crossposting_channel", gId, ct.CrosspostingChannelId)); // Add crossposting channel
+            eb.AddField(Strings.CtCrossposting(gId),
+                Strings.CtCrosspostingChannel(gId, ct.CrosspostingChannelId)); // Add crossposting channel
 
         if (ct.PrefixType == RequirePrefixType.Custom)
-            eb.AddField(strings.GetText("ct_custom_prefix", gId), ct.CustomPrefix); // Add custom prefix
+            eb.AddField(Strings.CtCustomPrefix(gId), ct.CustomPrefix); // Add custom prefix
 
         return eb; // Return the embed builder
     }

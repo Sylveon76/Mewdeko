@@ -78,7 +78,7 @@ public partial class Searches
         {
             if (Service.WowJokes.Count == 0)
             {
-                await ReplyErrorLocalizedAsync("jokes_not_loaded").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.JokesNotLoaded(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
@@ -101,7 +101,7 @@ public partial class Searches
         {
             if (Service.WowJokes.Count == 0)
             {
-                await ReplyErrorLocalizedAsync("magicitems_not_loaded").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.MagicitemsNotLoaded(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 

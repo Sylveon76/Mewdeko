@@ -24,25 +24,30 @@ public partial class Currency
         {
             if (betAmount <= 0)
             {
-                await ReplyErrorLocalizedAsync("horse_race_invalid_bet").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.HorseRaceInvalidBet(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
             var userBalance = await cs.GetUserBalanceAsync(ctx.User.Id, ctx.Guild.Id);
             if (betAmount > userBalance)
             {
-                await ReplyErrorLocalizedAsync("horse_race_insufficient_funds").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.HorseRaceInsufficientFunds(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
             var result = await Service.JoinRace(ctx.User, ctx.Guild.Id, betAmount);
             if (!result.Success)
             {
-                await ReplyErrorLocalizedAsync(result.Message).ConfigureAwait(false);
+                await ReplyErrorAsync(result.Message switch
+                {
+                    "horse_race_full" => Strings.HorseRaceFull(ctx.Guild.Id),
+                    "horse_race_already_joined" => Strings.HorseRaceAlreadyJoined(ctx.Guild.Id),
+                    _ => result.Message
+                }).ConfigureAwait(false);
                 return;
             }
 
-            await ReplyConfirmLocalizedAsync("horse_race_joined", betAmount).ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.HorseRaceJoined(ctx.Guild.Id, betAmount)).ConfigureAwait(false);
 
             if (result.RaceStarted)
             {
@@ -88,7 +93,7 @@ public partial class Currency
 
             foreach (var winner in finalResult.Winners)
             {
-                await ReplyConfirmLocalizedAsync("horse_race_winner", winner.Username, winner.Winnings)
+                await ReplyConfirmAsync(Strings.HorseRaceWinner(ctx.Guild.Id, winner.Username, winner.Winnings))
                     .ConfigureAwait(false);
             }
         }
@@ -101,8 +106,8 @@ public partial class Currency
         private Embed CreateRaceEmbed(List<RacerProgress> progress = null)
         {
             var eb = new EmbedBuilder()
-                .WithTitle(GetText("horse_race_in_progress"))
-                .WithDescription(GetText("horse_race_description"));
+                .WithTitle(Strings.HorseRaceInProgress(ctx.Guild.Id))
+                .WithDescription(Strings.HorseRaceDescription(ctx.Guild.Id));
 
             if (progress == null) return eb.Build();
             foreach (var racer in progress)
@@ -122,13 +127,13 @@ public partial class Currency
         private Embed CreateFinalRaceEmbed(RaceResult result)
         {
             var eb = new EmbedBuilder()
-                .WithTitle(GetText("horse_race_finished"))
-                .WithDescription(GetText("horse_race_winner_announcement", result.Winners.First().Username));
+                .WithTitle(Strings.HorseRaceFinished(ctx.Guild.Id))
+                .WithDescription(Strings.HorseRaceWinnerAnnouncement(ctx.Guild.Id, result.Winners.First().Username));
 
             foreach (var racer in result.FinalPositions)
             {
                 eb.AddField($"{racer.Position}. {racer.Animal} {racer.Username}",
-                    GetText("horse_race_final_status", racer.Winnings));
+                    Strings.HorseRaceFinalStatus(ctx.Guild.Id, racer.Winnings));
             }
 
             return eb.Build();

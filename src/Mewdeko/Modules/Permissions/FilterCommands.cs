@@ -42,14 +42,14 @@ public partial class Permissions
             var blacklist = dbContext.AutoBanWords;
             if (blacklist.Count(x => x.Word == word && x.GuildId == ctx.Guild.Id) == 1)
             {
-                Service.UnBlacklist(word, ctx.Guild.Id);
-                await ctx.Channel.SendConfirmAsync($"Removed {Format.Code(word)} from the auto bans word list!")
+                await Service.UnBlacklist(word, ctx.Guild.Id);
+                await ctx.Channel.SendConfirmAsync(Strings.AutobanWordRemoved(ctx.Guild.Id, Format.Code(word)))
                     .ConfigureAwait(false);
             }
             else
             {
-                Service.WordBlacklist(word, ctx.Guild.Id);
-                await ctx.Channel.SendConfirmAsync($"Added {Format.Code(word)} to the auto ban words list!")
+                await Service.WordBlacklist(word, ctx.Guild.Id);
+                await ctx.Channel.SendConfirmAsync(Strings.AutobanWordAdded(ctx.Guild.Id, Format.Code(word)))
                     .ConfigureAwait(false);
             }
         }
@@ -76,7 +76,7 @@ public partial class Permissions
             var words = dbContext.AutoBanWords.ToLinqToDB().Where(x => x.GuildId == ctx.Guild.Id);
             if (!words.Any())
             {
-                await ctx.Channel.SendErrorAsync("No AutoBanWords set.", Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.NoAutobanWordsSet(ctx.Guild.Id), Config).ConfigureAwait(false);
             }
             else
             {
@@ -95,7 +95,7 @@ public partial class Permissions
                 async Task<PageBuilder> PageFactory(int page)
                 {
                     await Task.CompletedTask.ConfigureAwait(false);
-                    return new PageBuilder().WithTitle("AutoBanWords")
+                    return new PageBuilder().WithTitle(Strings.AutobanWordsTitle(ctx.Guild.Id))
                         .WithDescription(string.Join("\n",
                             words.Select(x => x.Word).Skip(page * 10).Take(10)))
                         .WithOkColor();
@@ -125,10 +125,10 @@ public partial class Permissions
             switch (await Service.GetFw(ctx.Guild.Id))
             {
                 case 1:
-                    await ctx.Channel.SendConfirmAsync("Warn on filtered word is now enabled!").ConfigureAwait(false);
+                    await ctx.Channel.SendConfirmAsync(Strings.WarnFilteredWordEnabled(ctx.Guild.Id)).ConfigureAwait(false);
                     break;
                 case 0:
-                    await ctx.Channel.SendConfirmAsync("Warn on filtered word is now disabled!").ConfigureAwait(false);
+                    await ctx.Channel.SendConfirmAsync(Strings.WarnFilteredWordDisabled(ctx.Guild.Id)).ConfigureAwait(false);
                     break;
             }
         }
@@ -155,10 +155,10 @@ public partial class Permissions
             switch (await Service.GetInvWarn(ctx.Guild.Id))
             {
                 case 1:
-                    await ctx.Channel.SendConfirmAsync("Warn on invite post is now enabled!").ConfigureAwait(false);
+                    await ctx.Channel.SendConfirmAsync(Strings.WarnInviteEnabled(ctx.Guild.Id)).ConfigureAwait(false);
                     break;
                 case 0:
-                    await ctx.Channel.SendConfirmAsync("Warn on invite post is now disabled!").ConfigureAwait(false);
+                    await ctx.Channel.SendConfirmAsync(Strings.WarnInviteDisabled(ctx.Guild.Id)).ConfigureAwait(false);
                     break;
             }
         }
@@ -182,7 +182,7 @@ public partial class Permissions
         public async Task FwClear()
         {
             await Service.ClearFilteredWords(ctx.Guild.Id);
-            await ReplyConfirmLocalizedAsync("fw_cleared").ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.FwCleared(ctx.Guild.Id)).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -212,11 +212,11 @@ public partial class Permissions
 
             if (config.FilterInvites)
             {
-                await ReplyConfirmLocalizedAsync("invite_filter_server_on").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.InviteFilterServerOn(ctx.Guild.Id)).ConfigureAwait(false);
             }
             else
             {
-                await ReplyConfirmLocalizedAsync("invite_filter_server_off").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.InviteFilterServerOff(ctx.Guild.Id)).ConfigureAwait(false);
             }
         }
 
@@ -256,11 +256,11 @@ public partial class Permissions
 
             if (removed == null)
             {
-                await ReplyConfirmLocalizedAsync("invite_filter_channel_on").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.InviteFilterChannelOn(ctx.Guild.Id)).ConfigureAwait(false);
             }
             else
             {
-                await ReplyConfirmLocalizedAsync("invite_filter_channel_off").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.InviteFilterChannelOff(ctx.Guild.Id)).ConfigureAwait(false);
             }
         }
 
@@ -290,11 +290,11 @@ public partial class Permissions
 
             if (config.FilterLinks)
             {
-                await ReplyConfirmLocalizedAsync("link_filter_server_on").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.LinkFilterServerOn(ctx.Guild.Id)).ConfigureAwait(false);
             }
             else
             {
-                await ReplyConfirmLocalizedAsync("link_filter_server_off").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.LinkFilterServerOff(ctx.Guild.Id)).ConfigureAwait(false);
             }
         }
 
@@ -333,11 +333,11 @@ public partial class Permissions
 
             if (removed == null)
             {
-                await ReplyConfirmLocalizedAsync("link_filter_channel_on").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.LinkFilterChannelOn(ctx.Guild.Id)).ConfigureAwait(false);
             }
             else
             {
-                await ReplyConfirmLocalizedAsync("link_filter_channel_off").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.LinkFilterChannelOff(ctx.Guild.Id)).ConfigureAwait(false);
             }
         }
 
@@ -367,11 +367,11 @@ public partial class Permissions
 
             if (config.FilterWords)
             {
-                await ReplyConfirmLocalizedAsync("word_filter_server_on").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.WordFilterServerOn(ctx.Guild.Id)).ConfigureAwait(false);
             }
             else
             {
-                await ReplyConfirmLocalizedAsync("word_filter_server_off").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.WordFilterServerOff(ctx.Guild.Id)).ConfigureAwait(false);
             }
         }
 
@@ -410,11 +410,11 @@ public partial class Permissions
 
             if (removed == null)
             {
-                await ReplyConfirmLocalizedAsync("word_filter_channel_on").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.WordFilterChannelOn(ctx.Guild.Id)).ConfigureAwait(false);
             }
             else
             {
-                await ReplyConfirmLocalizedAsync("word_filter_channel_off").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.WordFilterChannelOff(ctx.Guild.Id)).ConfigureAwait(false);
             }
         }
 
@@ -460,11 +460,11 @@ public partial class Permissions
 
             if (removed == null)
             {
-                await ReplyConfirmLocalizedAsync("filter_word_add", Format.Code(word)).ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.FilterWordAdd(ctx.Guild.Id, Format.Code(word))).ConfigureAwait(false);
             }
             else
             {
-                await ReplyConfirmLocalizedAsync("filter_word_remove", Format.Code(word)).ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.FilterWordRemove(ctx.Guild.Id, Format.Code(word))).ConfigureAwait(false);
             }
         }
 
@@ -505,7 +505,7 @@ public partial class Permissions
             async Task<PageBuilder> PageFactory(int page)
             {
                 await Task.CompletedTask.ConfigureAwait(false);
-                return new PageBuilder().WithTitle(GetText("filter_word_list"))
+                return new PageBuilder().WithTitle(Strings.FilterWordList(ctx.Guild.Id))
                     .WithDescription(
                         string.Join("\n", fws.Skip(page * 10).Take(10)))
                     .WithOkColor();

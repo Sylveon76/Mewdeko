@@ -38,7 +38,7 @@
 //
 //         if (panel == null)
 //         {
-//             await ReplyErrorLocalizedAsync("panel_already_exists").ConfigureAwait(false);
+//             await ReplyErrorAsync(Strings.PanelAlreadyExists(ctx.Guild.Id)).ConfigureAwait(false);
 //             return;
 //         }
 //
@@ -53,7 +53,7 @@
 //             .Build();
 //
 //         await channel.SendMessageAsync(embed: embed.Build(), components: components).ConfigureAwait(false);
-//         await ReplyConfirmLocalizedAsync("panel_created").ConfigureAwait(false);
+//         await ReplyConfirmAsync(Strings.PanelCreated(ctx.Guild.Id)).ConfigureAwait(false);
 //     }
 //
 //     /// <summary>
@@ -67,7 +67,7 @@
 //
 //         if (!success)
 //         {
-//             await ReplyErrorLocalizedAsync("not_ticket_channel").ConfigureAwait(false);
+//             await ReplyErrorAsync(Strings.NotTicketChannel(ctx.Guild.Id)).ConfigureAwait(false);
 //         }
 //     }
 //
@@ -82,7 +82,7 @@
 //
 //         if (!success)
 //         {
-//             await ReplyErrorLocalizedAsync("ticket_claim_failed").ConfigureAwait(false);
+//             await ReplyErrorAsync(Strings.TicketClaimFailed(ctx.Guild.Id)).ConfigureAwait(false);
 //         }
 //     }
 //
@@ -97,7 +97,7 @@
 //
 //         if (!success)
 //         {
-//             await ReplyErrorLocalizedAsync("ticket_unclaim_failed").ConfigureAwait(false);
+//             await ReplyErrorAsync(Strings.TicketUnclaimFailed(ctx.Guild.Id)).ConfigureAwait(false);
 //         }
 //     }
 //
@@ -113,7 +113,7 @@
 //
 //         if (!success)
 //         {
-//             await ReplyErrorLocalizedAsync("note_add_failed").ConfigureAwait(false);
+//             await ReplyErrorAsync(Strings.NoteAddFailed(ctx.Guild.Id)).ConfigureAwait(false);
 //         }
 //     }
 //
@@ -129,7 +129,7 @@
 //     {
 //         var ticketCase = await Service.CreateCase(ctx.Guild, (IGuildUser)ctx.User, name, description);
 //
-//         await ReplyConfirmLocalizedAsync("case_created", ticketCase.Id).ConfigureAwait(false);
+//         await ReplyConfirmAsync(Strings.CaseCreated(ctx.Guild.Id, ticketCase.Id)).ConfigureAwait(false);
 //     }
 //
 //     /// <summary>
@@ -146,7 +146,7 @@
 //
 //         if (ticket == null)
 //         {
-//             await ReplyErrorLocalizedAsync("not_ticket_channel").ConfigureAwait(false);
+//             await ReplyErrorAsync(Strings.NotTicketChannel(ctx.Guild.Id)).ConfigureAwait(false);
 //             return;
 //         }
 //
@@ -154,11 +154,11 @@
 //
 //         if (!success)
 //         {
-//             await ReplyErrorLocalizedAsync("add_to_case_failed").ConfigureAwait(false);
+//             await ReplyErrorAsync(Strings.AddToCaseFailed(ctx.Guild.Id)).ConfigureAwait(false);
 //             return;
 //         }
 //
-//         await ReplyConfirmLocalizedAsync("added_to_case", caseId).ConfigureAwait(false);
+//         await ReplyConfirmAsync(Strings.AddedToCase(ctx.Guild.Id, caseId)).ConfigureAwait(false);
 //     }
 //
 //     /// <summary>
@@ -174,7 +174,7 @@
 //
 //         if (ticket == null)
 //         {
-//             await ReplyErrorLocalizedAsync("not_ticket_channel").ConfigureAwait(false);
+//             await ReplyErrorAsync(Strings.NotTicketChannel(ctx.Guild.Id)).ConfigureAwait(false);
 //             return;
 //         }
 //
@@ -182,11 +182,11 @@
 //
 //         if (!success)
 //         {
-//             await ReplyErrorLocalizedAsync("remove_from_case_failed").ConfigureAwait(false);
+//             await ReplyErrorAsync(Strings.RemoveFromCaseFailed(ctx.Guild.Id)).ConfigureAwait(false);
 //             return;
 //         }
 //
-//         await ReplyConfirmLocalizedAsync("removed_from_case").ConfigureAwait(false);
+//         await ReplyConfirmAsync(Strings.RemovedFromCase(ctx.Guild.Id)).ConfigureAwait(false);
 //     }
 //
 //     /// <summary>
@@ -277,7 +277,7 @@
 //     {
 //         if (level < 1 || level > 5)
 //         {
-//             await ReplyErrorLocalizedAsync("invalid_priority_level").ConfigureAwait(false);
+//             await ReplyErrorAsync(Strings.InvalidPriorityLevel(ctx.Guild.Id)).ConfigureAwait(false);
 //             return;
 //         }
 //
@@ -286,11 +286,11 @@
 //
 //         if (!success)
 //         {
-//             await ReplyErrorLocalizedAsync("priority_create_failed").ConfigureAwait(false);
+//             await ReplyErrorAsync(Strings.PriorityCreateFailed(ctx.Guild.Id)).ConfigureAwait(false);
 //             return;
 //         }
 //
-//         await ReplyConfirmLocalizedAsync("priority_created").ConfigureAwait(false);
+//         await ReplyConfirmAsync(Strings.PriorityCreated(ctx.Guild.Id)).ConfigureAwait(false);
 //     }
 //
 //     /// <summary>
@@ -306,11 +306,11 @@
 //
 //         if (!success)
 //         {
-//             await ReplyErrorLocalizedAsync("priority_delete_failed").ConfigureAwait(false);
+//             await ReplyErrorAsync(Strings.PriorityDeleteFailed(ctx.Guild.Id)).ConfigureAwait(false);
 //             return;
 //         }
 //
-//         await ReplyConfirmLocalizedAsync("priority_deleted").ConfigureAwait(false);
+//         await ReplyConfirmAsync(Strings.PriorityDeleted(ctx.Guild.Id)).ConfigureAwait(false);
 //     }
 //
 //     /// <summary>
@@ -325,7 +325,7 @@
 //
 //         if (!success)
 //         {
-//             await ReplyErrorLocalizedAsync("priority_set_failed").ConfigureAwait(false);
+//             await ReplyErrorAsync(Strings.PrioritySetFailed(ctx.Guild.Id)).ConfigureAwait(false);
 //         }
 //     }
 //
@@ -344,11 +344,11 @@
 //
 //         if (!success)
 //         {
-//             await ReplyErrorLocalizedAsync("tag_create_failed").ConfigureAwait(false);
+//             await ReplyErrorAsync(Strings.TagCreateFailed(ctx.Guild.Id)).ConfigureAwait(false);
 //             return;
 //         }
 //
-//         await ReplyConfirmLocalizedAsync("tag_created").ConfigureAwait(false);
+//         await ReplyConfirmAsync(Strings.TagCreated(ctx.Guild.Id)).ConfigureAwait(false);
 //     }
 //
 //     /// <summary>
@@ -364,11 +364,11 @@
 //
 //         if (!success)
 //         {
-//             await ReplyErrorLocalizedAsync("tag_delete_failed").ConfigureAwait(false);
+//             await ReplyErrorAsync(Strings.TagDeleteFailed(ctx.Guild.Id)).ConfigureAwait(false);
 //             return;
 //         }
 //
-//         await ReplyConfirmLocalizedAsync("tag_deleted").ConfigureAwait(false);
+//         await ReplyConfirmAsync(Strings.TagDeleted(ctx.Guild.Id)).ConfigureAwait(false);
 //     }
 //
 //     /// <summary>
@@ -384,11 +384,11 @@
 //
 //         if (!success)
 //         {
-//             await ReplyErrorLocalizedAsync("tags_add_failed").ConfigureAwait(false);
+//             await ReplyErrorAsync(Strings.TagsAddFailed(ctx.Guild.Id)).ConfigureAwait(false);
 //             return;
 //         }
 //
-//         await ReplyConfirmLocalizedAsync("tags_added").ConfigureAwait(false);
+//         await ReplyConfirmAsync(Strings.TagsAdded(ctx.Guild.Id)).ConfigureAwait(false);
 //     }
 //
 //     /// <summary>
@@ -404,11 +404,11 @@
 //
 //         if (!success)
 //         {
-//             await ReplyErrorLocalizedAsync("tags_remove_failed").ConfigureAwait(false);
+//             await ReplyErrorAsync(Strings.TagsRemoveFailed(ctx.Guild.Id)).ConfigureAwait(false);
 //             return;
 //         }
 //
-//         await ReplyConfirmLocalizedAsync("tags_removed").ConfigureAwait(false);
+//         await ReplyConfirmAsync(Strings.TagsRemoved(ctx.Guild.Id)).ConfigureAwait(false);
 //     }
 //
 //     /// <summary>
@@ -425,11 +425,11 @@
 //
 //         if (!success)
 //         {
-//             await ReplyErrorLocalizedAsync("blacklist_failed").ConfigureAwait(false);
+//             await ReplyErrorAsync(Strings.BlacklistFailed(ctx.Guild.Id)).ConfigureAwait(false);
 //             return;
 //         }
 //
-//         await ReplyConfirmLocalizedAsync("user_blacklisted").ConfigureAwait(false);
+//         await ReplyConfirmAsync(Strings.UserBlacklisted(ctx.Guild.Id)).ConfigureAwait(false);
 //     }
 //
 //     /// <summary>
@@ -447,11 +447,11 @@
 //
 //         if (!success)
 //         {
-//             await ReplyErrorLocalizedAsync("type_blacklist_failed").ConfigureAwait(false);
+//             await ReplyErrorAsync(Strings.TypeBlacklistFailed(ctx.Guild.Id)).ConfigureAwait(false);
 //             return;
 //         }
 //
-//         await ReplyConfirmLocalizedAsync("user_type_blacklisted").ConfigureAwait(false);
+//         await ReplyConfirmAsync(Strings.UserTypeBlacklisted(ctx.Guild.Id)).ConfigureAwait(false);
 //     }
 //
 //     /// <summary>
@@ -467,11 +467,11 @@
 //
 //         if (!success)
 //         {
-//             await ReplyErrorLocalizedAsync("unblacklist_failed").ConfigureAwait(false);
+//             await ReplyErrorAsync(Strings.UnblacklistFailed(ctx.Guild.Id)).ConfigureAwait(false);
 //             return;
 //         }
 //
-//         await ReplyConfirmLocalizedAsync("user_unblacklisted").ConfigureAwait(false);
+//         await ReplyConfirmAsync(Strings.UserUnblacklisted(ctx.Guild.Id)).ConfigureAwait(false);
 //     }
 //
 //     /// <summary>
@@ -488,11 +488,11 @@
 //
 //         if (!success)
 //         {
-//             await ReplyErrorLocalizedAsync("type_unblacklist_failed").ConfigureAwait(false);
+//             await ReplyErrorAsync(Strings.TypeUnblacklistFailed(ctx.Guild.Id)).ConfigureAwait(false);
 //             return;
 //         }
 //
-//         await ReplyConfirmLocalizedAsync("user_type_unblacklisted").ConfigureAwait(false);
+//         await ReplyConfirmAsync(Strings.UserTypeUnblacklisted(ctx.Guild.Id)).ConfigureAwait(false);
 //     }
 //
 //     /// <summary>
@@ -506,7 +506,7 @@
 //     {
 //         var (closed, failed) = await Service.BatchCloseInactiveTickets(ctx.Guild, time.Time);
 //
-//         await ReplyConfirmLocalizedAsync("batch_closed", closed, failed).ConfigureAwait(false);
+//         await ReplyConfirmAsync(Strings.BatchClosed(ctx.Guild.Id, closed, failed)).ConfigureAwait(false);
 //     }
 //
 //     /// <summary>
@@ -521,7 +521,7 @@
 //     {
 //         var (moved, failed) = await Service.BatchMoveTickets(ctx.Guild, sourceCategory.Id, targetCategory.Id);
 //
-//         await ReplyConfirmLocalizedAsync("batch_moved", moved, failed).ConfigureAwait(false);
+//         await ReplyConfirmAsync(Strings.BatchMoved(ctx.Guild.Id, moved, failed)).ConfigureAwait(false);
 //     }
 //
 //     /// <summary>
@@ -536,7 +536,7 @@
 //     {
 //         var (updated, failed) = await Service.BatchAddRole(ctx.Guild, role, viewOnly);
 //
-//         await ReplyConfirmLocalizedAsync("batch_role_added", updated, failed).ConfigureAwait(false);
+//         await ReplyConfirmAsync(Strings.BatchRoleAdded(ctx.Guild.Id, updated, failed)).ConfigureAwait(false);
 //     }
 //
 //     /// <summary>
@@ -551,7 +551,7 @@
 //     {
 //         var (transferred, failed) = await Service.BatchTransferTickets(ctx.Guild, fromStaff.Id, toStaff.Id);
 //
-//         await ReplyConfirmLocalizedAsync("tickets_transferred", transferred, failed).ConfigureAwait(false);
+//         await ReplyConfirmAsync(Strings.TicketsTransferred(ctx.Guild.Id, transferred, failed)).ConfigureAwait(false);
 //     }
 //
 //     /// <summary>
@@ -593,7 +593,7 @@
 //         var success = await Service.AddButtonToPanel(ctx.Guild.Id, panelId, button);
 //         if (!success)
 //         {
-//             await ReplyErrorLocalizedAsync("panel_not_found").ConfigureAwait(false);
+//             await ReplyErrorAsync(Strings.PanelNotFound(ctx.Guild.Id)).ConfigureAwait(false);
 //             return;
 //         }
 //
@@ -621,7 +621,7 @@
 //
 //         if (button == null)
 //         {
-//             await ReplyErrorLocalizedAsync("button_not_found").ConfigureAwait(false);
+//             await ReplyErrorAsync(Strings.ButtonNotFound(ctx.Guild.Id)).ConfigureAwait(false);
 //             return;
 //         }
 //
@@ -676,12 +676,12 @@
 //                 button.RequiredTags = value.Split(' ').ToList();
 //                 break;
 //             default:
-//                 await ReplyErrorLocalizedAsync("invalid_setting").ConfigureAwait(false);
+//                 await ReplyErrorAsync(Strings.InvalidSetting(ctx.Guild.Id)).ConfigureAwait(false);
 //                 return;
 //         }
 //
 //         await db.SaveChangesAsync();
-//         await ReplyConfirmLocalizedAsync("button_configured").ConfigureAwait(false);
+//         await ReplyConfirmAsync(Strings.ButtonConfigured(ctx.Guild.Id)).ConfigureAwait(false);
 //     }
 //
 //     /// <summary>
@@ -700,11 +700,11 @@
 //         var success = await Service.AddSelectToPanel(ctx.Guild.Id, panelId, select);
 //         if (!success)
 //         {
-//             await ReplyErrorLocalizedAsync("panel_not_found").ConfigureAwait(false);
+//             await ReplyErrorAsync(Strings.PanelNotFound(ctx.Guild.Id)).ConfigureAwait(false);
 //             return;
 //         }
 //
-//         await ReplyConfirmLocalizedAsync("select_added", select.Id).ConfigureAwait(false);
+//         await ReplyConfirmAsync(Strings.SelectAdded(ctx.Guild.Id, select.Id)).ConfigureAwait(false);
 //     }
 //
 //     /// <summary>
@@ -730,7 +730,7 @@
 //
 //         if (select == null)
 //         {
-//             await ReplyErrorLocalizedAsync("select_not_found").ConfigureAwait(false);
+//             await ReplyErrorAsync(Strings.SelectNotFound(ctx.Guild.Id)).ConfigureAwait(false);
 //             return;
 //         }
 //
@@ -781,7 +781,7 @@
 //
 //         if (option == null)
 //         {
-//             await ReplyErrorLocalizedAsync("option_not_found").ConfigureAwait(false);
+//             await ReplyErrorAsync(Strings.OptionNotFound(ctx.Guild.Id)).ConfigureAwait(false);
 //             return;
 //         }
 //
@@ -836,11 +836,11 @@
 //                 option.RequiredTags = value.Split(' ').ToList();
 //                 break;
 //             default:
-//                 await ReplyErrorLocalizedAsync("invalid_setting").ConfigureAwait(false);
+//                 await ReplyErrorAsync(Strings.InvalidSetting(ctx.Guild.Id)).ConfigureAwait(false);
 //                 return;
 //         }
 //
 //         await db.SaveChangesAsync();
-//         await ReplyConfirmLocalizedAsync("option_configured").ConfigureAwait(false);
+//         await ReplyConfirmAsync(Strings.OptionConfigured(ctx.Guild.Id)).ConfigureAwait(false);
 //     }
 // }

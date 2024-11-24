@@ -27,7 +27,7 @@ public partial class Games
         {
             await ctx.Channel
                 .SendConfirmAsync(
-                    $"{Format.Code(GetText("hangman_types", await guildSettings.GetPrefix(ctx.Guild.Id)))}\n{string.Join("\n", Service.TermPool.Data.Keys)}")
+                    $"{Format.Code(Strings.HangmanTypes(ctx.Guild.Id, await guildSettings.GetPrefix(ctx.Guild.Id)))}\n{string.Join("\n", Service.TermPool.Data.Keys)}")
                 .ConfigureAwait(false);
         }
 
@@ -54,7 +54,7 @@ public partial class Games
             if (!Service.HangmanGames.TryAdd(ctx.Channel.Id, hm))
             {
                 hm.Dispose();
-                await ReplyErrorLocalizedAsync("hangman_running").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.HangmanRunning(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
@@ -66,7 +66,7 @@ public partial class Games
 
             try
             {
-                await ctx.Channel.SendConfirmAsync($"{GetText("hangman_game_started")} ({hm.TermType})",
+                await ctx.Channel.SendConfirmAsync($"{Strings.HangmanGameStarted(ctx.Guild.Id)} ({hm.TermType})",
                         $"{hm.ScrambledWord}\n{hm.GetHangman()}")
                     .ConfigureAwait(false);
             }
@@ -173,7 +173,7 @@ public partial class Games
             if (Service.HangmanGames.TryRemove(ctx.Channel.Id, out var removed))
             {
                 await removed.Stop().ConfigureAwait(false);
-                await ReplyConfirmLocalizedAsync("hangman_stopped").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.HangmanStopped(ctx.Guild.Id)).ConfigureAwait(false);
             }
         }
     }

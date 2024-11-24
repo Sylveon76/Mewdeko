@@ -580,7 +580,7 @@ public async Task DeletePanelAsync(int panelId, IGuild guild)
         }
     }
 
-    //// <summary>
+    /// <summary>
     /// Creates a new ticket.
     /// </summary>
     /// <param name="guild">The guild where the ticket will be created.</param>
@@ -1386,7 +1386,7 @@ public async Task DeletePanelAsync(int panelId, IGuild guild)
     /// </summary>
     /// <param name="ticketId">The ID of the ticket.</param>
     /// <returns>The ticket object, if found.</returns>
-    public async Task<Ticket> GetTicketAsync(int ticketId)
+    public async Task<Ticket?> GetTicketAsync(int ticketId)
     {
         await using var ctx = await _db.GetContextAsync();
         return await ctx.Tickets.FirstOrDefaultAsync(t => t.Id == ticketId);

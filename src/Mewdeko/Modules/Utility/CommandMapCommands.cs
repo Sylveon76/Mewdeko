@@ -30,7 +30,7 @@ public partial class Utility
         public async Task AliasesClear()
         {
             var count = Service.ClearAliases(ctx.Guild.Id);
-            await ReplyConfirmLocalizedAsync("aliases_cleared", count).ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.AliasesCleared(ctx.Guild.Id, count)).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -59,7 +59,7 @@ public partial class Utility
                 if (gottenMaps != null && (gottenMaps.Count != 0 ||
                                            !gottenMaps.Remove(trigger, out _)))
                 {
-                    await ReplyErrorLocalizedAsync("alias_remove_fail", Format.Code(trigger)).ConfigureAwait(false);
+                    await ReplyErrorAsync(Strings.AliasRemoveFail(ctx.Guild.Id, Format.Code(trigger))).ConfigureAwait(false);
                     return;
                 }
 
@@ -72,7 +72,7 @@ public partial class Utility
                     await service.UpdateGuildConfig(ctx.Guild.Id, config).ConfigureAwait(false);
                 }
 
-                await ReplyConfirmLocalizedAsync("alias_removed", Format.Code(trigger)).ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.AliasRemoved(ctx.Guild.Id, Format.Code(trigger))).ConfigureAwait(false);
                 return;
             }
 
@@ -86,7 +86,7 @@ public partial class Utility
                 await dbContext.SaveChangesAsync();
                 await service.UpdateGuildConfig(ctx.Guild.Id, config);
 
-                await ReplyConfirmLocalizedAsync("alias_added", Format.Code(trigger), Format.Code(mapping))
+                await ReplyConfirmAsync(Strings.AliasAdded(ctx.Guild.Id, Format.Code(trigger), Format.Code(mapping)))
                     .ConfigureAwait(false);
             }
         }
@@ -103,7 +103,7 @@ public partial class Utility
             var aliases = await Service.GetCommandMap(ctx.Guild.Id);
             if (aliases is null || aliases.Count == 0)
             {
-                await ReplyErrorLocalizedAsync("aliases_none").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.AliasesNone(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
@@ -122,7 +122,7 @@ public partial class Utility
             {
                 await Task.CompletedTask.ConfigureAwait(false);
                 return new PageBuilder().WithOkColor()
-                    .WithTitle(GetText("alias_list"))
+                    .WithTitle(Strings.AliasList(ctx.Guild.Id))
                     .WithDescription(string.Join("\n",
                         aliases.Skip(page * 10).Take(10).Select(x => $"`{x.Key}` => `{x.Value}`")));
             }

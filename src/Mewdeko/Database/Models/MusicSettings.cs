@@ -31,6 +31,12 @@ public class MusicPlayerSettings
     public int Volume { get; set; } = 100;
 
     /// <summary>
+    ///     Gets or sets the role ID that has DJ permissions.
+    ///     If null, no DJ role is set.
+    /// </summary>
+    public ulong? DjRoleId { get; set; } = null;
+
+    /// <summary>
     ///     Gets or sets the auto disconnect setting.
     /// </summary>
     public AutoDisconnect AutoDisconnect { get; set; } = AutoDisconnect.Voice;
@@ -39,6 +45,16 @@ public class MusicPlayerSettings
     ///     Gets or sets the auto play setting.
     /// </summary>
     public int AutoPlay { get; set; } = 0;
+
+    /// <summary>
+    ///     Gets or sets whether vote skip is enabled.
+    /// </summary>
+    public bool VoteSkipEnabled { get; set; } = false;
+
+    /// <summary>
+    ///     Gets or sets the vote skip threshold percentage (1-100).
+    /// </summary>
+    public int VoteSkipThreshold { get; set; } = 50;
 }
 
 /// <summary>

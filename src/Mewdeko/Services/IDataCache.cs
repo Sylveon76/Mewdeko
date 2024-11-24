@@ -69,6 +69,36 @@ public interface IDataCache
     #region Music Methods
 
     /// <summary>
+    ///     Saves a playlist for a user.
+    /// </summary>
+    /// <param name="userId">The guild ID.</param>
+    /// <param name="playlist">The playlist to save.</param>
+    Task SavePlaylist(ulong userId, MusicPlaylist playlist);
+
+    /// <summary>
+    ///     Gets a specific playlist by name.
+    /// </summary>
+    /// <param name="userId">The user ID.</param>
+    /// <param name="name">The name of the playlist.</param>
+    /// <returns>The playlist if found, null otherwise.</returns>
+    Task<MusicPlaylist?> GetPlaylist(ulong userId, string name);
+
+    /// <summary>
+    ///     Gets all playlists for a guild.
+    /// </summary>
+    /// <param name="userId">The guild ID.</param>
+    /// <returns>The list of playlists.</returns>
+    Task<List<MusicPlaylist>> GetPlaylists(ulong userId);
+
+    /// <summary>
+    ///     Deletes a playlist.
+    /// </summary>
+    /// <param name="userId">The guild ID.</param>
+    /// <param name="name">The name of the playlist to delete.</param>
+    /// <returns>True if playlist was deleted, false if not found.</returns>
+    Task<bool> DeletePlaylist(ulong userId, string name);
+
+    /// <summary>
     ///     Retrieves music queue for a server.
     /// </summary>
     /// <param name="id">The server ID.</param>
@@ -97,6 +127,36 @@ public interface IDataCache
     /// <param name="id">The server ID.</param>
     /// <returns>The current track.</returns>
     Task<MewdekoTrack?> GetCurrentTrack(ulong id);
+
+    /// <summary>
+    ///     Gets music player settings for a server.
+    /// </summary>
+    /// <param name="id">The server ID.</param>
+    /// <returns>The music player settings if found, null otherwise.</returns>
+    Task<MusicPlayerSettings?> GetMusicPlayerSettings(ulong id);
+
+    /// <summary>
+    ///     Sets music player settings for a server.
+    /// </summary>
+    /// <param name="id">The server ID.</param>
+    /// <param name="settings">The settings to cache.</param>
+    /// <returns>A task representing the operation.</returns>
+    Task SetMusicPlayerSettings(ulong id, MusicPlayerSettings settings);
+
+    /// <summary>
+    ///     Gets the set of users who have voted to skip the current track.
+    /// </summary>
+    /// <param name="id">The server ID.</param>
+    /// <returns>The set of user IDs who have voted to skip, or null if no votes exist.</returns>
+    Task<HashSet<ulong>?> GetVoteSkip(ulong id);
+
+    /// <summary>
+    ///     Sets the current vote skip state for a server.
+    /// </summary>
+    /// <param name="id">The server ID.</param>
+    /// <param name="userIds">The set of user IDs who have voted to skip, or null to clear votes.</param>
+    /// <returns>A task representing the operation.</returns>
+    Task SetVoteSkip(ulong id, HashSet<ulong>? userIds);
 
     #endregion
 

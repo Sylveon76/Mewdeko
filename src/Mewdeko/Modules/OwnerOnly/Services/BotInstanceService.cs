@@ -1,11 +1,12 @@
 ﻿using System.Net.Http;
+using System.Text.Json;
 using System.Threading;
 using LinqToDB.EntityFrameworkCore;
 using Mewdeko.Common.ModuleBehaviors;
 using Mewdeko.Controllers;
 using Mewdeko.Database.DbContextStuff;
 using Mewdeko.Services.Impl;
-using Newtonsoft.Json;
+
 using Serilog;
 
 namespace Mewdeko.Modules.OwnerOnly.Services;
@@ -38,13 +39,13 @@ public class BotInstanceService(IDataCache cache, DbContextProvider provider, IH
 
                 if (!response.IsSuccessStatusCode) continue;
                 var actualResponse = await response.Content.ReadAsStringAsync();
-                var botStatus = JsonConvert.DeserializeObject<BotStatus.BotStatusModel>(actualResponse);
+                var botStatus = JsonSerializer.Deserialize<BotStatus.BotStatusModel>(actualResponse);
                 toPush.Add(botStatus);
             }
 
             if (toPush.Count == 0) continue;
             var redisDb = cache.Redis.GetDatabase();
-            await redisDb.StringSetAsync("bot_api_instances", JsonConvert.SerializeObject(toPush));
+            await redisDb.StringSetAsync("bot_api_instances", JsonSerializer.Serialize(toPush));
         } while (await periodic.WaitForNextTickAsync(CancellationToken.None));
     }
 
@@ -72,7 +73,7 @@ public class BotInstanceService(IDataCache cache, DbContextProvider provider, IH
         {
             var redisStatus = await redisDb.StringGetAsync("bot_api_instances");
             instanceList = redisStatus.HasValue
-                ? JsonConvert.DeserializeObject<List<BotStatus.BotStatusModel>>(redisStatus)
+                ? JsonSerializer.Deserialize<List<BotStatus.BotStatusModel>>(redisStatus)
                 : [];
         }
         catch (Exception e)
@@ -89,7 +90,7 @@ public class BotInstanceService(IDataCache cache, DbContextProvider provider, IH
 
         try
         {
-            var serializedList = JsonConvert.SerializeObject(instanceList);
+            var serializedList = JsonSerializer.Serialize(instanceList);
             await redisDb.StringSetAsync("bot_api_instances", serializedList);
         }
         catch (Exception e)
@@ -126,7 +127,7 @@ public class BotInstanceService(IDataCache cache, DbContextProvider provider, IH
             if (!redisStatus.HasValue)
                 return (false, RejectionReason.InstanceNotFoundInCache);
 
-            instanceList = JsonConvert.DeserializeObject<List<BotStatus.BotStatusModel>>(redisStatus);
+            instanceList = JsonSerializer.Deserialize<List<BotStatus.BotStatusModel>>(redisStatus);
         }
         catch (Exception e)
         {
@@ -143,7 +144,7 @@ public class BotInstanceService(IDataCache cache, DbContextProvider provider, IH
 
         try
         {
-            var serializedList = JsonConvert.SerializeObject(instanceList);
+            var serializedList = JsonSerializer.Serialize(instanceList);
             await redisDb.StringSetAsync("bot_api_instances", serializedList);
         }
         catch (Exception e)
@@ -167,7 +168,7 @@ public class BotInstanceService(IDataCache cache, DbContextProvider provider, IH
                 return (null, RejectionReason.InstanceNotFound);
 
             var content = await response.Content.ReadAsStringAsync();
-            var botStatus = JsonConvert.DeserializeObject<BotStatus.BotStatusModel>(content);
+            var botStatus = JsonSerializer.Deserialize<BotStatus.BotStatusModel>(content);
             return (botStatus, null);
         }
         catch (JsonException)

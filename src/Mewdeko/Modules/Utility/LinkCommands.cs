@@ -25,10 +25,10 @@ public partial class Utility
             switch (await Service.GetPLinks(ctx.Guild.Id))
             {
                 case 1:
-                    await ctx.Channel.SendConfirmAsync("Link  previews are now enabled!").ConfigureAwait(false);
+                    await ctx.Channel.SendConfirmAsync(Strings.LinkPreviewsEnabled(ctx.Guild.Id));
                     break;
                 case 0:
-                    await ctx.Channel.SendConfirmAsync("Link Previews are now disabled!").ConfigureAwait(false);
+                    await ctx.Channel.SendConfirmAsync(Strings.LinkPreviewsDisabled(ctx.Guild.Id));
                     break;
             }
         }

@@ -4,6 +4,7 @@ using Mewdeko.Common.Configs;
 using Mewdeko.Database.DbContextStuff;
 using Mewdeko.Modules.Utility.Services;
 using Mewdeko.Services.Impl;
+using Mewdeko.Services.Strings;
 using Serilog;
 using Swan;
 
@@ -21,6 +22,7 @@ public class GiveawayService : INService
     private readonly ConcurrentDictionary<int, Timer> giveawayTimers = new();
     private readonly GuildSettingsService guildSettings1;
     private readonly MessageCountService msgCntService;
+    private readonly GeneratedBotStrings Strings;
 
     /// <summary>
     ///     Service for handling giveaways.
@@ -31,7 +33,7 @@ public class GiveawayService : INService
     public GiveawayService(DiscordShardedClient client,
         DbContextProvider dbProvider,
         GuildSettingsService guildSettings,
-        BotConfig config, BotCredentials credentials, MessageCountService msgCntService)
+        BotConfig config, BotCredentials credentials, MessageCountService msgCntService, GeneratedBotStrings strings)
     {
         client1 = client;
         this.dbProvider = dbProvider;
@@ -39,6 +41,7 @@ public class GiveawayService : INService
         config1 = config;
         this.credentials = credentials;
         this.msgCntService = msgCntService;
+        Strings = strings;
         _ = InitializeGiveawaysAsync();
     }
 
@@ -476,9 +479,9 @@ public class GiveawayService : INService
         await ScheduleGiveaway(entry.Entity);
 
         if (interaction is not null)
-            await interaction.SendConfirmFollowupAsync($"Giveaway started in {chan.Mention}").ConfigureAwait(false);
+            await interaction.SendConfirmFollowupAsync(Strings.GiveawayStarted(guild.Id, chan.Mention)).ConfigureAwait(false);
         else
-            await currentChannel.SendConfirmAsync($"Giveaway started in {chan.Mention}").ConfigureAwait(false);
+            await currentChannel.SendConfirmAsync(Strings.GiveawayStarted(guild.Id, chan.Mention)).ConfigureAwait(false);
         return;
 
         bool IsHex(string value)

@@ -39,10 +39,10 @@ public class MultiGreetService : INService
     /// </summary>
     /// <param name="guildId">The ID of the guild.</param>
     /// <returns>An array of MultiGreet objects for the specified guild.</returns>
-    public async Task<MultiGreet?[]?> GetGreets(ulong guildId) =>
+    public async Task<MultiGreet[]?> GetGreets(ulong guildId) =>
         await WithMewdekoContext(db => Task.FromResult(db.MultiGreets.GetAllGreets(guildId)));
 
-    private async Task<MultiGreet?[]> GetForChannel(ulong channelId) =>
+    private async Task<MultiGreet[]?> GetForChannel(ulong channelId) =>
         await WithMewdekoContext(db => Task.FromResult(db.MultiGreets.GetForChannel(channelId)));
 
     private async Task DoMultiGreet(IGuildUser user)

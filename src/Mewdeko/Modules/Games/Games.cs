@@ -38,7 +38,7 @@ public partial class Games : MewdekoModuleBase<GamesService>
         var listArr = list.Split(';');
         if (listArr.Length < 2)
             return;
-        await ctx.Channel.SendConfirmAsync("🤔", listArr[rng.Next(0, listArr.Length)]).ConfigureAwait(false);
+        await ctx.Channel.SendConfirmAsync(Strings.ChoiceMade(ctx.Guild.Id, listArr[rng.Next(0, listArr.Length)])).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -56,8 +56,8 @@ public partial class Games : MewdekoModuleBase<GamesService>
         var res = Service.GetEightballResponse(question);
         await ctx.Channel.EmbedAsync(new EmbedBuilder().WithColor(Mewdeko.OkColor)
             .WithDescription(ctx.User.ToString())
-            .AddField(efb => efb.WithName($"❓ {GetText("question")}").WithValue(question).WithIsInline(false))
-            .AddField($"🎱 {GetText("8ball")}", res));
+            .AddField(efb => efb.WithName($"❓ {Strings.Question(ctx.Guild.Id)}").WithValue(question).WithIsInline(false))
+            .AddField($"🎱 {Strings.Eightball(ctx.Guild.Id)}", res));
     }
 
     /// <summary>
@@ -107,7 +107,7 @@ There really is a {loonix}, and these people are using it, but it is just a part
         var user = await dbContext.GetOrCreateUser(ctx.User);
         user.IsDragon = !user.IsDragon;
         await dbContext.SaveChangesAsync();
-        await ReplyConfirmLocalizedAsync(user.IsDragon ? "dragon_set" : "dragon_unset")
+        await ReplyConfirmAsync(user.IsDragon ? Strings.DragonSet(ctx.Guild.Id) : Strings.DragonUnset(ctx.Guild.Id))
             .ConfigureAwait(false);
     }
 }

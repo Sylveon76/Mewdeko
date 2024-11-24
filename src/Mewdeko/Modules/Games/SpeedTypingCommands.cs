@@ -50,12 +50,11 @@ public partial class Games
             var game = Service.RunningContests.GetOrAdd(channel.Guild.Id,
                 _ => new TypingGame(games, client, channel,
                     guildSettings.GetPrefix(ctx.Guild).GetAwaiter().GetResult(),
-                    options, handler));
+                    options, handler, Strings));
 
             if (game.IsActive)
             {
-                await channel.SendErrorAsync($"Contest already running in {game.Channel.Mention} channel.", Config)
-                    .ConfigureAwait(false);
+                await channel.SendErrorAsync(Strings.TypingContestRunning(ctx.Guild.Id, game.Channel.Mention), Config);
             }
             else
             {
@@ -79,7 +78,7 @@ public partial class Games
                 return;
             }
 
-            await channel.SendErrorAsync("No contest to stop on this channel.", Config).ConfigureAwait(false);
+            await channel.SendErrorAsync(Strings.TypingNoContest(ctx.Guild.Id), Config);
         }
 
         /// <summary>
@@ -99,7 +98,7 @@ public partial class Games
 
             games.AddTypingArticle(ctx.User, text);
 
-            await channel.SendConfirmAsync("Added new article for typing game.").ConfigureAwait(false);
+            await channel.SendConfirmAsync(Strings.TypingArticleAdded(ctx.Guild.Id));
         }
 
         /// <summary>
@@ -127,9 +126,8 @@ public partial class Games
             }
 
             var i = (page - 1) * 15;
-            await channel.SendConfirmAsync("List of articles for Type Race",
-                    string.Join("\n", articles.Select(a => $"`#{++i}` - {a.Text.TrimTo(50)}")))
-                .ConfigureAwait(false);
+            await channel.SendConfirmAsync(Strings.TypingArticleList(ctx.Guild.Id,
+                string.Join("\n", articles.Select(a => $"`#{++i}` - {a.Text.TrimTo(50)}"))));
         }
 
         /// <summary>
@@ -148,7 +146,7 @@ public partial class Games
             if (removed is null) return;
 
             var embed = new EmbedBuilder()
-                .WithTitle($"Removed typing article #{index + 1}")
+                .WithTitle(Strings.TypingArticleRemoved(ctx.Guild.Id, index + 1))
                 .WithDescription(removed.Text.TrimTo(50))
                 .WithOkColor();
 

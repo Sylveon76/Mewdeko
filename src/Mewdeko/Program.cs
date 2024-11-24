@@ -17,6 +17,7 @@ using Mewdeko.Modules.Nsfw;
 using Mewdeko.Modules.Searches.Services;
 using Mewdeko.Services.Impl;
 using Mewdeko.Services.Settings;
+using Mewdeko.Services.Strings;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -276,6 +277,7 @@ public class Program
             .AddSingleton(new NekosBestApi("Mewdeko"))
             .AddSingleton(p => new InteractionService(p.GetRequiredService<DiscordShardedClient>()))
             .AddSingleton<Localization>()
+            .AddSingleton<GeneratedBotStrings>()
             .AddSingleton<BotConfigService>()
             .AddSingleton<BotConfig>()
             .AddConfigServices()

@@ -25,7 +25,7 @@ public partial class ServerManagement
         public async Task SetDefaultPunishment(PunishmentAction punishmentAction)
         {
             await Service.SetDefaultPunishmentAsync(ctx.Guild, punishmentAction);
-            await SuccessLocalizedAsync("default_punishment_set", punishmentAction).ConfigureAwait(false);
+            await SuccessAsync(Strings.DefaultPunishmentSet(ctx.Guild.Id, punishmentAction)).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -43,11 +43,11 @@ public partial class ServerManagement
             try
             {
                 await Service.AddBlacklistedRoleAsync(ctx.Guild, role, punishmentAction);
-                await SuccessLocalizedAsync("role_blacklisted", role.Name).ConfigureAwait(false);
+                await SuccessAsync(Strings.RoleBlacklisted(ctx.Guild.Id, role.Name)).ConfigureAwait(false);
             }
             catch (InvalidOperationException ex)
             {
-                await ErrorLocalizedAsync(ex.Message, role.Mention).ConfigureAwait(false);
+                await ErrorAsync(Strings.RoleBlacklistError(ctx.Guild.Id, ex.Message, role.Mention)).ConfigureAwait(false);
             }
         }
 
@@ -65,11 +65,11 @@ public partial class ServerManagement
             try
             {
                 await Service.RemoveBlacklistedRoleAsync(ctx.Guild, role);
-                await SuccessLocalizedAsync("role_unblacklisted", role.Name).ConfigureAwait(false);
+                await SuccessAsync(Strings.RoleUnblacklisted(ctx.Guild.Id, role.Name)).ConfigureAwait(false);
             }
             catch (InvalidOperationException ex)
             {
-                await ErrorLocalizedAsync(ex.Message, role.Mention).ConfigureAwait(false);
+                await ErrorAsync(Strings.RoleUnblacklistError(ctx.Guild.Id, ex.Message, role.Mention)).ConfigureAwait(false);
             }
         }
 
@@ -89,11 +89,11 @@ public partial class ServerManagement
             try
             {
                 await Service.AddBlacklistedPermissionAsync(ctx.Guild, permission, punishmentAction);
-                await SuccessLocalizedAsync("permission_blacklisted", permission).ConfigureAwait(false);
+                await SuccessAsync(Strings.PermissionBlacklisted(ctx.Guild.Id, permission)).ConfigureAwait(false);
             }
             catch (InvalidOperationException ex)
             {
-                await ErrorLocalizedAsync(ex.Message, permission).ConfigureAwait(false);
+                await ErrorAsync(Strings.PermissionBlacklistError(ctx.Guild.Id, ex.Message, permission)).ConfigureAwait(false);
             }
         }
 
@@ -111,11 +111,11 @@ public partial class ServerManagement
             try
             {
                 await Service.RemoveBlacklistedPermissionAsync(ctx.Guild, permission);
-                await SuccessLocalizedAsync("permission_unblacklisted", permission).ConfigureAwait(false);
+                await SuccessAsync(Strings.PermissionUnblacklisted(ctx.Guild.Id, permission)).ConfigureAwait(false);
             }
             catch (InvalidOperationException ex)
             {
-                await ErrorLocalizedAsync(ex.Message, permission).ConfigureAwait(false);
+                await ErrorAsync(Strings.PermissionUnblacklistError(ctx.Guild.Id, ex.Message, permission)).ConfigureAwait(false);
             }
         }
 
@@ -131,7 +131,7 @@ public partial class ServerManagement
         public async Task AddWhitelistedUser(IGuildUser user)
         {
             await Service.AddWhitelistedUserAsync(ctx.Guild, user);
-            await SuccessLocalizedAsync("user_whitelisted", user.Username).ConfigureAwait(false);
+            await SuccessAsync(Strings.UserWhitelisted(ctx.Guild.Id, user.Username)).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -146,7 +146,7 @@ public partial class ServerManagement
         public async Task RemoveWhitelistedUser(IGuildUser user)
         {
             await Service.RemoveWhitelistedUserAsync(ctx.Guild, user);
-            await SuccessLocalizedAsync("user_unwhitelisted", user.Username).ConfigureAwait(false);
+            await SuccessAsync(Strings.UserUnwhitelisted(ctx.Guild.Id, user.Username)).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -161,7 +161,7 @@ public partial class ServerManagement
         public async Task AddWhitelistedRole(IRole role)
         {
             await Service.AddWhitelistedRoleAsync(ctx.Guild, role);
-            await SuccessLocalizedAsync("role_whitelisted", role.Name).ConfigureAwait(false);
+            await SuccessAsync(Strings.RoleWhitelisted(ctx.Guild.Id, role.Name)).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -176,8 +176,7 @@ public partial class ServerManagement
         public async Task RemoveWhitelistedRole(IRole role)
         {
             await Service.RemoveWhitelistedRoleAsync(ctx.Guild, role);
-            await SuccessLocalizedAsync("role_unwhitelisted", role.Name).ConfigureAwait(false);
-        }
+            await SuccessAsync(Strings.RoleUnwhitelisted(ctx.Guild.Id, role.Name)).ConfigureAwait(false);        }
 
         /// <summary>
         ///     Lists all blacklisted and whitelisted roles and permissions.
@@ -208,7 +207,7 @@ public partial class ServerManagement
                 .ToListAsync();
 
             var embed = new EmbedBuilder()
-                .WithTitle(GetText("blacklist_whitelist_list_title"))
+                .WithTitle(Strings.BlacklistWhitelistListTitle(ctx.Guild.Id))
                 .WithColor(Color.Red);
 
             if (blacklistedRoles.Any())
@@ -216,31 +215,31 @@ public partial class ServerManagement
                 var roles = blacklistedRoles.Select(r =>
                 {
                     var role = ctx.Guild.GetRole(r.RoleId);
-                    var roleName = role != null ? role.Name : GetText("role_id_format", r.RoleId);
-                    var punishment = r.PunishmentAction?.ToString() ?? GetText("default");
-                    return $"{roleName} - {GetText("punishment_format", punishment)}";
+                    var roleName = role != null ? role.Name : Strings.RoleIdFormat(ctx.Guild.Id, r.RoleId);
+                    var punishment = r.PunishmentAction?.ToString() ?? Strings.Default(ctx.Guild.Id);
+                    return $"{roleName} - {Strings.PunishmentFormat(ctx.Guild.Id, punishment)}";
                 });
 
-                embed.AddField(GetText("blacklisted_roles"), string.Join("\n", roles));
+                embed.AddField(Strings.BlacklistedRoles(ctx.Guild.Id), string.Join("\n", roles));
             }
             else
             {
-                embed.AddField(GetText("blacklisted_roles"), GetText("no_blacklisted_roles"));
+                embed.AddField(Strings.BlacklistedRoles(ctx.Guild.Id), Strings.NoBlacklistedRoles(ctx.Guild.Id));
             }
 
             if (blacklistedPermissions.Any())
             {
                 var permissions = blacklistedPermissions.Select(p =>
                 {
-                    var punishment = p.PunishmentAction?.ToString() ?? GetText("default");
-                    return $"{p.Permission} - {GetText("punishment_format", punishment)}";
+                    var punishment = p.PunishmentAction?.ToString() ?? Strings.Default(ctx.Guild.Id);
+                    return $"{p.Permission} - {Strings.PunishmentFormat(ctx.Guild.Id, punishment)}";
                 });
 
-                embed.AddField(GetText("blacklisted_permissions"), string.Join("\n", permissions));
+                embed.AddField(Strings.BlacklistedPermissions(ctx.Guild.Id), string.Join("\n", permissions));
             }
             else
             {
-                embed.AddField(GetText("blacklisted_permissions"), GetText("no_blacklisted_permissions"));
+                embed.AddField(Strings.BlacklistedPermissions(ctx.Guild.Id), Strings.NoBlacklistedPermissions(ctx.Guild.Id));
             }
 
             if (whitelistedRoles.Any())
@@ -248,15 +247,15 @@ public partial class ServerManagement
                 var roles = whitelistedRoles.Select(r =>
                 {
                     var role = ctx.Guild.GetRole(r.RoleId);
-                    var roleName = role != null ? role.Name : GetText("role_id_format", r.RoleId);
+                    var roleName = role != null ? role.Name : Strings.RoleIdFormat(ctx.Guild.Id, r.RoleId);
                     return $"{roleName}";
                 });
 
-                embed.AddField(GetText("whitelisted_roles"), string.Join("\n", roles));
+                embed.AddField(Strings.WhitelistedRoles(ctx.Guild.Id), string.Join("\n", roles));
             }
             else
             {
-                embed.AddField(GetText("whitelisted_roles"), GetText("no_whitelisted_roles"));
+                embed.AddField(Strings.WhitelistedRoles(ctx.Guild.Id), Strings.NoWhitelistedRoles(ctx.Guild.Id));
             }
 
             if (whitelistedUsers.Count != 0)
@@ -264,15 +263,15 @@ public partial class ServerManagement
                 var users = whitelistedUsers.Select(async u =>
                 {
                     var user = await ctx.Guild.GetUserAsync(u.UserId);
-                    var userName = user != null ? user.Username : GetText("user_id_format", u.UserId);
+                    var userName = user != null ? user.Username : Strings.UserIdFormat(ctx.Guild.Id, u.UserId);
                     return $"{userName}";
                 });
 
-                embed.AddField(GetText("whitelisted_users"), string.Join("\n", users));
+                embed.AddField(Strings.WhitelistedUsers(ctx.Guild.Id), string.Join("\n", users));
             }
             else
             {
-                embed.AddField(GetText("whitelisted_users"), GetText("no_whitelisted_users"));
+                embed.AddField(Strings.WhitelistedUsers(ctx.Guild.Id), Strings.NoWhitelistedUsers(ctx.Guild.Id));
             }
 
             await ctx.Channel.SendMessageAsync(embed: embed.Build()).ConfigureAwait(false);

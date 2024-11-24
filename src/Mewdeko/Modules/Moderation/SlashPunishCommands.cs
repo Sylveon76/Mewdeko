@@ -52,23 +52,21 @@ public class SlashPunishCommands : MewdekoSlashSubmodule<UserPunishService>
         var warnlogChannel = await Service.GetWarnlogChannel(ctx.Guild.Id);
         if (warnlogChannel == channel.Id)
         {
-            await ctx.Interaction.SendErrorAsync("This is already your warnlog channel!", Config).ConfigureAwait(false);
+            await ctx.Interaction.SendErrorAsync(Strings.WarnlogChannelExists(ctx.Guild.Id), Config);
             return;
         }
 
         if (warnlogChannel == 0)
         {
             await Service.SetWarnlogChannelId(ctx.Guild, channel).ConfigureAwait(false);
-            await ctx.Interaction.SendConfirmAsync($"Your warnlog channel has been set to {channel.Mention}")
-                .ConfigureAwait(false);
+            await ctx.Interaction.SendConfirmAsync(Strings.WarnlogChannelSet(ctx.Guild.Id, channel.Mention));
+
             return;
         }
 
         var oldWarnChannel = await ctx.Guild.GetTextChannelAsync(warnlogChannel).ConfigureAwait(false);
         await Service.SetWarnlogChannelId(ctx.Guild, channel).ConfigureAwait(false);
-        await ctx.Interaction.SendConfirmAsync(
-                $"Your warnlog channel has been changed from {oldWarnChannel.Mention} to {channel.Mention}")
-            .ConfigureAwait(false);
+        await ctx.Interaction.SendConfirmAsync(Strings.WarnlogChannelChanged(ctx.Guild.Id, oldWarnChannel.Mention, channel.Mention));
     }
 
     /// <summary>
@@ -94,14 +92,14 @@ public class SlashPunishCommands : MewdekoSlashSubmodule<UserPunishService>
         }
         catch
         {
-            await ctx.Interaction.SendErrorAsync("Invalid time specified. Please follow the format `4d3h2m1s`", Config);
+            await ctx.Interaction.SendErrorAsync(Strings.InvalidTimeFormat(ctx.Guild.Id), Config);
             return;
         }
 
         reason ??= $"{ctx.User} || None Specified";
         if (time.Time.Days > 28)
         {
-            await ReplyErrorLocalizedAsync("timeout_length_too_long").ConfigureAwait(false);
+            await ReplyErrorAsync(Strings.TimeoutLengthTooLong(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
@@ -109,7 +107,7 @@ public class SlashPunishCommands : MewdekoSlashSubmodule<UserPunishService>
         {
             AuditLogReason = reason
         }).ConfigureAwait(false);
-        await ReplyConfirmLocalizedAsync("timeout_set", user.Mention, time.Time.Humanize(maxUnit: TimeUnit.Day))
+        await ReplyConfirmAsync(Strings.TimeoutSet(ctx.Guild.Id, user.Mention, time.Time.Humanize(maxUnit: TimeUnit.Day)))
             .ConfigureAwait(false);
     }
 
@@ -130,7 +128,7 @@ public class SlashPunishCommands : MewdekoSlashSubmodule<UserPunishService>
         {
             AuditLogReason = $"Removal requested by {ctx.User}"
         }).ConfigureAwait(false);
-        await ReplyConfirmLocalizedAsync("timeout_removed", user.Mention).ConfigureAwait(false);
+        await ReplyConfirmAsync(Strings.TimeoutRemoved(ctx.Guild.Id, user.Mention)).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -152,9 +150,9 @@ public class SlashPunishCommands : MewdekoSlashSubmodule<UserPunishService>
         {
             await (await user.CreateDMChannelAsync().ConfigureAwait(false)).EmbedAsync(new EmbedBuilder()
                     .WithErrorColor()
-                    .WithDescription(GetText("warned_on", ctx.Guild.ToString()))
-                    .AddField(efb => efb.WithName(GetText("moderator")).WithValue(ctx.User.ToString()))
-                    .AddField(efb => efb.WithName(GetText("reason")).WithValue(reason ?? "-")))
+                    .WithDescription(Strings.WarnedOn(ctx.Guild.Id, ctx.Guild.ToString()))
+                    .AddField(efb => efb.WithName(Strings.Moderator(ctx.Guild.Id)).WithValue(ctx.User.ToString()))
+                    .AddField(efb => efb.WithName(Strings.Reason(ctx.Guild.Id)).WithValue(reason ?? "-")))
                 .ConfigureAwait(false);
         }
         catch
@@ -172,9 +170,9 @@ public class SlashPunishCommands : MewdekoSlashSubmodule<UserPunishService>
             Log.Warning(ex.Message);
             var errorEmbed = new EmbedBuilder()
                 .WithErrorColor()
-                .WithDescription(GetText("cant_apply_punishment"));
+                .WithDescription(Strings.CantApplyPunishment(ctx.Guild.Id));
 
-            if (dmFailed) errorEmbed.WithFooter($"⚠️ {GetText("unable_to_dm_user")}");
+            if (dmFailed) errorEmbed.WithFooter($"⚠️ {Strings.UnableToDmUser(ctx.Guild.Id)}");
 
             await ctx.Interaction.RespondAsync(embed: errorEmbed.Build());
             return;
@@ -184,18 +182,18 @@ public class SlashPunishCommands : MewdekoSlashSubmodule<UserPunishService>
             .WithOkColor();
         if (punishment is null || punishment.Id is 0)
         {
-            embed.WithDescription(GetText("user_warned",
+            embed.WithDescription(Strings.UserWarned(ctx.Guild.Id,
                 Format.Bold(user.ToString())));
         }
         else
         {
-            embed.WithDescription(GetText("user_warned_and_punished", Format.Bold(user.ToString()),
+            embed.WithDescription(Strings.UserWarnedAndPunished(ctx.Guild.Id, Format.Bold(user.ToString()),
                 Format.Bold(punishment.Punishment.ToString())));
         }
 
-        if (dmFailed) embed.WithFooter($"⚠️ {GetText("unable_to_dm_user")}");
+        if (dmFailed) embed.WithFooter($"⚠️ {Strings.UnableToDmUser(ctx.Guild.Id)}");
 
-        if (dmFailed) embed.WithFooter($"⚠️ {GetText("unable_to_dm_user")}");
+        if (dmFailed) embed.WithFooter($"⚠️ {Strings.UnableToDmUser(ctx.Guild.Id)}");
 
         await ctx.Interaction.RespondAsync(embed: embed.Build());
         if (await Service.GetWarnlogChannel(ctx.Guild.Id) != 0)
@@ -211,10 +209,17 @@ public class SlashPunishCommands : MewdekoSlashSubmodule<UserPunishService>
             var channel = await ctx.Guild.GetTextChannelAsync(await Service.GetWarnlogChannel(ctx.Guild.Id));
             await channel.EmbedAsync(new EmbedBuilder().WithErrorColor()
                 .WithThumbnailUrl(user.RealAvatarUrl().ToString())
-                .WithTitle($"Warned by: {ctx.User}")
-                .WithCurrentTimestamp()
-                .WithDescription(
-                    $"Username: {user.Username}#{user.Discriminator}\nID of Warned User: {user.Id}\nWarn Number: {warnings}\nPunishment: {punishaction} {punishtime}\n\nReason: {reason}\n\n[Click Here For Context]({ctx.Interaction.GetOriginalResponseAsync().GetAwaiter().GetResult().GetJumpUrl()})"));
+                .WithTitle(Strings.WarnLogTitle(ctx.Guild.Id, ctx.User))
+                .WithDescription(Strings.WarnLogDescription(
+                    ctx.Guild.Id,
+                    user.Username,
+                    user.Discriminator,
+                    user.Id,
+                    warnings,
+                    punishaction,
+                    punishtime,
+                    reason,
+                    ctx.Interaction.GetOriginalResponseAsync().GetAwaiter().GetResult().GetJumpUrl())));
         }
     }
 
@@ -239,18 +244,18 @@ public class SlashPunishCommands : MewdekoSlashSubmodule<UserPunishService>
         await Service.WarnExpireAsync(ctx.Guild.Id, days, action).ConfigureAwait(false);
         if (days == 0)
         {
-            await ReplyConfirmLocalizedAsync("warn_expire_reset").ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.WarnExpireReset(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
         if (action == WarnExpireAction.Delete)
         {
-            await ReplyConfirmLocalizedAsync("warn_expire_set_delete", Format.Bold(days.ToString()))
+            await ReplyConfirmAsync(Strings.WarnExpireSetDelete(ctx.Guild.Id, Format.Bold(days.ToString())))
                 .ConfigureAwait(false);
         }
         else
         {
-            await ReplyConfirmLocalizedAsync("warn_expire_set_clear", Format.Bold(days.ToString()))
+            await ReplyConfirmAsync(Strings.WarnExpireSetClear(ctx.Guild.Id, Format.Bold(days.ToString())))
                 .ConfigureAwait(false);
         }
     }
@@ -262,13 +267,13 @@ public class SlashPunishCommands : MewdekoSlashSubmodule<UserPunishService>
     /// <returns></returns>
     [SlashCommand("warnlog", "Check a users warn amount")]
     [RequireContext(ContextType.Guild)]
-    public Task Warnlog(IGuildUser? user = null)
+    public async Task Warnlog(IGuildUser? user = null)
     {
         user ??= (IGuildUser)ctx.User;
         if (ctx.User.Id == user.Id || ((IGuildUser)ctx.User).GuildPermissions.BanMembers)
-            return InternalWarnlog(user.Id);
-        return ctx.Interaction.SendEphemeralErrorAsync(
-            "You are missing the permissions to view another user's warns.", Config);
+            await InternalWarnlog(user.Id);
+        await ctx.Interaction.SendEphemeralErrorAsync(
+            Strings.MissingPermissionsViewWarns(ctx.Guild.Id), Config);
     }
 
     private async Task InternalWarnlog(ulong userId)
@@ -294,13 +299,13 @@ public class SlashPunishCommands : MewdekoSlashSubmodule<UserPunishService>
                 .ToArray();
 
             var embed = new PageBuilder().WithOkColor()
-                .WithTitle(GetText("warnlog_for",
+                .WithTitle(Strings.WarnlogFor(ctx.Guild.Id,
                     (ctx.Guild as SocketGuild)?.GetUser(userId)?.ToString() ?? userId.ToString()))
-                .WithFooter(efb => efb.WithText(GetText("page", page + 1)));
+                .WithFooter(efb => efb.WithText(Strings.Page(ctx.Guild.Id, page + 1)));
 
             if (warnings.Length == 0)
             {
-                embed.WithDescription(GetText("warnings_none"));
+                embed.WithDescription(Strings.WarningsNone(ctx.Guild.Id));
             }
             else
             {
@@ -308,10 +313,10 @@ public class SlashPunishCommands : MewdekoSlashSubmodule<UserPunishService>
                 foreach (var w in warnings)
                 {
                     i++;
-                    var name = GetText("warned_on_by", $"<t:{w.DateAdded.Value.ToUnixEpochDate()}:D>",
+                    var name = Strings.WarnedOnBy(ctx.Guild.Id, $"<t:{w.DateAdded.Value.ToUnixEpochDate()}:D>",
                         $"<t:{w.DateAdded.Value.ToUnixEpochDate()}:T>", w.Moderator);
                     if (w.Forgiven)
-                        name = $"{Format.Strikethrough(name)} {GetText("warn_cleared_by", w.ForgivenBy)}";
+                        name = $"{Format.Strikethrough(name)} {Strings.WarnClearedBy(ctx.Guild.Id, w.ForgivenBy)}";
 
                     embed.AddField(x => x
                         .WithName($"#`{i}` {name}")
@@ -362,7 +367,7 @@ public class SlashPunishCommands : MewdekoSlashSubmodule<UserPunishService>
                     }).GetResults().ConfigureAwait(false);
 
                 return new PageBuilder().WithOkColor()
-                    .WithTitle(GetText("warnings_list"))
+                    .WithTitle(Strings.WarningsList(ctx.Guild.Id))
                     .WithDescription(string.Join("\n", ws));
             }
         }
@@ -388,18 +393,18 @@ public class SlashPunishCommands : MewdekoSlashSubmodule<UserPunishService>
         var userStr = user.ToString();
         if (index == 0)
         {
-            await ReplyConfirmLocalizedAsync("warnings_cleared", userStr).ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.WarningsCleared(ctx.Guild.Id, userStr)).ConfigureAwait(false);
         }
         else
         {
             if (success)
             {
-                await ReplyConfirmLocalizedAsync("warning_cleared", Format.Bold(index.ToString()), userStr)
+                await ReplyConfirmAsync(Strings.WarningCleared(ctx.Guild.Id, Format.Bold(index.ToString()), userStr))
                     .ConfigureAwait(false);
             }
             else
             {
-                await ReplyErrorLocalizedAsync("warning_clear_fail").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.WarningClearFail(ctx.Guild.Id)).ConfigureAwait(false);
             }
         }
     }
@@ -425,7 +430,7 @@ public class SlashPunishCommands : MewdekoSlashSubmodule<UserPunishService>
             }
             catch
             {
-                await ctx.Interaction.SendErrorAsync("Invalid time specified. Please follow the format `4d3h2m1s`",
+                await ctx.Interaction.SendErrorAsync(Strings.InvalidTimeFormat(ctx.Guild.Id),
                     Config);
                 return;
             }
@@ -443,8 +448,8 @@ public class SlashPunishCommands : MewdekoSlashSubmodule<UserPunishService>
         {
             if (!await Service.WarnPunishRemove(ctx.Guild.Id, number)) return;
 
-            await ReplyConfirmLocalizedAsync("warn_punish_rem",
-                Format.Bold(number.ToString())).ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.WarnPunishRem(ctx.Guild.Id,
+                Format.Bold(number.ToString()))).ConfigureAwait(false);
             return;
         }
 
@@ -455,25 +460,25 @@ public class SlashPunishCommands : MewdekoSlashSubmodule<UserPunishService>
         switch (punish)
         {
             case PunishmentAction.Timeout when time?.Time.Days > 28:
-                await ReplyErrorLocalizedAsync("timeout_length_too_long").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.TimeoutLengthTooLong(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             case PunishmentAction.Timeout when time.Time.TotalSeconds is 0:
-                await ReplyErrorLocalizedAsync("timeout_needs_time").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.TimeoutNeedsTime(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
         }
 
         if (time.Time.TotalSeconds is 0)
         {
-            await ReplyConfirmLocalizedAsync("warn_punish_set",
+            await ReplyConfirmAsync(Strings.WarnPunishSet(ctx.Guild.Id,
                 Format.Bold(punish.ToString()),
-                Format.Bold(number.ToString())).ConfigureAwait(false);
+                Format.Bold(number.ToString()))).ConfigureAwait(false);
         }
         else
         {
-            await ReplyConfirmLocalizedAsync("warn_punish_set_timed",
+            await ReplyConfirmAsync(Strings.WarnPunishSetTimed(ctx.Guild.Id,
                 Format.Bold(punish.ToString()),
                 Format.Bold(number.ToString()),
-                Format.Bold(time.Input)).ConfigureAwait(false);
+                Format.Bold(time.Input))).ConfigureAwait(false);
         }
     }
 
@@ -496,11 +501,11 @@ public class SlashPunishCommands : MewdekoSlashSubmodule<UserPunishService>
         }
         else
         {
-            list = GetText("warnpl_none");
+            list = Strings.WarnplNone(ctx.Guild.Id);
         }
 
         await ctx.Interaction.SendConfirmAsync(
-            GetText("warn_punish_list"), list).ConfigureAwait(false);
+            Strings.WarnPunishList(ctx.Guild.Id), list).ConfigureAwait(false);
     }
 
 
@@ -525,7 +530,7 @@ public class SlashPunishCommands : MewdekoSlashSubmodule<UserPunishService>
             }
             catch
             {
-                await ctx.Interaction.SendErrorAsync("Invalid time specified. Please follow the format `4d3h2m1s`",
+                await ctx.Interaction.SendErrorAsync(Strings.InvalidTimeFormat(ctx.Guild.Id),
                     Config);
                 return;
             }
@@ -559,7 +564,7 @@ public class SlashPunishCommands : MewdekoSlashSubmodule<UserPunishService>
             }
             catch
             {
-                await ctx.Interaction.SendErrorAsync("Invalid time specified. Please follow the format `4d3h2m1s`",
+                await ctx.Interaction.SendErrorAsync(Strings.InvalidTimeFormat(ctx.Guild.Id),
                     Config);
                 return;
             }
@@ -589,7 +594,7 @@ public class SlashPunishCommands : MewdekoSlashSubmodule<UserPunishService>
                 }).ConfigureAwait(false);
 
                 await ctx.Interaction.RespondAsync(embed: new EmbedBuilder().WithOkColor()
-                        .WithTitle($"⛔️ {GetText("banned_user")}")
+                        .WithTitle($"⛔️ {Strings.BannedUser(ctx.Guild.Id)}")
                         .AddField(efb => efb.WithName("ID").WithValue(userId.ToString()).WithIsInline(true)).Build())
                     .ConfigureAwait(false);
             }
@@ -601,7 +606,7 @@ public class SlashPunishCommands : MewdekoSlashSubmodule<UserPunishService>
                 }).ConfigureAwait(false);
 
                 await ctx.Interaction.RespondAsync(embed: new EmbedBuilder().WithOkColor()
-                        .WithTitle($"⛔️ {GetText("banned_user")}")
+                        .WithTitle($"⛔️ {Strings.BannedUser(ctx.Guild.Id)}")
                         .AddField(efb => efb.WithName("ID").WithValue(userId.ToString()).WithIsInline(true)).Build())
                     .ConfigureAwait(false);
             }
@@ -614,7 +619,7 @@ public class SlashPunishCommands : MewdekoSlashSubmodule<UserPunishService>
 
                 try
                 {
-                    var defaultMessage = GetText("bandm", Format.Bold(ctx.Guild.Name), reason);
+                    var defaultMessage = Strings.Bandm(ctx.Guild.Id, Format.Bold(ctx.Guild.Name), reason);
                     var (embedBuilder, message, components) = await Service
                         .GetBanUserDmEmbed(Context, user, defaultMessage, reason, null).ConfigureAwait(false);
                     if (embedBuilder is not null || message is not null)
@@ -636,12 +641,12 @@ public class SlashPunishCommands : MewdekoSlashSubmodule<UserPunishService>
                 }).ConfigureAwait(false);
 
                 var toSend = new EmbedBuilder().WithOkColor()
-                    .WithTitle($"⛔️ {GetText("banned_user")}")
-                    .AddField(efb => efb.WithName(GetText("username")).WithValue(user.ToString()).WithIsInline(true))
+                    .WithTitle($"⛔️ {Strings.BannedUser(ctx.Guild.Id)}")
+                    .AddField(efb => efb.WithName(Strings.Username(ctx.Guild.Id)).WithValue(user.ToString()).WithIsInline(true))
                     .AddField(efb => efb.WithName("ID").WithValue(user.Id.ToString()).WithIsInline(true))
                     .WithImageUrl((await nekos.ActionsApi.Kick().ConfigureAwait(false)).Results.First().Url);
 
-                if (dmFailed) toSend.WithFooter($"⚠️ {GetText("unable_to_dm_user")}");
+                if (dmFailed) toSend.WithFooter($"⚠️ {Strings.UnableToDmUser(ctx.Guild.Id)}");
 
                 await ctx.Interaction.RespondAsync(embed: toSend.Build())
                     .ConfigureAwait(false);
@@ -652,7 +657,7 @@ public class SlashPunishCommands : MewdekoSlashSubmodule<UserPunishService>
 
                 try
                 {
-                    var defaultMessage = GetText("bandm", Format.Bold(ctx.Guild.Name), reason);
+                    var defaultMessage = Strings.Bandm(ctx.Guild.Id, Format.Bold(ctx.Guild.Name), reason);
                     var (embedBuilder, message, components) = await Service
                         .GetBanUserDmEmbed(ctx, user, defaultMessage, reason, null).ConfigureAwait(false);
                     if (embedBuilder is not null || message is not null)
@@ -674,12 +679,12 @@ public class SlashPunishCommands : MewdekoSlashSubmodule<UserPunishService>
                 }).ConfigureAwait(false);
 
                 var toSend = new EmbedBuilder().WithOkColor()
-                    .WithTitle($"⛔️ {GetText("banned_user")}")
-                    .AddField(efb => efb.WithName(GetText("username")).WithValue(user.ToString()).WithIsInline(true))
+                    .WithTitle($"⛔️ {Strings.BannedUser(ctx.Guild.Id)}")
+                    .AddField(efb => efb.WithName(Strings.Username(ctx.Guild.Id)).WithValue(user.ToString()).WithIsInline(true))
                     .AddField(efb => efb.WithName("ID").WithValue(user.Id.ToString()).WithIsInline(true))
                     .WithImageUrl((await nekos.ActionsApi.Kick().ConfigureAwait(false)).Results.First().Url);
 
-                if (dmFailed) toSend.WithFooter($"⚠️ {GetText("unable_to_dm_user")}");
+                if (dmFailed) toSend.WithFooter($"⚠️ {Strings.UnableToDmUser(ctx.Guild.Id)}");
 
                 await ctx.Interaction.RespondAsync(embed: toSend.Build())
                     .ConfigureAwait(false);
@@ -703,7 +708,7 @@ public class SlashPunishCommands : MewdekoSlashSubmodule<UserPunishService>
 
         if (bun == null)
         {
-            await ReplyErrorLocalizedAsync("user_not_found").ConfigureAwait(false);
+            await ReplyErrorAsync(Strings.UserNotFound(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
@@ -714,7 +719,7 @@ public class SlashPunishCommands : MewdekoSlashSubmodule<UserPunishService>
     {
         await ctx.Guild.RemoveBanAsync(user).ConfigureAwait(false);
 
-        await ReplyConfirmLocalizedAsync("unbanned_user", Format.Bold(user.ToString())).ConfigureAwait(false);
+        await ReplyConfirmAsync(Strings.UnbannedUser(ctx.Guild.Id, Format.Bold(user.ToString()))).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -742,7 +747,7 @@ public class SlashPunishCommands : MewdekoSlashSubmodule<UserPunishService>
 
         try
         {
-            await user.SendErrorAsync(GetText("sbdm", Format.Bold(ctx.Guild.Name), msg)).ConfigureAwait(false);
+            await user.SendErrorAsync(Strings.Sbdm(ctx.Guild.Id, Format.Bold(ctx.Guild.Name), msg)).ConfigureAwait(false);
         }
         catch
         {
@@ -763,12 +768,12 @@ public class SlashPunishCommands : MewdekoSlashSubmodule<UserPunishService>
         }
 
         var toSend = new EmbedBuilder().WithOkColor()
-            .WithTitle($"☣ {GetText("sb_user")}")
-            .AddField(efb => efb.WithName(GetText("username")).WithValue(user.ToString()).WithIsInline(true))
+            .WithTitle($"☣ {Strings.SbUser(ctx.Guild.Id)}")
+            .AddField(efb => efb.WithName(Strings.Username(ctx.Guild.Id)).WithValue(user.ToString()).WithIsInline(true))
             .AddField(efb => efb.WithName("ID").WithValue(user.Id.ToString()).WithIsInline(true))
             .WithImageUrl((await nekos.ActionsApi.Kick().ConfigureAwait(false)).Results.First().Url);
 
-        if (dmFailed) toSend.WithFooter($"⚠️ {GetText("unable_to_dm_user")}");
+        if (dmFailed) toSend.WithFooter($"⚠️ {Strings.UnableToDmUser(ctx.Guild.Id)}");
 
         await ctx.Interaction.RespondAsync(embed: toSend.Build())
             .ConfigureAwait(false);
@@ -799,7 +804,7 @@ public class SlashPunishCommands : MewdekoSlashSubmodule<UserPunishService>
 
         try
         {
-            await user.SendErrorAsync(GetText("kickdm", Format.Bold(ctx.Guild.Name), msg))
+            await user.SendErrorAsync(Strings.Kickdm(ctx.Guild.Id, Format.Bold(ctx.Guild.Name), msg))
                 .ConfigureAwait(false);
         }
         catch
@@ -810,12 +815,12 @@ public class SlashPunishCommands : MewdekoSlashSubmodule<UserPunishService>
         await user.KickAsync($"{ctx.User} | {msg}").ConfigureAwait(false);
 
         var toSend = new EmbedBuilder().WithOkColor()
-            .WithTitle(GetText("kicked_user"))
-            .AddField(efb => efb.WithName(GetText("username")).WithValue(user.ToString()).WithIsInline(true))
+            .WithTitle(Strings.KickedUser(ctx.Guild.Id))
+            .AddField(efb => efb.WithName(Strings.Username(ctx.Guild.Id)).WithValue(user.ToString()).WithIsInline(true))
             .AddField(efb => efb.WithName("ID").WithValue(user.Id.ToString()).WithIsInline(true))
             .WithImageUrl((await nekos.ActionsApi.Kick().ConfigureAwait(false)).Results.First().Url);
 
-        if (dmFailed) toSend.WithFooter($"⚠️ {GetText("unable_to_dm_user")}");
+        if (dmFailed) toSend.WithFooter($"⚠️ {Strings.UnableToDmUser(ctx.Guild.Id)}");
 
         await ctx.Interaction.RespondAsync(embed: toSend.Build())
             .ConfigureAwait(false);

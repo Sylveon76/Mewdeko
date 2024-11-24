@@ -27,21 +27,21 @@ public partial class Utility
         {
             if (channel is not INewsChannel chan)
             {
-                await ReplyErrorLocalizedAsync("channel_not_news_channel");
+                await ReplyErrorAsync(Strings.ChannelNotNewsChannel(ctx.Guild.Id));
                 return;
             }
 
             if (!await Service.PermCheck(chan))
             {
-                await ReplyErrorLocalizedAsync("missing_managed_messages");
+                await ReplyErrorAsync(Strings.MissingManageMessages(ctx.Guild.Id, ctx.Guild));
                 return;
             }
 
             var added = await Service.AddAutoPublish(ctx.Guild.Id, channel.Id);
             if (!added)
-                await ReplyErrorLocalizedAsync("auto_publish_already_set", channel.Mention);
+                await ReplyErrorAsync(Strings.AutoPublishAlreadySet(ctx.Guild.Id, channel.Mention));
             else
-                await ReplyConfirmLocalizedAsync("auto_publish_set", channel.Mention);
+                await ReplyConfirmAsync(Strings.AutoPublishSet(ctx.Guild.Id, channel.Mention));
         }
 
         /// <summary>
@@ -58,27 +58,27 @@ public partial class Utility
         {
             if (await Service.CheckIfExists(channel.Id))
             {
-                await ReplyErrorLocalizedAsync("channel_not_auto_publish");
+                await ReplyErrorAsync(Strings.ChannelNotAutoPublish(ctx.Guild.Id));
                 return;
             }
 
             if (channel is not INewsChannel chan)
             {
-                await ReplyErrorLocalizedAsync("channel_not_news_channel");
+                await ReplyErrorAsync(Strings.ChannelNotNewsChannel(ctx.Guild.Id));
                 return;
             }
 
             if (!await Service.PermCheck(chan))
             {
-                await ReplyErrorLocalizedAsync("missing_managed_messages");
+                await ReplyErrorAsync(Strings.MissingManageMessages(ctx.Guild.Id, ctx.Guild));
                 return;
             }
 
             var added = await Service.AddUserToBlacklist(channel.Id, user.Id);
             if (!added)
-                await ReplyErrorLocalizedAsync("user_already_blacklisted_autopub", user.Mention);
+                await ReplyErrorAsync(Strings.UserAlreadyBlacklistedAutopub(ctx.Guild.Id, user.Mention));
             else
-                await ReplyConfirmLocalizedAsync("user_publish_blacklisted", user.Mention, channel.Mention);
+                await ReplyConfirmAsync(Strings.UserPublishBlacklisted(ctx.Guild.Id, user.Mention, channel.Mention));
         }
 
         /// <summary>
@@ -95,33 +95,33 @@ public partial class Utility
         {
             if (await Service.CheckIfExists(channel.Id))
             {
-                await ReplyErrorLocalizedAsync("channel_not_auto_publish");
+                await ReplyErrorAsync(Strings.ChannelNotAutoPublish(ctx.Guild.Id));
                 return;
             }
 
             if (channel is not INewsChannel chan)
             {
-                await ReplyErrorLocalizedAsync("channel_not_news_channel");
+                await ReplyErrorAsync(Strings.ChannelNotNewsChannel(ctx.Guild.Id));
                 return;
             }
 
             if (!await Service.PermCheck(chan))
             {
-                await ReplyErrorLocalizedAsync("missing_managed_messages");
+                await ReplyErrorAsync(Strings.MissingManageMessages(ctx.Guild.Id, ctx.Guild));
                 return;
             }
 
             if (word.Length > 40)
             {
-                await ReplyErrorLocalizedAsync("word_publish_max_length");
+                await ReplyErrorAsync(Strings.WordPublishMaxLength(ctx.Guild.Id));
                 return;
             }
 
             var added = await Service.AddWordToBlacklist(channel.Id, word.ToLower());
             if (!added)
-                await ReplyErrorLocalizedAsync("word_already_blacklisted_autopub", word.ToLower());
+                await ReplyErrorAsync(Strings.WordAlreadyBlacklistedAutopub(ctx.Guild.Id, word.ToLower()));
             else
-                await ReplyConfirmLocalizedAsync("word_publish_blacklisted", word.ToLower(), channel.Mention);
+                await ReplyConfirmAsync(Strings.WordPublishBlacklisted(ctx.Guild.Id, word.ToLower(), channel.Mention));
         }
 
         /// <summary>
@@ -138,16 +138,16 @@ public partial class Utility
         {
             if (await Service.CheckIfExists(channel.Id))
             {
-                await ReplyErrorLocalizedAsync("channel_not_auto_publish");
+                await ReplyErrorAsync(Strings.ChannelNotAutoPublish(ctx.Guild.Id));
                 return;
             }
 
             var removed = await Service.RemoveUserFromBlacklist(channel.Id, user.Id);
 
             if (!removed)
-                await ReplyErrorLocalizedAsync("user_not_blacklisted_autopub", user.Mention);
+                await ReplyErrorAsync(Strings.UserNotBlacklistedAutopub(ctx.Guild.Id, user.Mention));
             else
-                await ReplyConfirmLocalizedAsync("user_publish_unblacklisted", user.Mention, channel.Mention);
+                await ReplyConfirmAsync(Strings.UserPublishUnblacklisted(ctx.Guild.Id, user.Mention, channel.Mention));
         }
 
         /// <summary>
@@ -164,16 +164,16 @@ public partial class Utility
         {
             if (await Service.CheckIfExists(channel.Id))
             {
-                await ReplyErrorLocalizedAsync("channel_not_auto_publish");
+                await ReplyErrorAsync(Strings.ChannelNotAutoPublish(ctx.Guild.Id));
                 return;
             }
 
             var removed = await Service.RemoveWordFromBlacklist(channel.Id, word);
 
             if (!removed)
-                await ReplyErrorLocalizedAsync("word_not_blacklisted_autopub", word);
+                await ReplyErrorAsync(Strings.WordNotBlacklistedAutopub(ctx.Guild.Id, word));
             else
-                await ReplyConfirmLocalizedAsync("user_publish_unblacklisted", word, channel.Mention);
+                await ReplyConfirmAsync(Strings.UserPublishUnblacklisted(ctx.Guild.Id, word, channel.Mention));
         }
 
         /// <summary>
@@ -189,15 +189,15 @@ public partial class Utility
         {
             if (channel is not INewsChannel)
             {
-                await ReplyErrorLocalizedAsync("channel_not_news_channel");
+                await ReplyErrorAsync(Strings.ChannelNotNewsChannel(ctx.Guild.Id));
                 return;
             }
 
             var removed = await Service.RemoveAutoPublish(ctx.Guild.Id, channel.Id);
             if (!removed)
-                await ReplyErrorLocalizedAsync("auto_publish_not_set", channel.Mention);
+                await ReplyErrorAsync(Strings.AutoPublishNotSet(ctx.Guild.Id, channel.Mention));
             else
-                await ReplyConfirmLocalizedAsync("auto_publish_removed", channel.Mention);
+                await ReplyConfirmAsync(Strings.AutoPublishRemoved(ctx.Guild.Id, channel.Mention));
         }
 
         /// <summary>
@@ -213,7 +213,7 @@ public partial class Utility
             var autoPublishes = await Service.GetAutoPublishes(ctx.Guild.Id);
             if (autoPublishes.Count == 0)
             {
-                await ReplyErrorLocalizedAsync("auto_publish_not_enabled");
+                await ReplyErrorAsync(Strings.AutoPublishNotEnabled(ctx.Guild.Id));
                 return;
             }
 
@@ -239,16 +239,16 @@ public partial class Utility
                     .WithTitle($"Auto Publish - {channel.Name.TrimTo(20)}");
 
                 if (userBlacklists.Any())
-                    eb.AddField(GetText("blacklisted_users"),
+                    eb.AddField(Strings.BlacklistedUsers(ctx.Guild.Id),
                         string.Join(",", userBlacklists.Select(x => $"<@{x.User}>")));
                 else
-                    eb.AddField("blacklisted_users", GetText("none"));
+                    eb.AddField("blacklisted_users", Strings.None(ctx.Guild.Id));
 
                 if (wordBlacklists.Any())
-                    eb.AddField(GetText("blacklisted_words"),
+                    eb.AddField(Strings.BlacklistedWords(ctx.Guild.Id),
                         string.Join("\n", wordBlacklists.Select(x => x.Word.ToLower())));
                 else
-                    eb.AddField(GetText("blacklisted_words"), GetText("none"));
+                    eb.AddField(Strings.BlacklistedWords(ctx.Guild.Id), Strings.None(ctx.Guild.Id));
                 return eb;
             }
         }

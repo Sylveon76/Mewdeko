@@ -53,7 +53,7 @@ public partial class Utility
             var enumerable = quotes as Quote[] ?? quotes.ToArray();
             if (enumerable.Length > 0)
             {
-                await ctx.Channel.SendConfirmAsync(GetText("quotes_page", page + 1),
+                await ctx.Channel.SendConfirmAsync(Strings.QuotesPage(ctx.Guild.Id, page + 1),
                         string.Join("\n",
                             enumerable.Select(q =>
                                 $"`#{q.Id}` {Format.Bold(q.Keyword.SanitizeAllMentions()),-20} by {q.AuthorName.SanitizeAllMentions()}")))
@@ -61,7 +61,7 @@ public partial class Utility
             }
             else
             {
-                await ReplyErrorLocalizedAsync("quotes_page_none").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.QuotesPageNone(ctx.Guild.Id)).ConfigureAwait(false);
             }
         }
 
@@ -122,7 +122,7 @@ public partial class Utility
 
             if (quote is null)
             {
-                await ReplyErrorLocalizedAsync("quote_no_found_id").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.QuotesNotfound(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
@@ -133,12 +133,12 @@ public partial class Utility
         {
             await ctx.Channel.EmbedAsync(new EmbedBuilder()
                 .WithOkColor()
-                .WithTitle(GetText("quote_id", $"#{data.Id}"))
-                .AddField(efb => efb.WithName(GetText("trigger")).WithValue(data.Keyword))
-                .AddField(efb => efb.WithName(GetText("response")).WithValue(data.Text.Length > 1000
-                    ? GetText("redacted_too_long")
+                .WithTitle(Strings.QuoteId(ctx.Guild.Id, $"#{data.Id}"))
+                .AddField(efb => efb.WithName(Strings.Trigger(ctx.Guild.Id)).WithValue(data.Keyword))
+                .AddField(efb => efb.WithName(Strings.Response(ctx.Guild.Id)).WithValue(data.Text.Length > 1000
+                    ? Strings.RedactedTooLong(ctx.Guild.Id)
                     : Format.Sanitize(data.Text)))
-                .WithFooter(GetText("created_by", $"{data.AuthorName} ({data.AuthorId})"))
+                .WithFooter(Strings.CreatedBy(ctx.Guild.Id, $"{data.AuthorName} ({data.AuthorId})"))
             ).ConfigureAwait(false);
         }
 
@@ -192,7 +192,7 @@ public partial class Utility
 
             if (quote is null || quote.GuildId != ctx.Guild.Id)
             {
-                await ctx.Channel.SendErrorAsync(GetText("quotes_notfound"), Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.QuotesNotfound(ctx.Guild.Id), Config).ConfigureAwait(false);
                 return;
             }
 
@@ -242,7 +242,7 @@ public partial class Utility
             });
             await dbContext.SaveChangesAsync().ConfigureAwait(false);
 
-            await ReplyConfirmLocalizedAsync("quote_added_new", Format.Code(q.Id.ToString())).ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.QuoteAddedNew(ctx.Guild.Id, Format.Code(q.Id.ToString()))).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -265,14 +265,14 @@ public partial class Utility
 
             if (q?.GuildId != ctx.Guild.Id || !isAdmin && q.AuthorId != ctx.Message.Author.Id)
             {
-                response = GetText("quotes_remove_none");
+                response = Strings.QuotesRemoveNone(ctx.Guild.Id);
             }
             else
             {
                 dbContext.Quotes.Remove(q);
                 await dbContext.SaveChangesAsync().ConfigureAwait(false);
                 success = true;
-                response = GetText("quote_deleted", id);
+                response = Strings.QuoteDeleted(ctx.Guild.Id, id);
             }
 
             if (success)
@@ -303,7 +303,7 @@ public partial class Utility
 
             await dbContext.SaveChangesAsync().ConfigureAwait(false);
 
-            await ReplyConfirmLocalizedAsync("quotes_deleted", Format.Bold(keyword.SanitizeAllMentions()))
+            await ReplyConfirmAsync(Strings.QuotesDeleted(ctx.Guild.Id, Format.Bold(keyword.SanitizeAllMentions())))
                 .ConfigureAwait(false);
         }
     }

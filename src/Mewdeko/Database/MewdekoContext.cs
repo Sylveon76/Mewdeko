@@ -251,6 +251,12 @@ public class MewdekoContext : DbContext
     public DbSet<Quote> Quotes { get; set; }
 
     /// <summary>
+    /// Gets or sets the music playlist tracks in the database.
+    /// </summary>
+    public DbSet<MusicPlaylistTrack> MusicPlaylistTracks { get; set; }
+
+
+    /// <summary>
     ///     Gets or sets the reminders.
     /// </summary>
     public DbSet<Reminder> Reminders { get; set; }
@@ -732,13 +738,27 @@ public class MewdekoContext : DbContext
 
         #region MusicPlaylists
 
-        var musicPlaylistEntity = modelBuilder.Entity<MusicPlaylist
-        >();
+        var musicPlaylistEntity = modelBuilder.Entity<MusicPlaylist>();
 
-        musicPlaylistEntity
-            .HasMany(p => p.Songs)
-            .WithOne()
+        musicPlaylistEntity.HasKey(x => x.Id);
+        musicPlaylistEntity.Property(x => x.Name).IsRequired().HasMaxLength(200);
+        musicPlaylistEntity.Property(x => x.DateAdded).ValueGeneratedOnAdd();
+
+        musicPlaylistEntity.HasIndex(x => new { x.GuildId, x.Name }).IsUnique();
+
+        musicPlaylistEntity.HasMany(x => x.Tracks)
+            .WithOne(x => x.Playlist)
+            .HasForeignKey(x => x.PlaylistId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        var musicPlaylistTracksEntity = modelBuilder.Entity<MusicPlaylistTrack>();
+
+        musicPlaylistTracksEntity.HasKey(x => x.Id);
+        musicPlaylistTracksEntity.Property(x => x.Title).IsRequired().HasMaxLength(200);
+        musicPlaylistTracksEntity.Property(x => x.Uri).IsRequired().HasMaxLength(500);
+        musicPlaylistTracksEntity.Property(x => x.DateAdded).ValueGeneratedOnAdd();
+
+        musicPlaylistTracksEntity.HasIndex(x => new { x.PlaylistId, x.Index });
 
         #endregion
 

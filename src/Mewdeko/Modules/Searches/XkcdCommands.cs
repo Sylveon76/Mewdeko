@@ -1,8 +1,9 @@
 ﻿using System.Net.Http;
+using System.Text.Json;
 using Discord.Commands;
 using Mewdeko.Common.Attributes.TextCommands;
 using Mewdeko.Modules.Searches.Common.StreamNotifications.Models;
-using Newtonsoft.Json;
+
 
 namespace Mewdeko.Modules.Searches;
 
@@ -32,17 +33,17 @@ public partial class Searches
                 {
                     using var http = factory.CreateClient();
                     var res = await http.GetStringAsync($"{XkcdUrl}/info.0.json").ConfigureAwait(false);
-                    var comic = JsonConvert.DeserializeObject<XkcdComic>(res);
+                    var comic = JsonSerializer.Deserialize<XkcdComic>(res);
                     var embed = new EmbedBuilder().WithColor(Mewdeko.OkColor)
                         .WithImageUrl(comic.ImageLink)
                         .WithAuthor(eab =>
                             eab.WithName(comic.Title).WithUrl($"{XkcdUrl}/{comic.Num}")
                                 .WithIconUrl("https://xkcd.com/s/919f27.ico"))
                         .AddField(efb =>
-                            efb.WithName(GetText("comic_number")).WithValue(comic.Num.ToString())
+                            efb.WithName(Strings.ComicNumber(ctx.Guild.Id)).WithValue(comic.Num.ToString())
                                 .WithIsInline(true))
                         .AddField(efb =>
-                            efb.WithName(GetText("date")).WithValue($"{comic.Month}/{comic.Year}")
+                            efb.WithName(Strings.Date(ctx.Guild.Id)).WithValue($"{comic.Month}/{comic.Year}")
                                 .WithIsInline(true));
                     var sent = await ctx.Channel.EmbedAsync(embed)
                         .ConfigureAwait(false);
@@ -56,7 +57,7 @@ public partial class Searches
                 }
                 catch (HttpRequestException)
                 {
-                    await ReplyErrorLocalizedAsync("comic_not_found").ConfigureAwait(false);
+                    await ReplyErrorAsync(Strings.ComicNotFound(ctx.Guild.Id)).ConfigureAwait(false);
                 }
 
                 return;
@@ -81,17 +82,17 @@ public partial class Searches
                 using var http = factory.CreateClient();
                 var res = await http.GetStringAsync($"{XkcdUrl}/{num}/info.0.json").ConfigureAwait(false);
 
-                var comic = JsonConvert.DeserializeObject<XkcdComic>(res);
+                var comic = JsonSerializer.Deserialize<XkcdComic>(res);
                 var embed = new EmbedBuilder().WithColor(Mewdeko.OkColor)
                     .WithImageUrl(comic.ImageLink)
                     .WithAuthor(eab =>
                         eab.WithName(comic.Title).WithUrl($"{XkcdUrl}/{num}")
                             .WithIconUrl("https://xkcd.com/s/919f27.ico"))
                     .AddField(efb =>
-                        efb.WithName(GetText("comic_number")).WithValue(comic.Num.ToString())
+                        efb.WithName(Strings.ComicNumber(ctx.Guild.Id)).WithValue(comic.Num.ToString())
                             .WithIsInline(true))
                     .AddField(efb =>
-                        efb.WithName(GetText("date")).WithValue($"{comic.Month}/{comic.Year}")
+                        efb.WithName(Strings.Date(ctx.Guild.Id)).WithValue($"{comic.Month}/{comic.Year}")
                             .WithIsInline(true));
                 var sent = await ctx.Channel.EmbedAsync(embed)
                     .ConfigureAwait(false);
@@ -106,7 +107,7 @@ public partial class Searches
             }
             catch (HttpRequestException)
             {
-                await ReplyErrorLocalizedAsync("comic_not_found").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.ComicNotFound(ctx.Guild.Id)).ConfigureAwait(false);
             }
         }
     }

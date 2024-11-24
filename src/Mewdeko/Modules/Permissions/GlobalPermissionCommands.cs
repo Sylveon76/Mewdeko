@@ -31,7 +31,7 @@ public partial class Permissions
             var blockedCommands = Service.BlockedCommands;
             if (blockedModule.Count == 0 && blockedCommands.Count == 0)
             {
-                await ReplyErrorLocalizedAsync("lgp_none").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.LgpNone(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
@@ -40,7 +40,7 @@ public partial class Permissions
             if (blockedModule.Count > 0)
             {
                 embed.AddField(efb => efb
-                    .WithName(GetText("blocked_modules"))
+                    .WithName(Strings.BlockedModules(ctx.Guild.Id))
                     .WithValue(string.Join("\n", Service.BlockedModules))
                     .WithIsInline(false));
             }
@@ -48,7 +48,7 @@ public partial class Permissions
             if (blockedCommands.Count > 0)
             {
                 embed.AddField(efb => efb
-                    .WithName(GetText("blocked_commands"))
+                    .WithName(Strings.BlockedCommands(ctx.Guild.Id))
                     .WithValue(string.Join("\n", Service.BlockedCommands))
                     .WithIsInline(false));
             }
@@ -68,7 +68,7 @@ public partial class Permissions
         public async Task ResetGlobalPerms()
         {
             await Service.Reset().ConfigureAwait(false);
-            await ReplyConfirmLocalizedAsync("global_perms_reset").ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.GlobalPermsReset(ctx.Guild.Id)).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -89,11 +89,11 @@ public partial class Permissions
 
             if (added)
             {
-                await ReplyConfirmLocalizedAsync("gmod_add", Format.Bold(module.Name)).ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.GmodAdd(ctx.Guild.Id, Format.Bold(module.Name))).ConfigureAwait(false);
                 return;
             }
 
-            await ReplyConfirmLocalizedAsync("gmod_remove", Format.Bold(module.Name)).ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.GmodRemove(ctx.Guild.Id, Format.Bold(module.Name))).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -113,8 +113,7 @@ public partial class Permissions
             if (commandName is "source")
             {
                 await ctx.Channel
-                    .SendErrorAsync("That command is not allowed to be globally disabled. What are you trying to do?",
-                        Config)
+                    .SendErrorAsync(Strings.CommandProtected(ctx.Guild.Id), Config)
                     .ConfigureAwait(false);
                 return;
             }
@@ -123,11 +122,11 @@ public partial class Permissions
 
             if (added)
             {
-                await ReplyConfirmLocalizedAsync("gcmd_add", Format.Bold(cmd.Name)).ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.GcmdAdd(ctx.Guild.Id, Format.Bold(cmd.Name))).ConfigureAwait(false);
                 return;
             }
 
-            await ReplyConfirmLocalizedAsync("gcmd_remove", Format.Bold(cmd.Name)).ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.GcmdRemove(ctx.Guild.Id, Format.Bold(cmd.Name))).ConfigureAwait(false);
         }
     }
 }

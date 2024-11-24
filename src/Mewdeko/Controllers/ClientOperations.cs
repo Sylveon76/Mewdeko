@@ -1,6 +1,8 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
+
 
 namespace Mewdeko.Controllers;
 
@@ -15,6 +17,7 @@ public class ClientOperations(DiscordShardedClient client) : Controller
     /// <summary>
     ///     Used for getting a specific channel type in the api
     /// </summary>
+    [System.Text.Json.Serialization.JsonConverter(typeof(JsonStringEnumConverter))]
     public enum ChannelType
     {
         /// <summary>
@@ -43,9 +46,9 @@ public class ClientOperations(DiscordShardedClient client) : Controller
         None
     }
 
-    private readonly JsonSerializerSettings settings = new()
+    private static readonly JsonSerializerOptions options = new()
     {
-        ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+        ReferenceHandler = ReferenceHandler.IgnoreCycles
     };
 
     /// <summary>
@@ -105,7 +108,7 @@ public class ClientOperations(DiscordShardedClient client) : Controller
             return NotFound();
 
         var users = await guild.GetUsersAsync().FlattenAsync();
-        return Ok(JsonConvert.SerializeObject(users, settings));
+        return Ok(JsonSerializer.Serialize(users, options));
     }
 
 
@@ -160,7 +163,7 @@ public class ClientOperations(DiscordShardedClient client) : Controller
     public async Task<IActionResult> GetGuilds()
     {
         await Task.CompletedTask;
-        return Ok(JsonConvert.SerializeObject(client.Guilds.Select(x => x.Id)));
+        return Ok(JsonSerializer.Serialize(client.Guilds.Select(x => x.Id)));
     }
 
     /// <summary>
@@ -171,11 +174,13 @@ public class ClientOperations(DiscordShardedClient client) : Controller
         /// <summary>
         ///     Name
         /// </summary>
+        [JsonPropertyName("name")]
         public string Name { get; set; }
 
         /// <summary>
         ///     And badge number
         /// </summary>
+        [JsonPropertyName("id")]
         public ulong Id { get; set; }
     }
 }

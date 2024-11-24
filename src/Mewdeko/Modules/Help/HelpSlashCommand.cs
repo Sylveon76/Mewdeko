@@ -96,7 +96,7 @@ public class HelpSlashCommand(
 
         if (!commandInfos.Any())
         {
-            await ReplyErrorLocalizedAsync("module_not_found_or_cant_exec").ConfigureAwait(false);
+            await ReplyErrorAsync(Strings.ModuleNotFoundOrCantExec(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
@@ -178,10 +178,10 @@ public class HelpSlashCommand(
             if (commandsOnPage.Any())
                 pageBuilder.AddField(currentModule, $"```css\n{string.Join("\n", commandsOnPage)}\n```");
 
-            pageBuilder.WithDescription(
-                $"✅: You can use this command.\n❌: You cannot use this command.\n" +
-                $"{config.Data.LoadingEmote}: If you need any help don't hesitate to join [The Support Server](https://discord.gg/mewdeko)\n" +
-                $"Do `{prefix}h commandname` to see info on that command");
+            pageBuilder.WithDescription(Strings.HelpCommandListSlash(
+                ctx.Guild?.Id ?? 0,
+                config.Data.LoadingEmote,
+                prefix));
 
             return Task.FromResult(pageBuilder);
         }
@@ -193,15 +193,17 @@ public class HelpSlashCommand(
     /// <returns></returns>
     [SlashCommand("invite", "You should invite me to your server and check all my features!")]
     [CheckPermissions]
-    public Task Invite()
+    public async Task Invite()
     {
         var eb = new EmbedBuilder()
-            .AddField("Invite Link",
-                "[Mewdeko](https://discord.com/oauth2/authorize?client_id=752236274261426212&scope=bot&permissions=66186303)\n[Mewdeko Nightly](https://discord.com/oauth2/authorize?client_id=964590728397344868&scope=bot&permissions=66186303)")
-            .AddField("Website/Docs", "https://mewdeko.tech")
-            .AddField("Support Server", config.Data.SupportServer)
+            .AddField(Strings.InviteFieldInvite(ctx.Guild?.Id ?? 0),
+                Strings.InviteLinkText(ctx.Guild?.Id ?? 0))
+            .AddField(Strings.InviteFieldWebsite(ctx.Guild?.Id ?? 0),
+                "https://mewdeko.tech")
+            .AddField(Strings.InviteFieldSupport(ctx.Guild?.Id ?? 0),
+                config.Data.SupportServer)
             .WithOkColor();
-        return ctx.Interaction.RespondAsync(embed: eb.Build());
+        await ctx.Interaction.RespondAsync(embed: eb.Build());
     }
 
     /// <summary>

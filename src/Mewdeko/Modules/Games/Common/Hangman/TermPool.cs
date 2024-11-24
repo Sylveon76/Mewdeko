@@ -1,6 +1,7 @@
 ﻿using System.IO;
+using System.Text.Json;
 using Mewdeko.Modules.Games.Common.Hangman.Exceptions;
-using Newtonsoft.Json;
+
 using Serilog;
 
 namespace Mewdeko.Modules.Games.Common.Hangman;
@@ -20,7 +21,7 @@ public class TermPool
         try
         {
             // Deserialize terms from JSON file
-            Data = JsonConvert.DeserializeObject<Dictionary<string, HangmanObject[]>>(File.ReadAllText(TermsPath));
+            Data = JsonSerializer.Deserialize<Dictionary<string, HangmanObject[]>>(File.ReadAllText(TermsPath));
             Data = Data.ToDictionary(
                 x => x.Key.ToLowerInvariant(),
                 x => x.Value);

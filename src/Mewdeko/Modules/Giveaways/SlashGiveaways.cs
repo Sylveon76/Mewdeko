@@ -31,10 +31,10 @@ public class SlashGiveaways(
         var (successful, reason) = await Service.AddUserToGiveaway(ctx.User.Id, giveawayId);
         if (!successful)
         {
-            await ctx.Interaction.SendEphemeralErrorAsync(GetText("giveaway_entry_failed", reason), Config);
+            await ctx.Interaction.SendEphemeralErrorAsync(Strings.GiveawayEntryFailed(ctx.Guild.Id, reason), Config);
         }
 
-        await ctx.Interaction.SendEphemeralConfirmAsync(GetText("giveaway_entry_successful"));
+        await ctx.Interaction.SendEphemeralConfirmAsync(Strings.GiveawayEntrySuccessful(ctx.Guild.Id));
     }
 
     /// <summary>
@@ -85,16 +85,13 @@ public class SlashGiveaways(
         var gc = await guildSettings.GetGuildConfig(Context.Guild.Id);
         if (!Uri.IsWellFormedUriString(banner, UriKind.Absolute) && banner != "none")
         {
-            await ctx.Interaction.SendErrorAsync("That's not a valid URL!", Config).ConfigureAwait(false);
+            await ctx.Interaction.SendErrorAsync(Strings.GiveawayInvalidUrl(ctx.Guild.Id), Config).ConfigureAwait(false);
             return;
         }
 
         gc.GiveawayBanner = banner == "none" ? "" : banner;
         await guildSettings.UpdateGuildConfig(Context.Guild.Id, gc);
-        if (banner == "none")
-            await ctx.Interaction.SendConfirmAsync("Giveaway banner removed!").ConfigureAwait(false);
-        else
-            await ctx.Interaction.SendConfirmAsync("Giveaway banner set!").ConfigureAwait(false);
+        await ctx.Interaction.SendConfirmAsync(Strings.GiveawayBannerSet(ctx.Guild.Id));
     }
 
     /// <summary>
@@ -118,14 +115,14 @@ public class SlashGiveaways(
             gc.GiveawayEmbedColor = colorVal;
             await guildSettings.UpdateGuildConfig(Context.Guild.Id, gc);
             await ctx.Interaction.SendConfirmAsync(
-                    "Giveaway win embed color set! Just keep in mind this doesn't update until the next giveaway.")
+                    Strings.GiveawayWinEmbedColorSet(ctx.Guild.Id))
                 .ConfigureAwait(false);
         }
         else
         {
             await ctx.Interaction
                 .SendErrorAsync(
-                    "That's not a valid color! Please use proper hex (starts with #) or use html color names!", Config)
+                    Strings.GiveawayInvalidColor(ctx.Guild.Id), Config)
                 .ConfigureAwait(false);
         }
     }
@@ -151,14 +148,14 @@ public class SlashGiveaways(
             gc.GiveawayEmbedColor = colorVal;
             await guildSettings.UpdateGuildConfig(Context.Guild.Id, gc);
             await ctx.Interaction.SendConfirmAsync(
-                    "Giveaway embed color set! Just keep in mind this doesn't update until the next giveaway.")
+                Strings.GiveawayEmbedColorSet(ctx.Guild.Id))
                 .ConfigureAwait(false);
         }
         else
         {
             await ctx.Interaction
                 .SendErrorAsync(
-                    "That's not a valid color! Please use proper hex (starts with #) or use html color names!", Config)
+                    Strings.GiveawayInvalidColor(ctx.Guild.Id), Config)
                 .ConfigureAwait(false);
         }
     }
@@ -174,7 +171,7 @@ public class SlashGiveaways(
         gc.DmOnGiveawayWin = !gc.DmOnGiveawayWin;
         await guildSettings.UpdateGuildConfig(Context.Guild.Id, gc);
         await ctx.Interaction.SendConfirmAsync(
-                $"Giveaway DMs set to {gc.DmOnGiveawayWin}! Just keep in mind this doesn't update until the next giveaway.")
+            Strings.GiveawayDmStatus(ctx.Guild.Id, gc.DmOnGiveawayWin))
             .ConfigureAwait(false);
     }
 
@@ -193,19 +190,18 @@ public class SlashGiveaways(
             .GiveawaysForGuild(ctx.Guild.Id).ToList().Find(x => x.MessageId == messageid);
         if (gway is null)
         {
-            await ctx.Interaction.SendErrorAsync("No Giveaway with that message ID exists! Please try again!", Config)
-                .ConfigureAwait(false);
+            await ctx.Interaction.SendErrorAsync(Strings.GiveawayNotFound(ctx.Guild.Id), Config).ConfigureAwait(false);
             return;
         }
 
         if (gway.Ended != 1)
         {
-            await ctx.Interaction.SendErrorAsync("This giveaway hasn't ended yet!", Config).ConfigureAwait(false);
+            await ctx.Interaction.SendErrorAsync(Strings.GiveawayNotEnded(ctx.Guild.Id), Config).ConfigureAwait(false);
             return;
         }
 
         await Service.GiveawayTimerAction(gway).ConfigureAwait(false);
-        await ctx.Interaction.SendConfirmAsync("Giveaway Rerolled!").ConfigureAwait(false);
+        await ctx.Interaction.SendConfirmAsync(Strings.GiveawayRerolled(ctx.Guild.Id)).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -221,8 +217,7 @@ public class SlashGiveaways(
         var gways = dbContext.Giveaways.GiveawaysForGuild(ctx.Guild.Id);
         if (gways.Count == 0)
         {
-            await ctx.Channel.SendErrorAsync("There have been no giveaways here, so no stats!", Config)
-                .ConfigureAwait(false);
+            await ctx.Interaction.SendErrorAsync(Strings.GiveawayNoStatsAvailable(ctx.Guild.Id), Config).ConfigureAwait(false);
         }
         else
         {
@@ -235,13 +230,14 @@ public class SlashGiveaways(
             }
 
             var amount = gways.Distinct(x => x.UserId).Count();
-            eb.WithTitle("Giveaway Statistics!");
-            eb.AddField("Amount of users that started giveaways", amount, true);
-            eb.AddField("Total amount of giveaways", gways.Count, true);
-            eb.AddField("Active Giveaways", gways.Count(x => x.Ended == 0), true);
-            eb.AddField("Ended Giveaways", gways.Count(x => x.Ended == 1), true);
-            eb.AddField("Giveaway Channels: Uses",
-                string.Join("\n", gchans.Select(x => $"{x.Mention}: {gways.Count(s => s.ChannelId == x.Id)}")),
+            eb.WithTitle(Strings.GiveawayStatsTitle(ctx.Guild.Id));
+            eb.AddField(Strings.GiveawayStatsUsers(ctx.Guild.Id), amount, true);
+            eb.AddField(Strings.GiveawayStatsTotal(ctx.Guild.Id), gways.Count, true);
+            eb.AddField(Strings.GiveawayStatsActive(ctx.Guild.Id), gways.Count(x => x.Ended == 0), true);
+            eb.AddField(Strings.GiveawayStatsEnded(ctx.Guild.Id), gways.Count(x => x.Ended == 1), true);
+            eb.AddField(Strings.GiveawayStatsChannels(ctx.Guild.Id),
+                string.Join("\n", gchans.Select(x =>
+                    Strings.GiveawayStatsChannelEntry(ctx.Guild.Id, x.Mention, gways.Count(s => s.ChannelId == x.Id)))),
                 true);
 
             await ctx.Interaction.RespondAsync(embed: eb.Build()).ConfigureAwait(false);
@@ -262,65 +258,66 @@ public class SlashGiveaways(
     [SlashUserPerm(GuildPermission.ManageMessages)]
     [CheckPermissions]
     public async Task GStart(ITextChannel chan, TimeSpan time, int winners, string what, IRole pingRole = null,
-        IAttachment attachment = null, IUser host = null, bool useButton = false, bool useCaptcha = false,
-        IRole[] requiredRoles = null, ulong requiredMessages = 0)
+    IAttachment attachment = null, IUser host = null, bool useButton = false, bool useCaptcha = false,
+    IRole[] requiredRoles = null, ulong requiredMessages = 0)
+{
+    host ??= ctx.User;
+    await ctx.Interaction.DeferAsync().ConfigureAwait(false);
+    if (useButton && useCaptcha)
     {
-        host ??= ctx.User;
-        await ctx.Interaction.DeferAsync().ConfigureAwait(false);
-        if (useButton && useCaptcha)
+        await ReplyAsync(Strings.GiveawayButtonCaptchaError(ctx.Guild.Id));
+        return;
+    }
+
+    string reqs;
+    if (requiredRoles is null || requiredRoles.Length == 0)
+        reqs = "";
+    else
+        reqs = string.Join("\n", requiredRoles.Select(x => x.Id));
+
+    var emote = (await Service.GetGiveawayEmote(ctx.Guild.Id)).ToIEmote();
+    if (!useButton && !useCaptcha)
+    {
+        try
         {
-            await ReplyAsync("<:Bruh:1269875636793638965>");
-            return;
+            var message = await ctx.Interaction.SendConfirmFollowupAsync(
+                Strings.GiveawayCheckingEmote(ctx.Guild.Id)).ConfigureAwait(false);
+            await message.AddReactionAsync(emote).ConfigureAwait(false);
         }
-
-        string reqs;
-        if (requiredRoles is null || requiredRoles.Length == 0)
-            reqs = "";
-        else
-            reqs = string.Join("\n", requiredRoles.Select(x => x.Id));
-
-        var emote = (await Service.GetGiveawayEmote(ctx.Guild.Id)).ToIEmote();
-        if (!useButton && !useCaptcha)
+        catch
         {
-            try
-            {
-                var message = await ctx.Interaction.SendConfirmFollowupAsync("Checking emote...").ConfigureAwait(false);
-                await message.AddReactionAsync(emote).ConfigureAwait(false);
-            }
-            catch
-            {
-                await ctx.Interaction.SendErrorFollowupAsync(
-                        "I'm unable to use that emote for giveaways! Most likely because I'm not in a server with it.",
-                        Config)
-                    .ConfigureAwait(false);
-                return;
-            }
-        }
-
-        var user = await ctx.Guild.GetUserAsync(ctx.Client.CurrentUser.Id).ConfigureAwait(false);
-        var perms = user.GetPermissions(chan);
-        if (!useButton && !useCaptcha)
-        {
-            if (!perms.Has(ChannelPermission.AddReactions))
-            {
-                await ctx.Interaction.SendErrorFollowupAsync("I cannot add reactions in that channel!", Config)
-                    .ConfigureAwait(false);
-                return;
-            }
-        }
-
-        if (!perms.Has(ChannelPermission.UseExternalEmojis) && !ctx.Guild.Emotes.Contains(emote))
-        {
-            await ctx.Interaction.SendErrorFollowupAsync("I'm unable to use external emotes!", Config)
+            await ctx.Interaction.SendErrorFollowupAsync(
+                Strings.GiveawayEmoteInvalidInteraction(ctx.Guild.Id), Config)
                 .ConfigureAwait(false);
             return;
         }
-
-
-        await Service.GiveawaysInternal(chan, time, what, winners, host.Id, ctx.Guild.Id,
-            ctx.Channel as ITextChannel, ctx.Guild, banner: attachment?.Url, pingROle: pingRole, useButton: useButton,
-            useCaptcha: useCaptcha, reqroles: reqs, messageCount: requiredMessages).ConfigureAwait(false);
     }
+
+    var user = await ctx.Guild.GetUserAsync(ctx.Client.CurrentUser.Id).ConfigureAwait(false);
+    var perms = user.GetPermissions(chan);
+    if (!useButton && !useCaptcha)
+    {
+        if (!perms.Has(ChannelPermission.AddReactions))
+        {
+            await ctx.Interaction.SendErrorFollowupAsync(
+                Strings.GiveawayNoReactionPermissionInteraction(ctx.Guild.Id), Config)
+                .ConfigureAwait(false);
+            return;
+        }
+    }
+
+    if (!perms.Has(ChannelPermission.UseExternalEmojis) && !ctx.Guild.Emotes.Contains(emote))
+    {
+        await ctx.Interaction.SendErrorFollowupAsync(
+            Strings.GiveawayNoExternalEmotesInteraction(ctx.Guild.Id), Config)
+            .ConfigureAwait(false);
+        return;
+    }
+
+    await Service.GiveawaysInternal(chan, time, what, winners, host.Id, ctx.Guild.Id,
+        ctx.Channel as ITextChannel, ctx.Guild, banner: attachment?.Url, pingROle: pingRole, useButton: useButton,
+        useCaptcha: useCaptcha, reqroles: reqs, messageCount: requiredMessages).ConfigureAwait(false);
+}
 
     /// <summary>
     ///     View current giveaways
@@ -335,7 +332,7 @@ public class SlashGiveaways(
         var gways = dbContext.Giveaways.GiveawaysForGuild(ctx.Guild.Id).Where(x => x.Ended == 0);
         if (!gways.Any())
         {
-            await ctx.Channel.SendErrorAsync("No active giveaways", Config).ConfigureAwait(false);
+            await ctx.Interaction.SendErrorAsync(Strings.GiveawayNoActive(ctx.Guild.Id), Config).ConfigureAwait(false);
             return;
         }
 
@@ -353,10 +350,12 @@ public class SlashGiveaways(
 
         async Task<PageBuilder> PageFactory(int page)
         {
-            return new PageBuilder().WithOkColor().WithTitle($"{gways.Count()} Active Giveaways")
+            return new PageBuilder().WithOkColor()
+                .WithTitle(Strings.GiveawayListTitle(ctx.Guild.Id, gways.Count()))
                 .WithDescription(string.Join("\n\n",
                     await gways.Skip(page * 5).Take(5).Select(async x =>
-                            $"{x.MessageId}\nPrize: {x.Item}\nWinners: {x.Winners}\nLink: {await GetJumpUrl(x.ChannelId, x.MessageId).ConfigureAwait(false)}")
+                            Strings.GiveawayListEntry(ctx.Guild.Id, x.MessageId, x.Item, x.Winners,
+                                await GetJumpUrl(x.ChannelId, x.MessageId).ConfigureAwait(false)))
                         .GetResults()
                         .ConfigureAwait(false)));
         }
@@ -385,21 +384,22 @@ public class SlashGiveaways(
             .GiveawaysForGuild(ctx.Guild.Id).ToList().Find(x => x.MessageId == messageid);
         if (gway is null)
         {
-            await ctx.Channel.SendErrorAsync("No Giveaway with that message ID exists! Please try again!", Config)
-                .ConfigureAwait(false);
+            await ctx.Interaction.SendErrorAsync(Strings.GiveawayNotFound(ctx.Guild.Id), Config).ConfigureAwait(false);
+
         }
 
         if (gway.Ended == 1)
         {
-            await ctx.Channel.SendErrorAsync(
-                    $"This giveaway has already ended! Plase use `{await guildSettings.GetPrefix(ctx.Guild)}greroll {messageid}` to reroll!",
-                    Config)
-                .ConfigureAwait(false);
+            await ctx.Interaction.SendErrorAsync(
+                Strings.GiveawayAlreadyEnded(ctx.Guild.Id,
+                    await guildSettings.GetPrefix(ctx.Guild),
+                    messageid),
+                Config).ConfigureAwait(false);
         }
         else
         {
             await Service.GiveawayTimerAction(gway).ConfigureAwait(false);
-            await ctx.Channel.SendConfirmAsync("Giveaway ended!").ConfigureAwait(false);
+            await ctx.Interaction.SendConfirmAsync(Strings.GiveawayEndedSuccess(ctx.Guild.Id)).ConfigureAwait(false);
         }
     }
 }

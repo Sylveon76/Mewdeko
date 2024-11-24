@@ -6,6 +6,7 @@ using Mewdeko.Database.DbContextStuff;
 using Mewdeko.Modules.Xp.Common;
 using Mewdeko.Services.Impl;
 using Mewdeko.Services.strings;
+using Mewdeko.Services.Strings;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
@@ -40,7 +41,7 @@ public class XpService : INService, IUnloadableService
     private readonly GuildSettingsService guildSettings;
     private readonly IImageCache images;
     private readonly IMemoryCache memoryCache;
-    private readonly IBotStrings strings;
+    private readonly GeneratedBotStrings Strings;
     private readonly XpConfigService xpConfig;
 
 
@@ -50,7 +51,7 @@ public class XpService : INService, IUnloadableService
     /// </summary>
     /// <param name="client">The Discord client.</param>
     /// <param name="cmd">The command handler.</param>
-    /// <param name="db;">The database service.</param>
+    /// <param name="dbProvider">The database service.</param>
     /// <param name="strings">The bot strings service for localization.</param>
     /// <param name="cache">The data cache service.</param>
     /// <param name="fonts">The font provider for image generation.</param>
@@ -66,7 +67,7 @@ public class XpService : INService, IUnloadableService
         DiscordShardedClient client,
         CommandHandler cmd,
         DbContextProvider dbProvider,
-        IBotStrings strings,
+        GeneratedBotStrings strings,
         IDataCache cache,
         FontProvider fonts,
         IBotCredentials creds,
@@ -79,7 +80,7 @@ public class XpService : INService, IUnloadableService
         this.dbProvider = dbProvider;
         this.cmd = cmd;
         images = cache.LocalImages;
-        this.strings = strings;
+        this.Strings = strings;
         this.cache = cache;
         this.creds = creds;
         this.xpConfig = xpConfig;
@@ -207,14 +208,14 @@ public class XpService : INService, IUnloadableService
                             var chan = await x.User.CreateDMChannelAsync().ConfigureAwait(false);
                             if (chan != null)
                             {
-                                await chan.SendConfirmAsync(strings.GetText("level_up_dm", x.Guild.Id, x.User.Mention,
+                                await chan.SendConfirmAsync(Strings.LevelUpDm(x.Guild.Id,x.User.Mention,
                                         Format.Bold(x.Level.ToString()), Format.Bold(x.Guild.ToString() ?? "-")))
                                     .ConfigureAwait(false);
                             }
                         }
                         else if (x.MessageChannel != null) // channel
                         {
-                            await x.MessageChannel.SendConfirmAsync(strings.GetText("level_up_channel", x.Guild.Id,
+                            await x.MessageChannel.SendConfirmAsync(Strings.LevelUpChannel(x.Guild.Id,
                                 x.User.Mention, Format.Bold(x.Level.ToString()))).ConfigureAwait(false);
                         }
                     }
@@ -226,7 +227,7 @@ public class XpService : INService, IUnloadableService
                         else // channel
                             chan = x.MessageChannel;
 
-                        await chan.SendConfirmAsync(strings.GetText("level_up_global", x.Guild.Id, x.User.Mention,
+                        await chan.SendConfirmAsync(Strings.LevelUpGlobal(x.Guild.Id,x.User.Mention,
                             Format.Bold(x.Level.ToString()))).ConfigureAwait(false);
                     }
                 })).ConfigureAwait(false);

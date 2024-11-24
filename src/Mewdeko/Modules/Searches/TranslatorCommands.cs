@@ -45,12 +45,12 @@ public partial class Searches
             {
                 await ctx.Channel.TriggerTypingAsync().ConfigureAwait(false);
                 var translation = await SearchesService.Translate(langs, text).ConfigureAwait(false);
-                await ctx.Channel.SendConfirmAsync($"{GetText("translation")} {langs}", translation)
+                await ctx.Channel.SendConfirmAsync($"{Strings.Translation(ctx.Guild.Id)} {langs}", translation)
                     .ConfigureAwait(false);
             }
             catch
             {
-                await ReplyErrorLocalizedAsync("bad_input_format").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.BadInputFormat(ctx.Guild.Id)).ConfigureAwait(false);
             }
         }
 
@@ -73,18 +73,18 @@ public partial class Searches
             if (autoDelete == AutoDeleteAutoTranslate.Del)
             {
                 searches.TranslatedChannels.AddOrUpdate(channel.Id, true, (_, _) => true);
-                await ReplyConfirmLocalizedAsync("atl_ad_started").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.AtlAdStarted(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
             if (searches.TranslatedChannels.TryRemove(channel.Id, out _))
             {
-                await ReplyConfirmLocalizedAsync("atl_stopped").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.AtlStopped(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
             if (searches.TranslatedChannels.TryAdd(channel.Id, autoDelete == AutoDeleteAutoTranslate.Del))
-                await ReplyConfirmLocalizedAsync("atl_started").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.AtlStarted(ctx.Guild.Id)).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -105,7 +105,7 @@ public partial class Searches
             if (string.IsNullOrWhiteSpace(langs))
             {
                 if (searches.UserLanguages.TryRemove(ucp, out langs))
-                    await ReplyConfirmLocalizedAsync("atl_removed").ConfigureAwait(false);
+                    await ReplyConfirmAsync(Strings.AtlRemoved(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
@@ -117,13 +117,13 @@ public partial class Searches
 
             if (!google.Languages.Contains(from) || !google.Languages.Contains(to))
             {
-                await ReplyErrorLocalizedAsync("invalid_lang").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.InvalidLang(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
             searches.UserLanguages.AddOrUpdate(ucp, langs, (_, _) => langs);
 
-            await ReplyConfirmLocalizedAsync("atl_set", from, to).ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.AtlSet(ctx.Guild.Id, from, to)).ConfigureAwait(false);
         }
 
         /// <summary>

@@ -30,7 +30,7 @@ public class StatusRoles(BotConfigService bss, InteractiveService interactivity)
 
         var added = await Service.AddStatusRoleConfig(status, ctx.Guild.Id);
         if (added)
-            await ctx.Channel.SendConfirmAsync("Added StatusRole config! Please configure it with the other commands.");
+            await ctx.Channel.SendConfirmAsync(Strings.StatusroleAdded(ctx.Guild.Id));
         else
             await ctx.Channel.SendErrorAsync($"{bss.Data.ErrorEmote} That StatusRole already exists!", Config);
     }
@@ -59,7 +59,7 @@ public class StatusRoles(BotConfigService bss, InteractiveService interactivity)
         }
 
         await Service.RemoveStatusRoleConfig(potentialStatusRole);
-        await ctx.Channel.SendConfirmAsync("StatusRole config removed!");
+        await ctx.Channel.SendConfirmAsync(Strings.StatusroleRemoved(ctx.Guild.Id));
     }
 
     /// <summary>

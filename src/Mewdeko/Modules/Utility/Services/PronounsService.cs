@@ -1,9 +1,10 @@
 using System.Net.Http;
+using System.Text.Json;
 using Mewdeko.Database.DbContextStuff;
 using Mewdeko.Modules.UserProfile.Common;
 using Mewdeko.Modules.Utility.Common;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
+
 
 namespace Mewdeko.Modules.Utility.Services;
 
@@ -25,7 +26,7 @@ public class PronounsService(DbContextProvider dbProvider, HttpClient http) : IN
         if (!string.IsNullOrWhiteSpace(user?.Pronouns)) return new PronounSearchResult(user.Pronouns, false);
         var result = await http.GetStringAsync($"https://pronoundb.org/api/v1/lookup?platform=discord&id={user.UserId}")
             .ConfigureAwait(false);
-        var pronouns = JsonConvert.DeserializeObject<PronounDbResult>(result);
+        var pronouns = JsonSerializer.Deserialize<PronounDbResult>(result);
         return new PronounSearchResult((pronouns?.Pronouns ?? "unspecified") switch
         {
             "unspecified" => "Unspecified",

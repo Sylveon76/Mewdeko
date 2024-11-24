@@ -3,7 +3,7 @@
 namespace Mewdeko.Database.Common;
 
 /// <summary>
-///     Represents a collection of indexed items that implements the IList<T> interface.
+///     Represents a collection of indexed items that implements the IList<T/> interface.
 /// </summary>
 /// <typeparam name="T">The type of elements in the collection. Must be a class and implement IIndexed interface.</typeparam>
 public class IndexedCollection<T> : IList<T> where T : class, IIndexed
@@ -14,7 +14,7 @@ public class IndexedCollection<T> : IList<T> where T : class, IIndexed
     private readonly object locker = new();
 
     /// <summary>
-    ///     Initializes a new instance of the IndexedCollection<T> class with an empty list.
+    ///     Initializes a new instance of the IndexedCollection<T/> class with an empty list.
     /// </summary>
     public IndexedCollection()
     {
@@ -22,7 +22,7 @@ public class IndexedCollection<T> : IList<T> where T : class, IIndexed
     }
 
     /// <summary>
-    ///     Initializes a new instance of the IndexedCollection<T> class with the specified source collection.
+    ///     Initializes a new instance of the IndexedCollection<T/> class with the specified source collection.
     /// </summary>
     /// <param name="source">The collection whose elements are copied to the new list.</param>
     public IndexedCollection(IEnumerable<T> source)
@@ -40,7 +40,7 @@ public class IndexedCollection<T> : IList<T> where T : class, IIndexed
     public List<T> Source { get; }
 
     /// <summary>
-    ///     Gets the number of elements contained in the IndexedCollection<T>.
+    ///     Gets the number of elements contained in the IndexedCollection<T/>.
     /// </summary>
     public int Count
     {
@@ -51,7 +51,7 @@ public class IndexedCollection<T> : IList<T> where T : class, IIndexed
     }
 
     /// <summary>
-    ///     Gets a value indicating whether the IndexedCollection<T> is read-only.
+    ///     Gets a value indicating whether the IndexedCollection<T/> is read-only.
     /// </summary>
     public bool IsReadOnly
     {
@@ -62,9 +62,9 @@ public class IndexedCollection<T> : IList<T> where T : class, IIndexed
     }
 
     /// <summary>
-    ///     Determines the index of a specific item in the IndexedCollection<T>.
+    ///     Determines the index of a specific item in the IndexedCollection<T/>.
     /// </summary>
-    /// <param name="item">The object to locate in the IndexedCollection<T>.</param>
+    /// <param name="item">The object to locate in the IndexedCollection<T/>.</param>
     /// <returns>The index of item if found in the list; otherwise, -1.</returns>
     public int IndexOf(T item)
     {
@@ -73,7 +73,7 @@ public class IndexedCollection<T> : IList<T> where T : class, IIndexed
     }
 
     /// <summary>
-    ///     Returns an enumerator that iterates through the IndexedCollection<T>.
+    ///     Returns an enumerator that iterates through the IndexedCollection<T/>.
     /// </summary>
     /// <returns>An enumerator that can be used to iterate through the collection.</returns>
     public IEnumerator<T> GetEnumerator()
@@ -82,7 +82,7 @@ public class IndexedCollection<T> : IList<T> where T : class, IIndexed
     }
 
     /// <summary>
-    ///     Returns an enumerator that iterates through the IndexedCollection<T>.
+    ///     Returns an enumerator that iterates through the IndexedCollection<T/>.
     /// </summary>
     /// <returns>An IEnumerator that can be used to iterate through the collection.</returns>
     IEnumerator IEnumerable.GetEnumerator()
@@ -91,9 +91,9 @@ public class IndexedCollection<T> : IList<T> where T : class, IIndexed
     }
 
     /// <summary>
-    ///     Adds an item to the IndexedCollection<T>.
+    ///     Adds an item to the IndexedCollection<T/>.
     /// </summary>
-    /// <param name="item">The object to add to the IndexedCollection<T>.</param>
+    /// <param name="item">The object to add to the IndexedCollection<T/>.</param>
     public void Add(T item)
     {
         lock (locker)
@@ -105,7 +105,7 @@ public class IndexedCollection<T> : IList<T> where T : class, IIndexed
     }
 
     /// <summary>
-    ///     Removes all items from the IndexedCollection<T>.
+    ///     Removes all items from the IndexedCollection<T/>.
     /// </summary>
     public virtual void Clear()
     {
@@ -116,10 +116,10 @@ public class IndexedCollection<T> : IList<T> where T : class, IIndexed
     }
 
     /// <summary>
-    ///     Determines whether the IndexedCollection<T> contains a specific value.
+    ///     Determines whether the IndexedCollection<T/> contains a specific value.
     /// </summary>
-    /// <param name="item">The object to locate in the IndexedCollection<T>.</param>
-    /// <returns>true if item is found in the IndexedCollection<T>; otherwise, false.</returns>
+    /// <param name="item">The object to locate in the IndexedCollection<T/>.</param>
+    /// <returns>true if item is found in the IndexedCollection<T/>; otherwise, false.</returns>
     public bool Contains(T item)
     {
         lock (locker)
@@ -129,10 +129,10 @@ public class IndexedCollection<T> : IList<T> where T : class, IIndexed
     }
 
     /// <summary>
-    ///     Copies the elements of the IndexedCollection<T> to an Array, starting at a particular Array index.
+    ///     Copies the elements of the IndexedCollection<T/> to an Array, starting at a particular Array index.
     /// </summary>
     /// <param name="array">
-    ///     The one-dimensional Array that is the destination of the elements copied from IndexedCollection<T>.
+    ///     The one-dimensional Array that is the destination of the elements copied from IndexedCollection<T/>.
     /// </param>
     /// <param name="arrayIndex">The zero-based index in array at which copying begins.</param>
     public void CopyTo(T[] array, int arrayIndex)
@@ -144,10 +144,10 @@ public class IndexedCollection<T> : IList<T> where T : class, IIndexed
     }
 
     /// <summary>
-    ///     Removes the first occurrence of a specific object from the IndexedCollection<T>.
+    ///     Removes the first occurrence of a specific object from the IndexedCollection<T/>.
     /// </summary>
-    /// <param name="item">The object to remove from the IndexedCollection<T>.</param>
-    /// <returns>true if item was successfully removed from the IndexedCollection<T>; otherwise, false.</returns>
+    /// <param name="item">The object to remove from the IndexedCollection<T/>.</param>
+    /// <returns>true if item was successfully removed from the IndexedCollection<T/>; otherwise, false.</returns>
     public virtual bool Remove(T item)
     {
         bool removed;
@@ -166,10 +166,10 @@ public class IndexedCollection<T> : IList<T> where T : class, IIndexed
     }
 
     /// <summary>
-    ///     Inserts an item to the IndexedCollection<T> at the specified index.
+    ///     Inserts an item to the IndexedCollection<T/> at the specified index.
     /// </summary>
     /// <param name="index">The zero-based index at which item should be inserted.</param>
-    /// <param name="item">The object to insert into the IndexedCollection<T>.</param>
+    /// <param name="item">The object to insert into the IndexedCollection<T/>.</param>
     public virtual void Insert(int index, T item)
     {
         lock (locker)
@@ -180,7 +180,7 @@ public class IndexedCollection<T> : IList<T> where T : class, IIndexed
     }
 
     /// <summary>
-    ///     Removes the IndexedCollection<T> item at the specified index.
+    ///     Removes the IndexedCollection<T/> item at the specified index.
     /// </summary>
     /// <param name="index">The zero-based index of the item to remove.</param>
     public virtual void RemoveAt(int index)
@@ -229,19 +229,19 @@ public class IndexedCollection<T> : IList<T> where T : class, IIndexed
     }
 
     /// <summary>
-    ///     Implicitly converts an IndexedCollection<T> to a List<T>.
+    ///     Implicitly converts an IndexedCollection<T/> to a List<T/>.
     /// </summary>
-    /// <param name="x">The IndexedCollection<T> to convert.</param>
-    /// <returns>A List<T> containing the elements of the IndexedCollection<T>.</returns>
+    /// <param name="x">The IndexedCollection<T/> to convert.</param>
+    /// <returns>A List<T/> containing the elements of the IndexedCollection<T/>.</returns>
     public static implicit operator List<T>(IndexedCollection<T> x)
     {
         return x.Source;
     }
 
     /// <summary>
-    ///     Creates a new List<T> from the IndexedCollection<T>.
+    ///     Creates a new List<T/> from the IndexedCollection<T/>.
     /// </summary>
-    /// <returns>A new List<T> containing elements copied from the IndexedCollection<T>.</returns>
+    /// <returns>A new List<T/> containing elements copied from the IndexedCollection<T/>.</returns>
     public List<T> ToList()
     {
         return Source.ToList();

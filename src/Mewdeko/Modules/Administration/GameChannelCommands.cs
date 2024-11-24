@@ -30,7 +30,7 @@ public partial class Administration
 
             if (vch == null)
             {
-                await ReplyErrorLocalizedAsync("not_in_voice").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.NotInVoice(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
@@ -38,11 +38,11 @@ public partial class Administration
 
             if (id == null)
             {
-                await ReplyConfirmLocalizedAsync("gvc_disabled").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.GvcDisabled(ctx.Guild.Id)).ConfigureAwait(false);
             }
             else
             {
-                await ReplyConfirmLocalizedAsync("gvc_enabled", Format.Bold(vch.Name)).ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.GvcEnabled(ctx.Guild.Id, Format.Bold(vch.Name))).ConfigureAwait(false);
             }
         }
     }

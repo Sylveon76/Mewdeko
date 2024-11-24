@@ -1,9 +1,10 @@
 #nullable enable
 using System.Net.Http;
+using System.Text.Json;
 using Mewdeko.Database.Common;
 using Mewdeko.Modules.Searches.Common.StreamNotifications.Models;
 using Mewdeko.Modules.Searches.Common.StreamNotifications.Providers;
-using Newtonsoft.Json;
+
 using Serilog;
 using StackExchange.Redis;
 
@@ -215,8 +216,8 @@ public class NotifChecker
     {
         var db = multi.Redis.GetDatabase();
         return await db.HashSetAsync(key,
-            JsonConvert.SerializeObject(streamDataKey),
-            JsonConvert.SerializeObject(data),
+            JsonSerializer.Serialize(streamDataKey),
+            JsonSerializer.Serialize(data),
             replace ? When.Always : When.NotExists);
     }
 
@@ -228,7 +229,7 @@ public class NotifChecker
     private async Task CacheDeleteData(StreamDataKey streamdataKey)
     {
         var db = multi.Redis.GetDatabase();
-        await db.HashDeleteAsync(key, JsonConvert.SerializeObject(streamdataKey));
+        await db.HashDeleteAsync(key, JsonSerializer.Serialize(streamdataKey));
     }
 
     /// <summary>
@@ -253,8 +254,8 @@ public class NotifChecker
 
         var getAll = await db.HashGetAllAsync(key);
 
-        return getAll.Select(redisEntry => (Key: JsonConvert.DeserializeObject<StreamDataKey>(redisEntry.Name),
-                Value: JsonConvert.DeserializeObject<StreamData?>(redisEntry.Value)))
+        return getAll.Select(redisEntry => (Key: JsonSerializer.Deserialize<StreamDataKey>(redisEntry.Name),
+                Value: JsonSerializer.Deserialize<StreamData?>(redisEntry.Value)))
             .Where(keyValuePair => keyValuePair.Key.Name is not null)
             .ToDictionary(keyValuePair => keyValuePair.Key, entry => entry.Value);
     }

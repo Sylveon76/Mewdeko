@@ -1,6 +1,7 @@
 #nullable enable
 using System.IO;
 using System.Net.Http;
+using System.Text.Json;
 using AngleSharp;
 using AngleSharp.Html.Dom;
 using Anilist4Net;
@@ -13,7 +14,8 @@ using Mewdeko.Common.Attributes.TextCommands;
 using Mewdeko.Modules.Searches.Services;
 using Mewdeko.Services.Settings;
 using NekosBestApiNet;
-using Newtonsoft.Json;
+
+
 
 namespace Mewdeko.Modules.Searches;
 
@@ -64,25 +66,19 @@ public partial class Searches
             switch (random)
             {
                 case < 30:
-                    response = "No chance, just none. Don't even think about it.";
-                    color = Discord.Color.Red;
+                    response = Strings.ShipNoChance(ctx.Guild.Id);
                     break;
                 case <= 50 and >= 31:
-                    response = "You may have a chance but don't try too hard.";
-                    color = Discord.Color.Teal;
+                    response = Strings.ShipMaybeChance(ctx.Guild.Id);
                     break;
                 case 69:
-                    response = "Go 69 that mfer";
-                    color = Discord.Color.DarkRed;
+                    response = Strings.ShipSixnine(ctx.Guild.Id);
                     break;
                 case <= 70 and >= 60:
-                    response = "I mean, go for it, I guess, looks like you would do good";
-                    color = Discord.Color.Magenta;
+                    response = Strings.ShipGoodChance(ctx.Guild.Id);
                     break;
                 case <= 100 and >= 71:
-                    response =
-                        "Horoscopes conclude that today will be a good day.. And that you two will get a room together soon";
-                    color = Discord.Color.Red;
+                    response = Strings.ShipExcellentChance(ctx.Guild.Id);
                     break;
             }
 
@@ -127,7 +123,7 @@ public partial class Searches
             var req = await nekosBestApi.CategoryApi.Neko().ConfigureAwait(false);
             var em = new EmbedBuilder
             {
-                Description = $"nya~ [Source]({req.Results.FirstOrDefault().SourceUrl})",
+                Description = Strings.NekoSource(ctx.Guild.Id, req.Results.FirstOrDefault().SourceUrl),
                 ImageUrl = req.Results.FirstOrDefault().Url,
                 Color = Mewdeko.OkColor
             };
@@ -150,7 +146,7 @@ public partial class Searches
             var req = await nekosBestApi.CategoryApi.Kitsune().ConfigureAwait(false);
             var em = new EmbedBuilder
             {
-                Description = $"What does the fox say? [Source]({req.Results.FirstOrDefault().SourceUrl})",
+                Description = Strings.KitsuneSource(ctx.Guild.Id, req.Results.FirstOrDefault().SourceUrl),
                 ImageUrl = req.Results.FirstOrDefault().Url,
                 Color = Mewdeko.OkColor
             };
@@ -173,7 +169,7 @@ public partial class Searches
             var req = await nekosBestApi.CategoryApi.Waifu().ConfigureAwait(false);
             var em = new EmbedBuilder
             {
-                Description = $"Ara Ara~ [Source]({req.Results.FirstOrDefault().SourceUrl})",
+                Description = Strings.WaifuSource(ctx.Guild.Id, req.Results.FirstOrDefault().SourceUrl),
                 ImageUrl = req.Results.FirstOrDefault().Url,
                 Color = Mewdeko.OkColor
             };
@@ -215,7 +211,7 @@ public partial class Searches
 
             var favorites = document.QuerySelectorAll("div.user-favorites > div.di-tc");
 
-            var favAnime = GetText("anime_no_fav");
+            var favAnime = Strings.AnimeNoFav(ctx.Guild.Id);
             if (favorites.Length > 0 && favorites[0].QuerySelector("p") == null)
             {
                 favAnime = string.Join("\n", favorites[0].QuerySelectorAll("ul > li > div.di-tc.va-t > a")
@@ -238,14 +234,14 @@ public partial class Searches
 
             var embed = new EmbedBuilder()
                 .WithOkColor()
-                .WithTitle(GetText("mal_profile", name))
-                .AddField(efb => efb.WithName("💚 " + GetText("watching")).WithValue(stats[0]).WithIsInline(true))
-                .AddField(efb => efb.WithName("💙 " + GetText("completed")).WithValue(stats[1]).WithIsInline(true));
+                .WithTitle(Strings.MalProfile(ctx.Guild.Id, name))
+                .AddField(efb => efb.WithName("💚 " + Strings.Watching(ctx.Guild.Id)).WithValue(stats[0]).WithIsInline(true))
+                .AddField(efb => efb.WithName("💙 " + Strings.Completed(ctx.Guild.Id)).WithValue(stats[1]).WithIsInline(true));
             if (info.Count < 3)
-                embed.AddField(efb => efb.WithName("💛 " + GetText("on_hold")).WithValue(stats[2]).WithIsInline(true));
+                embed.AddField(efb => efb.WithName("💛 " + Strings.OnHold(ctx.Guild.Id)).WithValue(stats[2]).WithIsInline(true));
             embed
-                .AddField(efb => efb.WithName("💔 " + GetText("dropped")).WithValue(stats[3]).WithIsInline(true))
-                .AddField(efb => efb.WithName("⚪ " + GetText("plan_to_watch")).WithValue(stats[4]).WithIsInline(true))
+                .AddField(efb => efb.WithName("💔 " + Strings.Dropped(ctx.Guild.Id)).WithValue(stats[3]).WithIsInline(true))
+                .AddField(efb => efb.WithName("⚪ " + Strings.PlanToWatch(ctx.Guild.Id)).WithValue(stats[4]).WithIsInline(true))
                 .AddField(
                     efb => efb.WithName("🕐 " + daysAndMean[0][0]).WithValue(daysAndMean[0][1]).WithIsInline(true))
                 .AddField(
@@ -265,7 +261,7 @@ public partial class Searches
                 .WithDescription($@"
 ** https://myanimelist.net/animelist/{name} **
 
-**{GetText("top_3_fav_anime")}**
+**{Strings.TopThreeFavAnime(ctx.Guild.Id)}**
 {favAnime}"
                 )
                 .WithUrl(fullQueryLink)
@@ -333,7 +329,8 @@ public partial class Searches
                 }
                 catch
                 {
-                    await ctx.Channel.SendErrorAsync("You need to attach a file or use a url with this!", Config)
+                    await ctx.Channel.SendErrorAsync(
+                            Strings.YouNeedToAttachFileOrUrl(ctx.Guild.Id), Config)
                         .ConfigureAwait(false);
                     return;
                 }
@@ -345,15 +342,15 @@ public partial class Searches
             var responseContent = response.Content;
             using var reader = new StreamReader(await responseContent.ReadAsStreamAsync().ConfigureAwait(false));
             var er = await reader.ReadToEndAsync().ConfigureAwait(false);
-            var stuff = JsonConvert.DeserializeObject<MoeResponse>(er,
-                new JsonSerializerSettings
+            var stuff = JsonSerializer.Deserialize<MoeResponse>(er,
+                new JsonSerializerOptions
                 {
-                    NullValueHandling = NullValueHandling.Ignore
+                    RespectNullableAnnotations = true
                 });
             if (!string.IsNullOrWhiteSpace(stuff.Error))
             {
-                await ctx.Channel.SendErrorAsync($"There was an issue with the findanime command:\n{stuff.Error}",
-                        Config)
+                await ctx.Channel.SendErrorAsync(
+                            Strings.FindAnimeError(ctx.Guild.Id, stuff.Error), Config)
                     .ConfigureAwait(false);
                 return;
             }
@@ -362,8 +359,9 @@ public partial class Searches
             if (ert?.Filename is null)
             {
                 await ctx.Channel.SendErrorAsync(
-                        "No results found. Please try a different image, or avoid cropping the current one.", Config)
+                        Strings.NoResultsTryDifferent(ctx.Guild.Id), Config)
                     .ConfigureAwait(false);
+                return;
             }
 
             var image = await c2.GetMediaById(ert.Anilist).ConfigureAwait(false);
@@ -444,7 +442,7 @@ public partial class Searches
             if (result is null)
             {
                 await ctx.Channel.SendErrorAsync(
-                        "The anime you searched for wasn't found! Please try a different query!", Config)
+                        Strings.AnimeNotFound(ctx.Guild.Id), Config)
                     .ConfigureAwait(false);
                 return;
             }
@@ -456,7 +454,8 @@ public partial class Searches
 
             if (!newResult.Any())
             {
-                await ctx.Channel.SendErrorAsync("No results found!", Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.NoResultsFound(ctx.Guild.Id), Config)
+                    .ConfigureAwait(false);
                 return;
             }
 
@@ -533,7 +532,7 @@ public partial class Searches
         public async Task Manga([Remainder] string query)
         {
             var msg = await ctx.Channel.SendConfirmAsync(
-                $"{config.Data.LoadingEmote} Getting results for {query}...").ConfigureAwait(false);
+                Strings.SearchingFor(ctx.Guild.Id, query)).ConfigureAwait(false);
             var jikan = new Jikan();
             var result = await jikan.SearchMangaAsync(query).ConfigureAwait(false);
             var paginator = new LazyPaginatorBuilder()

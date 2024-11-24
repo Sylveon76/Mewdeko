@@ -44,7 +44,7 @@ public partial class Utility
         {
             if (!Service.TryParseRemindMessage(remindString, out var remindData))
             {
-                await ReplyErrorLocalizedAsync("remind_invalid").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.RemindInvalidFormat(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
@@ -53,7 +53,7 @@ public partial class Utility
                         remindData.What)
                     .ConfigureAwait(false))
             {
-                await ReplyErrorLocalizedAsync("remind_too_long").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.RemindTooLong(ctx.Guild.Id)).ConfigureAwait(false);
             }
         }
 
@@ -73,20 +73,20 @@ public partial class Utility
             var perms = ((IGuildUser)ctx.User).GetPermissions(channel);
             if (!perms.SendMessages || !perms.ViewChannel)
             {
-                await ReplyErrorLocalizedAsync("cant_read_or_send").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.CantReadOrSend(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
             if (!Service.TryParseRemindMessage(remindString, out var remindData))
             {
-                await ReplyErrorLocalizedAsync("remind_invalid").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.RemindInvalidFormat(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
             if (!await RemindInternal(channel.Id, false, remindData.Time, remindData.What)
                     .ConfigureAwait(false))
             {
-                await ReplyErrorLocalizedAsync("remind_too_long").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.RemindTooLong(ctx.Guild.Id)).ConfigureAwait(false);
             }
         }
 
@@ -104,7 +104,7 @@ public partial class Utility
 
             var embed = new EmbedBuilder()
                 .WithOkColor()
-                .WithTitle(GetText("reminder_list"));
+                .WithTitle(Strings.ReminderList(ctx.Guild.Id));
 
             await using var dbContext = await dbProvider.GetContextAsync();
             var rems = dbContext.Reminders.RemindersFor(ctx.User.Id, page)
@@ -126,7 +126,7 @@ public partial class Utility
             }
             else
             {
-                embed.WithDescription(GetText("reminders_none"));
+                embed.WithDescription(Strings.RemindersNone(ctx.Guild.Id));
             }
 
             embed.AddPaginatedFooter(page + 1, null);
@@ -159,9 +159,9 @@ public partial class Utility
             }
 
             if (rem == null)
-                await ReplyErrorLocalizedAsync("reminder_not_exist").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.ReminderNotExist(ctx.Guild.Id)).ConfigureAwait(false);
             else
-                await ReplyErrorLocalizedAsync("reminder_deleted", index + 1).ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.ReminderDeleted(ctx.Guild.Id, index + 1)).ConfigureAwait(false);
         }
 
         private async Task<bool> RemindInternal(ulong targetId, bool isPrivate, TimeSpan ts, string? message)
@@ -199,7 +199,7 @@ public partial class Utility
             {
                 var unixTime = time.ToUnixEpochDate();
                 await ctx.Channel.SendConfirmAsync(
-                        $"⏰ {GetText("remind", Format.Bold(!isPrivate ? $"<#{targetId}>" : ctx.User.Username), Format.Bold(message), $"<t:{unixTime}:R>", gTime, gTime)}")
+                        $"⏰ {Strings.Remind(ctx.Guild.Id, Format.Bold(!isPrivate ? $"<#{targetId}>" : ctx.User.Username), Format.Bold(message), ($"<t:{unixTime}:R>", gTime, gTime))}")
                     .ConfigureAwait(false);
             }
             catch

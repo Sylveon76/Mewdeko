@@ -68,12 +68,12 @@ public partial class Utility
         {
             if (r is < 0 or > 255 || g is < 0 or > 255 || b is < 0 or > 255)
             {
-                await ErrorLocalizedAsync("color_invalid");
+                await ErrorAsync(Strings.ColorInvalid(ctx.Guild.Id));
             }
 
             var color = (uint)Color.FromArgb(r, g, b).ToArgb();
             await Service.SetJoinColorAsync(color, Context.Guild.Id);
-            await ConfirmLocalizedAsync("color_set");
+            await ConfirmAsync(Strings.ColorSet(ctx.Guild.Id));
         }
 
         /// <summary>
@@ -91,7 +91,7 @@ public partial class Utility
         {
             var color = (uint)Color.FromArgb(255, 215, 0).ToArgb();
             await Service.SetJoinColorAsync(color, Context.Guild.Id);
-            await ConfirmLocalizedAsync("color_set");
+            await ConfirmAsync(Strings.ColorSet(ctx.Guild.Id));
         }
 
         /// <summary>
@@ -113,12 +113,12 @@ public partial class Utility
         {
             if (r is < 0 or > 255 || g is < 0 or > 255 || b is < 0 or > 255)
             {
-                await ErrorLocalizedAsync("color_invalid");
+                await ErrorAsync(Strings.ColorInvalid(ctx.Guild.Id));
             }
 
             var color = (uint)Color.FromArgb(r, g, b).ToArgb();
             await Service.SetLeaveColorAsync(color, Context.Guild.Id);
-            await ConfirmLocalizedAsync("color_set");
+            await ConfirmAsync(Strings.ColorSet(ctx.Guild.Id));
         }
 
         /// <summary>
@@ -138,7 +138,7 @@ public partial class Utility
         {
             var color = (uint)Color.FromArgb(255, 215, 0).ToArgb();
             await Service.SetLeaveColorAsync(color, Context.Guild.Id);
-            await ConfirmLocalizedAsync("color_set");
+            await ConfirmAsync(Strings.ColorSet(ctx.Guild.Id));
         }
     }
 }

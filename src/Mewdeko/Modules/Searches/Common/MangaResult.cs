@@ -1,4 +1,6 @@
-using Newtonsoft.Json;
+
+
+using System.Text.Json.Serialization;
 
 namespace Mewdeko.Modules.Searches.Common;
 
@@ -15,31 +17,31 @@ public class MangaResult
     /// <summary>
     ///     Gets or sets the publishing status of the manga.
     /// </summary>
-    [JsonProperty("publishing_status")]
+    [JsonPropertyName("publishing_status")]
     public string PublishingStatus { get; set; }
 
     /// <summary>
     ///     Gets or sets the large image URL of the manga.
     /// </summary>
-    [JsonProperty("image_url_lge")]
+    [JsonPropertyName("image_url_lge")]
     public string ImageUrlLge { get; set; }
 
     /// <summary>
     ///     Gets or sets the English title of the manga.
     /// </summary>
-    [JsonProperty("title_english")]
+    [JsonPropertyName("title_english")]
     public string TitleEnglish { get; set; }
 
     /// <summary>
     ///     Gets or sets the total number of chapters in the manga.
     /// </summary>
-    [JsonProperty("total_chapters")]
+    [JsonPropertyName("total_chapters")]
     public int TotalChapters { get; set; }
 
     /// <summary>
     ///     Gets or sets the total number of volumes in the manga.
     /// </summary>
-    [JsonProperty("total_volumes")]
+    [JsonPropertyName("total_volumes")]
     public int TotalVolumes { get; set; }
 
     /// <summary>
@@ -55,7 +57,7 @@ public class MangaResult
     /// <summary>
     ///     Gets or sets the average score of the manga.
     /// </summary>
-    [JsonProperty("average_score")]
+    [JsonPropertyName("average_score")]
     public string AverageScore { get; set; }
 
     /// <summary>

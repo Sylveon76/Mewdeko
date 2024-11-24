@@ -49,7 +49,7 @@ public class SlashStatusRoles(BotConfigService bss, InteractiveService interacti
         StatusRolesTable potentialStatusRole)
     {
         await Service.RemoveStatusRoleConfig(potentialStatusRole);
-        await ctx.Interaction.SendConfirmAsync("StatusRole config removed!");
+        await ctx.Interaction.SendConfirmAsync(Strings.StatusroleRemoved(ctx.Guild.Id));
     }
 
     /// <summary>

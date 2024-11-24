@@ -43,14 +43,14 @@ public partial class SlashAdministration
 
             if (!setup)
             {
-                await ctx.Interaction.SendErrorAsync(GetText("nothingsetup"), Config);
+                await ctx.Interaction.SendErrorAsync(Strings.Nothingsetup(ctx.Guild.Id), Config);
             }
             else
             {
-                if (await PromptUserConfirmAsync(GetText("areyouabsolutelysure"), ctx.User.Id))
+                if (await PromptUserConfirmAsync(Strings.Areyouabsolutelysure(ctx.Guild.Id), ctx.User.Id))
                 {
                     await Service.ClearRecoverySetup(store);
-                    await ctx.Interaction.SendErrorFollowupAsync(GetText("recoverydeleted"), Config);
+                    await ctx.Interaction.SendErrorFollowupAsync(Strings.Recovrydel(ctx.Guild.Id), Config);
                 }
             }
         }
@@ -70,7 +70,7 @@ public partial class SlashAdministration
             var curBotUser = await ctx.Guild.GetUserAsync(ctx.Client.CurrentUser.Id);
             if (!curBotUser.GuildPermissions.Has(GuildPermission.Administrator))
             {
-                await ctx.Interaction.SendErrorFollowupAsync(GetText("recovernoadmin"), Config);
+                await ctx.Interaction.SendErrorFollowupAsync(Strings.Recovernoadmin(ctx.Guild.Id), Config);
                 return;
             }
 
@@ -79,7 +79,7 @@ public partial class SlashAdministration
             {
                 if (ctx.Guild.OwnerId != ctx.User.Id)
                 {
-                    await ctx.Interaction.SendErrorFollowupAsync(GetText("recoverowneronly"), Config);
+                    await ctx.Interaction.SendErrorFollowupAsync(Strings.Recoverowneronly(ctx.Guild.Id), Config);
                     return;
                 }
 
@@ -108,10 +108,8 @@ public partial class SlashAdministration
 
                 var eb = new EmbedBuilder()
                     .WithOkColor()
-                    .WithTitle(GetText("keepsecret"))
-                    .WithDescription($"\nRecovery Key: {secureString}" +
-                                     $"\n2FA Key ***only***: {base32Secret}" +
-                                     $"\n***The recovery key will also be sent to your DMs.***");
+                    .WithTitle(Strings.Keepsecret(ctx.Guild.Id))
+                    .WithDescription(Strings.RecoveryKeyDetails(ctx.Guild.Id, secureString, base32Secret));
 
                 await ctx.Interaction.FollowupWithFileAsync(new MemoryStream(qrCodeImage),
                     "qrcode.png", embed: eb.WithImageUrl("attachment://qrcode.png").Build(), ephemeral: true,
@@ -120,13 +118,13 @@ public partial class SlashAdministration
                 try
                 {
                     var dmEmbed = new EmbedBuilder()
-                        .WithTitle($"Recovery Key for {ctx.Guild}")
+                        .WithTitle(Strings.RecoveryKeyForServer(ctx.Guild.Id, ctx.Guild))
                         .WithDescription(secureString);
                     await ctx.User.SendMessageAsync(embed: dmEmbed.Build());
                 }
                 catch
                 {
-                    await ctx.Interaction.SendErrorFollowupAsync("can't_dm", Config);
+                    await ctx.Interaction.SendErrorFollowupAsync(Strings.CantDm(ctx.Guild.Id), Config);
                 }
             }
             else
@@ -134,7 +132,7 @@ public partial class SlashAdministration
                 var components = new ComponentBuilder().WithButton("Enter Recovery Key", "recoverykey");
                 await ctx.Interaction.FollowupAsync(embed: new EmbedBuilder()
                         .WithOkColor()
-                        .WithDescription("Please follow the steps to recover your server.").Build(),
+                        .WithDescription(Strings.RecoveryStepsPrompt(ctx.Guild.Id)).Build(),
                     components: components.Build());
 
                 await cache.SetAsync($"{credentials.RedisKey()}_2fa_{ctx.User.Id}", store.TwoFactorKey);
@@ -165,15 +163,15 @@ public partial class SlashAdministration
             {
                 if (modal.RecoveryKey == rescue.Value)
                 {
-                    var component = new ComponentBuilder().WithButton(GetText("enter2fa"), "2fa-verify-rescue").Build();
+                    var component = new ComponentBuilder().WithButton(Strings.Entertwofa(ctx.Guild.Id), "2fa-verify-rescue").Build();
                     await ctx.Interaction.RespondAsync(embed: new EmbedBuilder()
-                        .WithDescription(GetText("pleaseenter2fa"))
+                        .WithDescription(Strings.Pleaseentertwofa(ctx.Guild.Id))
                         .WithOkColor()
                         .Build(), components: component);
                 }
                 else
                 {
-                    await ctx.Interaction.SendErrorAsync(GetText("tryagain"), Config);
+                    await ctx.Interaction.SendErrorAsync(Strings.Tryagain(ctx.Guild.Id), Config);
                     await cache.RemoveAsync($"{credentials.RedisKey()}_rescuekey_{ctx.User.Id}");
                     await cache.RemoveAsync($"{credentials.RedisKey()}_2fa_{ctx.User.Id}");
                 }
@@ -213,7 +211,7 @@ public partial class SlashAdministration
                     if (isValid)
                     {
                         await Service.SetupRecovery(ctx.Guild.Id, rescueKey.Value, Base32Encoding.ToString(secret));
-                        await ctx.Interaction.SendConfirmAsync(GetText("recoverysetupcomplete"));
+                        await ctx.Interaction.SendConfirmAsync(Strings.Recoversetupcomplete(ctx.Guild.Id));
 
 
                         await cache.RemoveAsync($"{credentials.RedisKey()}_rescuekey_{ctx.User.Id}");
@@ -221,14 +219,14 @@ public partial class SlashAdministration
                     }
                     else
                     {
-                        await ctx.Interaction.SendErrorAsync(GetText("incorrect2fa"), Config);
+                        await ctx.Interaction.SendErrorAsync(Strings.Incorrecttwofa(ctx.Guild.Id), Config);
                         await cache.RemoveAsync($"{credentials.RedisKey()}_rescuekey_{ctx.User.Id}");
                         await cache.RemoveAsync($"{credentials.RedisKey()}_2fa_{ctx.User.Id}");
                     }
                 }
                 else
                 {
-                    await ctx.Interaction.SendErrorAsync(GetText("startagain"), Config);
+                    await ctx.Interaction.SendErrorAsync(Strings.Startagain(ctx.Guild.Id), Config);
                 }
             }
             else
@@ -240,7 +238,7 @@ public partial class SlashAdministration
                 var isValid = totp.VerifyTotp(modal.Code, out _, new VerificationWindow(2, 2));
                 if (!isValid)
                 {
-                    await ctx.Interaction.SendErrorAsync(GetText("incorrect2fa"), Config);
+                    await ctx.Interaction.SendErrorAsync(Strings.Incorrecttwofa(ctx.Guild.Id), Config);
                     await cache.RemoveAsync($"{credentials.RedisKey()}_rescuekey_{ctx.User.Id}");
                     await cache.RemoveAsync($"{credentials.RedisKey()}_2fa_{ctx.User.Id}");
                     return;
@@ -255,7 +253,7 @@ public partial class SlashAdministration
                 await newRole.ModifyAsync(x => x.Position = highestRole - 1);
                 var curuser = ctx.User as IGuildUser;
                 await curuser.AddRoleAsync(newRole);
-                await ctx.Interaction.SendConfirmAsync(GetText("highestpossiblerole"));
+                await ctx.Interaction.SendConfirmAsync(Strings.Highestpossiblerole(ctx.Guild.Id));
             }
         }
     }

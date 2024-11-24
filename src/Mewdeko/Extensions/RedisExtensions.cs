@@ -1,5 +1,5 @@
 ﻿using System.Collections.ObjectModel;
-using Newtonsoft.Json;
+using System.Text.Json;
 using StackExchange.Redis;
 
 namespace Mewdeko.Extensions;
@@ -159,12 +159,12 @@ public class RedisDictionary<TKey, TValue> : IDictionary<TKey, TValue>
 
     private static string Serialize(object obj)
     {
-        return JsonConvert.SerializeObject(obj);
+        return JsonSerializer.Serialize(obj);
     }
 
     private static T Deserialize<T>(string serialized)
     {
-        return JsonConvert.DeserializeObject<T>(serialized);
+        return JsonSerializer.Deserialize<T>(serialized);
     }
 
     /// <summary>

@@ -1,4 +1,6 @@
 ﻿using System.IO;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Discord.Interactions;
 using Humanizer;
 using Mewdeko.Common.Attributes.InteractionCommands;
@@ -10,7 +12,8 @@ using Mewdeko.Modules.Moderation.Services;
 using Mewdeko.Modules.Utility.Services;
 using Mewdeko.Services.Impl;
 using Mewdeko.Services.Settings;
-using Newtonsoft.Json;
+
+
 
 namespace Mewdeko.Modules.Utility;
 
@@ -156,21 +159,25 @@ public class SlashUtility(
     public async Task GetJson(ulong messageId, ITextChannel channel = null)
     {
         channel ??= ctx.Channel as ITextChannel;
-        var settings = new JsonSerializerSettings
+
+        var options = new JsonSerializerOptions
         {
-            ContractResolver = new LowercaseContractResolver(), NullValueHandling = NullValueHandling.Ignore
+            PropertyNamingPolicy = new LowercaseNamingPolicy(),
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            WriteIndented = true
         };
 
         var message = await channel.GetMessageAsync(messageId);
-        var serialized = JsonConvert.SerializeObject(message.GetNewEmbedSource(), Formatting.Indented, settings);
-        using var ms = new MemoryStream();
+        var serialized = JsonSerializer.Serialize(message.GetNewEmbedSource(), options);
+
+        await using var ms = new MemoryStream();
         await using var writer = new StreamWriter(ms);
+
         await writer.WriteAsync(serialized);
         await writer.FlushAsync();
         ms.Position = 0;
+
         await ctx.Interaction.RespondWithFileAsync(ms, "EmbedJson.txt");
-        await ms.DisposeAsync();
-        await writer.DisposeAsync();
     }
 
     /// <summary>
@@ -251,14 +258,14 @@ public class SlashUtility(
                 new EmbedBuilder().WithOkColor()
                     .WithAuthor($"{client.CurrentUser.Username} v{StatsService.BotVersion}",
                         client.CurrentUser.GetAvatarUrl(), config.Data.SupportServer)
-                    .AddField(GetText("authors"),
+                    .AddField(Strings.Authors(ctx.Guild.Id),
                         $"[{users[0]}](https://github.com/SylveonDeko)\n[{users[1]}](https://github.com/CottageDwellingCat)")
-                    .AddField(GetText("commands_ran"), $"{commandStats}/5s")
+                    .AddField(Strings.CommandsRan(ctx.Guild.Id), $"{commandStats}/5s")
                     .AddField("Library", stats.Library)
-                    .AddField(GetText("owner_ids"), string.Join("\n", creds.OwnerIds.Select(x => $"<@{x}>")))
-                    .AddField(GetText("shard"), $"#{client.GetShardFor(ctx.Guild)} / {creds.TotalShards}")
-                    .AddField(GetText("memory"), $"{stats.Heap} MB")
-                    .AddField(GetText("uptime"), stats.GetUptimeString("\n"))
+                    .AddField(Strings.OwnerIds(ctx.Guild.Id), string.Join("\n", creds.OwnerIds.Select(x => $"<@{x}>")))
+                    .AddField(Strings.Shard(ctx.Guild.Id), $"#{client.GetShardFor(ctx.Guild)} / {creds.TotalShards}")
+                    .AddField(Strings.Memory(ctx.Guild.Id), $"{stats.Heap} MB")
+                    .AddField(Strings.Uptime(ctx.Guild.Id), stats.GetUptimeString("\n"))
                     .AddField("Servers", $"{client.Guilds.Count} Servers").Build())
             .ConfigureAwait(false);
     }
@@ -363,7 +370,7 @@ public class SlashUtility(
         // Because discord is ass and uses int32 instead of int64
         if (!ulong.TryParse(userIdstring, out var userId))
         {
-            await ctx.Interaction.SendEphemeralErrorAsync("Please make sure that you put an ID in.", Config);
+            await ctx.Interaction.SendEphemeralErrorAsync(Strings.EnterValidId(ctx.Guild.Id), Config);
             return;
         }
 
@@ -400,7 +407,7 @@ public class SlashUtility(
         var voicechn = guild.VoiceChannels.Count;
 
         var component = new ComponentBuilder().WithButton("More Info", "moreinfo");
-        var embed = new EmbedBuilder().WithAuthor(eab => eab.WithName(GetText("server_info"))).WithTitle(guild.Name)
+        var embed = new EmbedBuilder().WithAuthor(eab => eab.WithName(Strings.ServerInfo(ctx.Guild.Id))).WithTitle(guild.Name)
             .AddField("Id", guild.Id.ToString())
             .AddField("Owner", ownername.Mention).AddField("Total Users", guild.Users.Count.ToString())
             .AddField("Created On", TimestampTag.FromDateTimeOffset(guild.CreatedAt)).WithColor(Mewdeko.OkColor);
@@ -411,7 +418,7 @@ public class SlashUtility(
         if (guild.Emotes.Count > 0)
         {
             embed.AddField(fb =>
-                fb.WithName($"{GetText("custom_emojis")}({guild.Emotes.Count})")
+                fb.WithName($"{Strings.CustomEmojis(ctx.Guild.Id)}({guild.Emotes.Count})")
                     .WithValue(string.Join(" ", guild.Emotes.Shuffle().Take(30).Select(e => $"{e}")).TrimTo(1024)));
         }
 
@@ -447,9 +454,9 @@ public class SlashUtility(
     public async Task ChannelInfo(ITextChannel channel = null)
     {
         var ch = channel ?? (ITextChannel)ctx.Channel;
-        var embed = new EmbedBuilder().WithTitle(ch.Name).AddField(GetText("id"), ch.Id.ToString())
-            .AddField(GetText("created_at"), TimestampTag.FromDateTimeOffset(ch.CreatedAt))
-            .AddField(GetText("users"), (await ch.GetUsersAsync().FlattenAsync().ConfigureAwait(false)).Count())
+        var embed = new EmbedBuilder().WithTitle(ch.Name).AddField(Strings.Id(ctx.Guild.Id), ch.Id.ToString())
+            .AddField(Strings.CreatedAt(ctx.Guild.Id), TimestampTag.FromDateTimeOffset(ch.CreatedAt))
+            .AddField(Strings.Users(ctx.Guild.Id), (await ch.GetUsersAsync().FlattenAsync().ConfigureAwait(false)).Count())
             .AddField("NSFW", ch.IsNsfw)
             .AddField("Slowmode Interval", TimeSpan.FromSeconds(ch.SlowModeInterval).Humanize())
             .AddField("Default Thread Archive Duration", ch.DefaultArchiveDuration).WithColor(Mewdeko.OkColor);
@@ -598,7 +605,7 @@ public class SlashUtility(
 
         if (avatarUrl == null)
         {
-            await ReplyErrorLocalizedAsync("avatar_none", usr.ToString()).ConfigureAwait(false);
+            await ReplyErrorAsync(Strings.AvatarNone(ctx.Guild.Id, usr.ToString())).ConfigureAwait(false);
             return;
         }
 

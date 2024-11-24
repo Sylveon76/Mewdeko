@@ -2,6 +2,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading;
 using AngleSharp.Html.Dom;
@@ -12,7 +14,7 @@ using MartineApiNet;
 using MartineApiNet.Enums;
 using MartineApiNet.Models.Images;
 using Mewdeko.Modules.Searches.Common;
-using Newtonsoft.Json;
+
 using Newtonsoft.Json.Linq;
 using Refit;
 using Serilog;
@@ -151,12 +153,12 @@ public class SearchesService : INService, IUnloadableService
 
         //joke commands
         if (File.Exists("data/wowjokes.json"))
-            WowJokes = JsonConvert.DeserializeObject<List<WoWJoke>>(File.ReadAllText("data/wowjokes.json"));
+            WowJokes = JsonSerializer.Deserialize<List<WoWJoke>>(File.ReadAllText("data/wowjokes.json"));
         else
             Log.Warning("data/wowjokes.json is missing. WOW Jokes are not loaded");
 
         if (File.Exists("data/magicitems.json"))
-            MagicItems = JsonConvert.DeserializeObject<List<MagicItem>>(File.ReadAllText("data/magicitems.json"));
+            MagicItems = JsonSerializer.Deserialize<List<MagicItem>>(File.ReadAllText("data/magicitems.json"));
         else
             Log.Warning("data/magicitems.json is missing. Magic items are not loaded");
 
@@ -391,7 +393,7 @@ public class SearchesService : INService, IUnloadableService
                     $"https://api.openweathermap.org/data/2.5/weather?q={query}&appid=42cd627dd60debf25a5739e50a217d74&units=metric")
                 .ConfigureAwait(false);
 
-            return string.IsNullOrEmpty(data) ? null : JsonConvert.DeserializeObject<WeatherData>(data);
+            return string.IsNullOrEmpty(data) ? null : JsonSerializer.Deserialize<WeatherData>(data);
         }
         catch (Exception ex)
         {
@@ -441,7 +443,7 @@ public class SearchesService : INService, IUnloadableService
                 return http.GetStringAsync(url);
             }, "", TimeSpan.FromHours(1)).ConfigureAwait(false);
 
-            var responses = JsonConvert.DeserializeObject<LocationIqResponse[]>(res);
+            var responses = JsonSerializer.Deserialize<LocationIqResponse[]>(res);
             if (responses is null || responses.Length == 0)
             {
                 Log.Warning("Geocode lookup failed for: {Query}", query);
@@ -454,7 +456,7 @@ public class SearchesService : INService, IUnloadableService
                 $"http://api.timezonedb.com/v2.1/get-time-zone?key={creds.TimezoneDbApiKey}&format=json&by=position&lat={geoData.Lat}&lng={geoData.Lon}");
             using var geoRes = await http.SendAsync(req).ConfigureAwait(false);
             var resString = await geoRes.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var timeObj = JsonConvert.DeserializeObject<TimeZoneResult>(resString);
+            var timeObj = JsonSerializer.Deserialize<TimeZoneResult>(resString);
 
             var time = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
                 .AddSeconds(timeObj.Timestamp);
@@ -670,11 +672,14 @@ public async Task<RedditPost> GetRandomImageAsync(ImageTag tag)
     {
         using var http = httpFactory.CreateClient();
         var res = await http.GetStringAsync("https://official-joke-api.appspot.com/random_joke").ConfigureAwait(false);
-        var resObj = JsonConvert.DeserializeAnonymousType(res, new
+
+        var options = new JsonSerializerOptions
         {
-            setup = "", punchline = ""
-        });
-        return (resObj.setup, resObj.punchline);
+            PropertyNameCaseInsensitive = true
+        };
+
+        var resObj = JsonSerializer.Deserialize<JokeResponse>(res, options);
+        return (resObj?.Setup, resObj?.Punchline ?? string.Empty);
     }
 
     /// <summary>
@@ -738,7 +743,7 @@ public async Task<RedditPost> GetRandomImageAsync(ImageTag tag)
             .GetStringAsync($"https://api.magicthegathering.io/v1/cards?name={Uri.EscapeDataString(search)}")
             .ConfigureAwait(false);
 
-        var responseObject = JsonConvert.DeserializeObject<MtgResponse>(response);
+        var responseObject = JsonSerializer.Deserialize<MtgResponse>(response);
         if (responseObject == null)
             return [];
 
@@ -776,7 +781,7 @@ public async Task<RedditPost> GetRandomImageAsync(ImageTag tag)
             var response = await http.GetStringAsync(
                     $"https://omgvamp-hearthstone-v1.p.rapidapi.com/cards/search/{Uri.EscapeDataString(name)}")
                 .ConfigureAwait(false);
-            var objs = JsonConvert.DeserializeObject<HearthstoneCardData[]>(response);
+            var objs = JsonSerializer.Deserialize<HearthstoneCardData[]>(response);
             if (objs == null || objs.Length == 0)
                 return null;
             var data = Array.Find(objs, x => x.Collectible)
@@ -823,7 +828,7 @@ public async Task<RedditPost> GetRandomImageAsync(ImageTag tag)
         var searchUrl =
             $"https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch={Uri.EscapeDataString(name)}%20film&format=json&prop=info&inprop=url";
         var searchResponse = await http.GetStringAsync(searchUrl).ConfigureAwait(false);
-        var searchResult = JsonConvert.DeserializeObject<WikiSearchResponse>(searchResponse);
+        var searchResult = JsonSerializer.Deserialize<WikiSearchResponse>(searchResponse);
 
         if (searchResult?.Query?.Search == null || searchResult.Query.Search.Count == 0)
             return null;
@@ -833,7 +838,7 @@ public async Task<RedditPost> GetRandomImageAsync(ImageTag tag)
         var contentUrl =
             $"https://en.wikipedia.org/w/api.php?action=query&prop=extracts|pageimages|info&pithumbsize=500&inprop=url&explaintext=1&pageids={pageId}&format=json";
         var contentResponse = await http.GetStringAsync(contentUrl).ConfigureAwait(false);
-        var contentResult = JsonConvert.DeserializeObject<WikiContentResponse>(contentResponse);
+        var contentResult = JsonSerializer.Deserialize<WikiContentResponse>(contentResponse);
 
         if (!contentResult?.Query?.Pages?.ContainsKey(pageId.ToString()) ?? true)
             return null;
@@ -861,57 +866,72 @@ public async Task<RedditPost> GetRandomImageAsync(ImageTag tag)
     }
 
     /// <summary>
-    ///     Retrieves the Steam App ID for the specified game name asynchronously.
-    /// </summary>
-    /// <param name="query">The name of the game to search for.</param>
-    /// <returns>A task representing the asynchronous operation, returning the Steam App ID of the game.</returns>
-    public async Task<int> GetSteamAppIdByName(string query)
+///     Retrieves detailed Steam game information for the specified game name asynchronously.
+/// </summary>
+/// <param name="query">The name of the game to search for.</param>
+/// <returns>A task representing the asynchronous operation, returning detailed game information or null if not found.</returns>
+public async Task<SteamGameInfo?> GetSteamGameInfoByName(string query)
+{
+    var redis = cache.Redis;
+    var redisDb = redis.GetDatabase();
+    const string steamGameIdsKey = "steam_names_to_appid";
+    await redisDb.KeyExistsAsync(steamGameIdsKey).ConfigureAwait(false);
+
+    var gamesMap = await cache.GetOrAddCachedDataAsync(steamGameIdsKey, async _ =>
     {
-        var redis = cache.Redis;
-        var redisDb = redis.GetDatabase();
-        const string steamGameIdsKey = "steam_names_to_appid";
-        await redisDb.KeyExistsAsync(steamGameIdsKey).ConfigureAwait(false);
+        using var http = httpFactory.CreateClient();
+        var gamesStr = await http.GetStringAsync("https://api.steampowered.com/ISteamApps/GetAppList/v2/")
+            .ConfigureAwait(false);
 
-        var gamesMap = await cache.GetOrAddCachedDataAsync(steamGameIdsKey, async _ =>
+        var options = new JsonSerializerOptions
         {
-            using var http = httpFactory.CreateClient();
-            // https://api.steampowered.com/ISteamApps/GetAppList/v2/
-            var gamesStr = await http.GetStringAsync("https://api.steampowered.com/ISteamApps/GetAppList/v2/")
-                .ConfigureAwait(false);
-            var apps = JsonConvert
-                .DeserializeAnonymousType(gamesStr, new
-                {
-                    applist = new
-                    {
-                        apps = new List<SteamGameId>()
-                    }
-                })
-                .applist.apps;
+            PropertyNameCaseInsensitive = true
+        };
 
-            return apps
-                .OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
-                .GroupBy(x => x.Name)
-                .ToDictionary(x => x.Key, x => x.First().AppId);
-        }, default(string), TimeSpan.FromHours(24)).ConfigureAwait(false);
+        var response = JsonSerializer.Deserialize<SteamAppListResponse>(gamesStr, options);
+        var apps = response?.Applist?.Apps ?? new List<SteamGameId>();
 
-        if (!gamesMap.Any())
-            return -1;
+        return apps
+            .OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
+            .GroupBy(x => x.Name)
+            .ToDictionary(x => x.Key, x => x.First().AppId);
+    }, default(string), TimeSpan.FromHours(24)).ConfigureAwait(false);
 
-        query = query.Trim();
+    if (!gamesMap.Any())
+        return null;
 
-        var keyList = gamesMap.Keys.ToList();
+    query = query.Trim();
+    var keyList = gamesMap.Keys.ToList();
+    var key = keyList.Find(x => x.Equals(query, StringComparison.OrdinalIgnoreCase));
 
-        var key = keyList.Find(x => x.Equals(query, StringComparison.OrdinalIgnoreCase));
-
+    if (key == default)
+    {
+        key = keyList.Find(x => x.StartsWith(query, StringComparison.OrdinalIgnoreCase));
         if (key == default)
-        {
-            key = keyList.Find(x => x.StartsWith(query, StringComparison.OrdinalIgnoreCase));
-            if (key == default)
-                return -1;
-        }
-
-        return gamesMap[key];
+            return null;
     }
+
+    var appId = gamesMap[key];
+
+    // Get detailed game info
+    using var http = httpFactory.CreateClient();
+    var detailsUrl = $"https://store.steampowered.com/api/appdetails?appids={appId}";
+    var detailsStr = await http.GetStringAsync(detailsUrl).ConfigureAwait(false);
+
+    var options = new JsonSerializerOptions
+    {
+        PropertyNameCaseInsensitive = true
+    };
+
+    var response = JsonSerializer.Deserialize<Dictionary<string, SteamGameDetailsResponse>>(detailsStr, options);
+
+    if (response != null && response.TryGetValue(appId.ToString(), out var gameDetails) && gameDetails.Success)
+    {
+        return gameDetails.Data;
+    }
+
+    return null;
+}
 
     /// <summary>
     ///     Performs a Google search asynchronously.
@@ -1091,13 +1111,13 @@ public class SteamGameId
     /// <summary>
     ///     Gets or sets the name of the Steam game.
     /// </summary>
-    [JsonProperty("name")]
+    [JsonPropertyName("name")]
     public string Name { get; set; }
 
     /// <summary>
     ///     Gets or sets the Steam App ID of the game.
     /// </summary>
-    [JsonProperty("appid")]
+    [JsonPropertyName("appid")]
     public int AppId { get; set; }
 }
 
@@ -1119,13 +1139,13 @@ public class SteamGameData
         /// <summary>
         ///     Gets or sets a value indicating whether the operation was successful.
         /// </summary>
-        [JsonProperty("success")]
+        [JsonPropertyName("success")]
         public bool Success { get; set; }
 
         /// <summary>
         ///     Gets or sets the Steam game data.
         /// </summary>
-        [JsonProperty("data")]
+        [JsonPropertyName("data")]
         public SteamGameData Data { get; set; }
     }
 }

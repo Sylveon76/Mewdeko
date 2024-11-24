@@ -1,8 +1,9 @@
 ﻿using System.IO;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using Mewdeko.Common.Yml;
-using Newtonsoft.Json;
+
 
 namespace Mewdeko.Extensions;
 
@@ -592,7 +593,7 @@ public static partial class StringExtensions
     /// <returns>The deserialized object.</returns>
     public static T MapJson<T>(this string str)
     {
-        return JsonConvert.DeserializeObject<T>(str);
+        return JsonSerializer.Deserialize<T>(str);
     }
 
     /// <summary>

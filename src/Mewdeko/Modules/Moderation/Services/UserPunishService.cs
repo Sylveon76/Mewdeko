@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Threading;
 using Discord.Commands;
 using LinqToDB.EntityFrameworkCore;
@@ -5,7 +6,7 @@ using Mewdeko.Common.TypeReaders.Models;
 using Mewdeko.Database.DbContextStuff;
 using Mewdeko.Modules.Permissions.Services;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
+
 using Serilog;
 using Embed = Discord.Embed;
 
@@ -753,7 +754,7 @@ public class UserPunishService : INService
         // if template isn't set, use the old message style
         if (string.IsNullOrWhiteSpace(template))
         {
-            template = JsonConvert.SerializeObject(new
+            template = JsonSerializer.Serialize(new
             {
                 color = Mewdeko.ErrorColor.RawValue, description = defaultMessage
             });

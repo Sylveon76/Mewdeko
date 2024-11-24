@@ -15,8 +15,7 @@ namespace Mewdeko.Modules.Administration;
 ///     Class for the Administration Module.
 /// </summary>
 /// <param name="serv">The interactivity service by Fergun.Interactive</param>
-/// <param name="configService">The bot config service that uses yml from data/</param>
-public partial class Administration(InteractiveService serv, BotConfigService configService)
+public partial class Administration(InteractiveService serv)
     : MewdekoModuleBase<AdministrationService>
 {
     /// <summary>
@@ -108,14 +107,14 @@ public partial class Administration(InteractiveService serv, BotConfigService co
 
         if (usersToBan is null || !usersToBan.Any())
         {
-            await ctx.Channel.SendErrorAsync(GetText("ban_by_hash_none", avatarHash), Config);
+            await ctx.Channel.SendErrorAsync(Strings.BanByHashNone(ctx.Guild.Id, avatarHash), Config);
             return;
         }
 
         if (await PromptUserConfirmAsync(
-                GetText("ban_by_hash_confirm", usersToBan.Count(), avatarHash), ctx.User.Id))
+                Strings.BanByHashConfirm(ctx.Guild.Id, usersToBan.Count(), avatarHash), ctx.User.Id))
         {
-            await ctx.Channel.SendConfirmAsync(GetText("ban_by_hash_start", usersToBan.Count(), avatarHash));
+            await ctx.Channel.SendConfirmAsync(Strings.BanByHashStart(ctx.Guild.Id, usersToBan.Count(), avatarHash));
             var failedUsers = 0;
             var bannedUsers = 0;
             foreach (var i in usersToBan)
@@ -132,12 +131,12 @@ public partial class Administration(InteractiveService serv, BotConfigService co
             }
 
             if (failedUsers == 0)
-                await ctx.Channel.SendConfirmAsync(GetText("ban_by_hash_success", bannedUsers, avatarHash));
+                await ctx.Channel.SendConfirmAsync(Strings.BanByHashSuccess(ctx.Guild.Id, bannedUsers, avatarHash));
             else if (failedUsers == usersToBan.Count())
-                await ctx.Channel.SendErrorAsync(GetText("ban_by_hash_fail_all", usersToBan.Count(), avatarHash),
+                await ctx.Channel.SendErrorAsync(Strings.BanByHashFailAll(ctx.Guild.Id, usersToBan.Count(), avatarHash),
                     Config);
             else
-                await ctx.Channel.SendConfirmAsync(GetText("ban_by_hash_fail_some", bannedUsers, failedUsers,
+                await ctx.Channel.SendConfirmAsync(Strings.BanByHashFailSome(ctx.Guild.Id, bannedUsers, failedUsers,
                     avatarHash));
         }
     }
@@ -153,9 +152,9 @@ public partial class Administration(InteractiveService serv, BotConfigService co
     {
         var optout = await Service.ToggleOptOut(ctx.Guild);
         if (!optout)
-            await ctx.Channel.SendConfirmAsync(GetText("command_stats_enabled"));
+            await ctx.Channel.SendConfirmAsync(Strings.CommandStatsEnabled(ctx.Guild.Id));
         else
-            await ctx.Channel.SendConfirmAsync(GetText("command_stats_disabled"));
+            await ctx.Channel.SendConfirmAsync(Strings.CommandStatsDisabled(ctx.Guild.Id));
     }
 
     /// <summary>
@@ -168,12 +167,12 @@ public partial class Administration(InteractiveService serv, BotConfigService co
     [UserPerm(GuildPermission.Administrator)]
     public async Task DeleteGuildStatsData()
     {
-        if (await PromptUserConfirmAsync(GetText("command_stats_delete_confirm"), ctx.User.Id))
+        if (await PromptUserConfirmAsync(Strings.CommandStatsDeleteConfirm(ctx.Guild.Id), ctx.User.Id))
         {
             if (await Service.DeleteStatsData(ctx.Guild))
-                await ctx.Channel.SendErrorAsync(GetText("command_stats_delete_success"), Config);
+                await ctx.Channel.SendErrorAsync(Strings.CommandStatsDeleteSuccess(ctx.Guild.Id), Config);
             else
-                await ctx.Channel.SendErrorAsync(GetText("command_stats_delete_fail"), Config);
+                await ctx.Channel.SendErrorAsync(Strings.CommandStatsDeleteFail(ctx.Guild.Id), Config);
         }
     }
 
@@ -193,13 +192,13 @@ public partial class Administration(InteractiveService serv, BotConfigService co
         var sg = (SocketGuild)Context.Guild;
         if (sg.OwnerId == gu.Id || gu.GetRoles().Max(r => r.Position) >= sg.CurrentUser.GetRoles().Max(r => r.Position))
         {
-            await ReplyErrorLocalizedAsync("insuf_perms_i").ConfigureAwait(false);
+            await ReplyErrorAsync(Strings.InsufPermsI(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
         await gu.ModifyAsync(u => u.Nickname = newNick).ConfigureAwait(false);
 
-        await ReplyConfirmLocalizedAsync("user_nick", Format.Bold(gu.ToString()), Format.Bold(newNick) ?? "-")
+        await ReplyConfirmAsync(Strings.UserNick(ctx.Guild.Id, Format.Bold(gu.ToString()), Format.Bold(newNick) ?? "-"))
             .ConfigureAwait(false);
     }
 
@@ -217,13 +216,13 @@ public partial class Administration(InteractiveService serv, BotConfigService co
         var usersToBan = users.Where(x => x.RoleIds.Contains(role.Id)).ToList();
         if (usersToBan.Count == 0)
         {
-            await ctx.Channel.SendErrorAsync(GetText("ban_in_role_no_users"), Config).ConfigureAwait(false);
+            await ctx.Channel.SendErrorAsync(Strings.BanInRoleNoUsers(ctx.Guild.Id), Config).ConfigureAwait(false);
             return;
         }
 
-        if (!await PromptUserConfirmAsync(GetText("ban_in_role_confirm", usersToBan.Count, role.Mention), ctx.User.Id))
+        if (!await PromptUserConfirmAsync(Strings.BanInRoleConfirm(ctx.Guild.Id, usersToBan.Count, role.Mention), ctx.User.Id))
         {
-            await ctx.Channel.SendErrorAsync(GetText("ban_in_role_cancelled"), Config).ConfigureAwait(false);
+            await ctx.Channel.SendErrorAsync(Strings.BanInRoleCancelled(ctx.Guild.Id), Config).ConfigureAwait(false);
             return;
         }
 
@@ -233,7 +232,7 @@ public partial class Administration(InteractiveService serv, BotConfigService co
             try
             {
                 await ctx.Guild
-                    .AddBanAsync(i, 0, reason ?? GetText("ban_in_role_default_reason", ctx.User, ctx.User.Id))
+                    .AddBanAsync(i, 0, reason ?? Strings.BanInRoleDefaultReason(ctx.Guild.Id, ctx.User, ctx.User.Id))
                     .ConfigureAwait(false);
             }
             catch
@@ -243,14 +242,14 @@ public partial class Administration(InteractiveService serv, BotConfigService co
         }
 
         if (failedUsers == 0)
-            await ctx.Channel.SendConfirmAsync(GetText("ban_in_role_success", usersToBan.Count, role.Mention))
+            await ctx.Channel.SendConfirmAsync(Strings.BanInRoleSuccess(ctx.Guild.Id, usersToBan.Count, role.Mention))
                 .ConfigureAwait(false);
         else if (failedUsers == usersToBan.Count)
-            await ctx.Channel.SendErrorAsync(GetText("ban_in_role_all_failed", users.Count, role.Mention), Config)
+            await ctx.Channel.SendErrorAsync(Strings.BanInRoleAllFailed(ctx.Guild.Id, users.Count, role.Mention), Config)
                 .ConfigureAwait(false);
         else
             await ctx.Channel
-                .SendConfirmAsync(GetText("ban_in_role_partial_success", usersToBan.Count - failedUsers, role.Mention,
+                .SendConfirmAsync(Strings.BanInRolePartialSuccess(ctx.Guild.Id, usersToBan.Count - failedUsers, role.Mention,
                     failedUsers)).ConfigureAwait(false);
     }
 
@@ -271,7 +270,7 @@ public partial class Administration(InteractiveService serv, BotConfigService co
         var curUser = await ctx.Guild.GetCurrentUserAsync().ConfigureAwait(false);
         await curUser.ModifyAsync(u => u.Nickname = newNick).ConfigureAwait(false);
 
-        await ReplyConfirmLocalizedAsync("bot_nick", Format.Bold(newNick) ?? "-").ConfigureAwait(false);
+        await ReplyConfirmAsync(Strings.BotNick(ctx.Guild.Id, Format.Bold(newNick)) ?? "-").ConfigureAwait(false);
     }
 
     /// <summary>
@@ -292,38 +291,38 @@ public partial class Administration(InteractiveService serv, BotConfigService co
         users = users.Where(x => regex.IsMatch(x.Username.ToLower())).ToList();
         if (!users.Any())
         {
-            await ctx.Channel.SendErrorAsync(GetText("nameban_no_users_found"), Config);
+            await ctx.Channel.SendErrorAsync(Strings.NamebanNoUsersFound(ctx.Guild.Id), Config);
             return;
         }
 
-        await ctx.Channel.SendConfirmAsync(GetText("nameban_message_delete"));
+        await ctx.Channel.SendConfirmAsync(Strings.NamebanMessageDelete(ctx.Guild.Id));
         var deleteString = await NextMessageAsync(ctx.Channel.Id, ctx.User.Id);
         if (deleteString == null)
         {
-            await ctx.Channel.SendErrorAsync(GetText("nameban_cancelled"), Config);
+            await ctx.Channel.SendErrorAsync(Strings.NamebanCancelled(ctx.Guild.Id), Config);
             return;
         }
 
         if (!int.TryParse(deleteString, out var _))
         {
-            await ctx.Channel.SendErrorAsync(GetText("invalid_input_number"), Config);
+            await ctx.Channel.SendErrorAsync(Strings.InvalidInputNumber(ctx.Guild.Id), Config);
             return;
         }
 
         var deleteCount = int.Parse(deleteString);
         var components = new ComponentBuilder()
-            .WithButton(GetText("preview"), "previewbans")
-            .WithButton(GetText("execute"), "executeorder66", ButtonStyle.Success)
-            .WithButton(GetText("cancel"), "cancel", ButtonStyle.Danger);
+            .WithButton(Strings.Preview(ctx.Guild.Id), "previewbans")
+            .WithButton(Strings.Execute(ctx.Guild.Id), "executeorder66", ButtonStyle.Success)
+            .WithButton(Strings.Cancel(ctx.Guild.Id), "cancel", ButtonStyle.Danger);
         var eb = new EmbedBuilder()
-            .WithDescription(GetText("preview_or_execute"))
+            .WithDescription(Strings.PreviewOrExecute(ctx.Guild.Id))
             .WithOkColor();
         var msg = await ctx.Channel.SendMessageAsync(embed: eb.Build(), components: components.Build());
         var input = await GetButtonInputAsync(ctx.Channel.Id, msg.Id, ctx.User.Id);
         switch (input)
         {
             case "cancel":
-                await ctx.Channel.SendErrorAsync(GetText("nameban_cancelled"), Config);
+                await ctx.Channel.SendErrorAsync(Strings.NamebanCancelled(ctx.Guild.Id), Config);
                 break;
             case "previewbans":
                 var paginator = new LazyPaginatorBuilder()
@@ -342,21 +341,21 @@ public partial class Administration(InteractiveService serv, BotConfigService co
                 async Task<PageBuilder> PageFactory(int page)
                 {
                     await Task.CompletedTask.ConfigureAwait(false);
-                    return new PageBuilder().WithTitle(GetText("nameban_preview_count", users.Count, name.ToLower()))
+                    return new PageBuilder().WithTitle(Strings.NamebanPreviewCount(ctx.Guild.Id, users.Count, name.ToLower()))
                         .WithDescription(string.Join("\n", users.Skip(page * 20).Take(20)));
                 }
             case "executeorder66":
-                if (await PromptUserConfirmAsync(GetText("nameban_confirm", users.Count), ctx.User.Id))
+                if (await PromptUserConfirmAsync(Strings.NamebanConfirm(ctx.Guild.Id, users.Count), ctx.User.Id))
                 {
                     var failedUsers = 0;
-                    await SuccessLocalizedAsync("nameban_processing", users.Count);
+                    await SuccessAsync(Strings.NamebanProcessing(ctx.Guild.Id, users.Count));
                     foreach (var i in users)
                     {
                         try
                         {
                             await ctx.Guild.AddBanAsync(i, deleteCount, options: new RequestOptions
                             {
-                                AuditLogReason = GetText("mass_ban_requested_by", ctx.User)
+                                AuditLogReason = Strings.MassBanRequestedBy(ctx.Guild.Id, ctx.User)
                             });
                         }
                         catch
@@ -365,7 +364,7 @@ public partial class Administration(InteractiveService serv, BotConfigService co
                         }
                     }
 
-                    await ctx.Channel.SendConfirmAsync(GetText("nameban_success", users.Count - failedUsers,
+                    await ctx.Channel.SendConfirmAsync(Strings.NamebanSuccess(ctx.Guild.Id, users.Count - failedUsers,
                         failedUsers));
                 }
 
@@ -412,7 +411,7 @@ public partial class Administration(InteractiveService serv, BotConfigService co
 
             if (!users.Any())
             {
-                await ctx.Channel.SendErrorAsync(GetText("banunder_no_users"), Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.BanunderNoUsers(ctx.Guild.Id), Config).ConfigureAwait(false);
                 return;
             }
 
@@ -429,7 +428,7 @@ public partial class Administration(InteractiveService serv, BotConfigService co
                 {
                     await Task.CompletedTask.ConfigureAwait(false);
                     return new PageBuilder()
-                        .WithTitle(GetText("banunder_preview", users.Count(),
+                        .WithTitle(Strings.BanunderPreview(ctx.Guild.Id, users.Count(),
                             time.Time.Humanize(maxUnit: TimeUnit.Year)))
                         .WithDescription(string.Join("\n", users.Skip(page * 20).Take(20)));
                 }
@@ -438,20 +437,20 @@ public partial class Administration(InteractiveService serv, BotConfigService co
             var banned = 0;
             var errored = 0;
             var msg = await ctx.Channel.SendMessageAsync(embed: new EmbedBuilder().WithErrorColor()
-                .WithDescription(GetText("banunder_confirm", users.Count()))
+                .WithDescription(Strings.BanunderConfirm(ctx.Guild.Id, users.Count()))
                 .Build());
             var text = await NextMessageAsync(ctx.Channel.Id, ctx.User.Id);
             await msg.DeleteAsync();
             if (!text.ToLower().Contains("yes"))
                 return;
-            var message = await ConfirmLocalizedAsync("banunder_banning").ConfigureAwait(false);
+            var message = await ConfirmAsync(Strings.BanunderBanning(ctx.Guild.Id, users.Count())).ConfigureAwait(false);
             foreach (var i in users)
             {
                 try
                 {
                     await ctx.Guild.AddBanAsync(i, options: new RequestOptions
                     {
-                        AuditLogReason = GetText("banunder_starting", ctx.User)
+                        AuditLogReason = Strings.BanunderStarting(ctx.Guild.Id, ctx.User)
                     }).ConfigureAwait(false);
                     banned++;
                 }
@@ -462,7 +461,7 @@ public partial class Administration(InteractiveService serv, BotConfigService co
             }
 
             var eb = new EmbedBuilder()
-                .WithDescription(GetText("banunder_kicked", banned, errored))
+                .WithDescription(Strings.BanunderBanned(ctx.Guild.Id, banned, errored))
                 .WithOkColor();
             await message.ModifyAsync(x => x.Embed = eb.Build()).ConfigureAwait(false);
         }
@@ -495,7 +494,7 @@ public partial class Administration(InteractiveService serv, BotConfigService co
         var guildUsers = users as SocketGuildUser[] ?? users.ToArray();
         if (guildUsers.Length == 0)
         {
-            await ErrorLocalizedAsync("kickunder_no_users").ConfigureAwait(false);
+            await ErrorAsync(Strings.KickunderNoUsers(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
@@ -516,7 +515,7 @@ public partial class Administration(InteractiveService serv, BotConfigService co
             {
                 await Task.CompletedTask.ConfigureAwait(false);
                 return new PageBuilder()
-                    .WithTitle(GetText("kickunder_preview", guildUsers.Length,
+                    .WithTitle(Strings.KickunderPreview(ctx.Guild.Id, guildUsers.Length,
                         time.Time.Humanize(maxUnit: TimeUnit.Year)))
                     .WithDescription(string.Join("\n", guildUsers.Skip(page * 20).Take(20)));
             }
@@ -525,18 +524,18 @@ public partial class Administration(InteractiveService serv, BotConfigService co
         var banned = 0;
         var errored = 0;
         var msg = await ctx.Channel.SendMessageAsync(embed: new EmbedBuilder().WithErrorColor()
-            .WithDescription(GetText("kickunder_confirm", users.Count()))
+            .WithDescription(Strings.KickunderConfirm(ctx.Guild.Id, users.Count()))
             .Build());
         var text = await NextMessageAsync(ctx.Channel.Id, ctx.User.Id);
         await msg.DeleteAsync();
         if (!text.ToLower().Contains("yes"))
             return;
-        var message = await ConfirmLocalizedAsync("kickunder_kicking").ConfigureAwait(false);
+        var message = await ConfirmAsync(Strings.KickunderKicking(ctx.Guild.Id, users.Count())).ConfigureAwait(false);
         foreach (var i in guildUsers)
         {
             try
             {
-                await i.KickAsync(GetText("kickunder_starting", ctx.User)).ConfigureAwait(false);
+                await i.KickAsync(Strings.KickunderStarting(ctx.Guild.Id, ctx.User)).ConfigureAwait(false);
                 banned++;
             }
             catch
@@ -546,7 +545,7 @@ public partial class Administration(InteractiveService serv, BotConfigService co
         }
 
         var eb = new EmbedBuilder()
-            .WithDescription(GetText("kickunder_kicked", banned, errored))
+            .WithDescription(Strings.KickunderKicked(ctx.Guild.Id, banned, errored))
             .WithOkColor();
         await message.ModifyAsync(x => x.Embed = eb.Build()).ConfigureAwait(false);
     }
@@ -572,13 +571,13 @@ public partial class Administration(InteractiveService serv, BotConfigService co
     {
         try
         {
-            await ConfirmLocalizedAsync("command_expected_latency_server_size");
+            await ConfirmAsync(Strings.CommandExpectedLatencyServerSize(ctx.Guild.Id));
             if (e == "no")
             {
                 var toprune = await ctx.Guild.PruneUsersAsync(time.Time.Days, true);
                 if (toprune == 0)
                 {
-                    await ErrorLocalizedAsync("prune_no_members_upsell").ConfigureAwait(false);
+                    await ErrorAsync(Strings.PruneNoMembersUpsell(ctx.Guild.Id)).ConfigureAwait(false);
                     return;
                 }
 
@@ -588,15 +587,15 @@ public partial class Administration(InteractiveService serv, BotConfigService co
                 };
                 if (!await PromptUserConfirmAsync(eb, ctx.User.Id).ConfigureAwait(false))
                 {
-                    await ConfirmLocalizedAsync("prune_canceled_member_upsell").ConfigureAwait(false);
+                    await ConfirmAsync(Strings.PruneCanceledMemberUpsell(ctx.Guild.Id)).ConfigureAwait(false);
                 }
                 else
                 {
-                    var msg = await ConfirmLocalizedAsync("pruning_members", toprune).ConfigureAwait(false);
+                    var msg = await ConfirmAsync(Strings.PruningMembers(ctx.Guild.Id, toprune)).ConfigureAwait(false);
                     await ctx.Guild.PruneUsersAsync(time.Time.Days).ConfigureAwait(false);
                     var ebi = new EmbedBuilder
                     {
-                        Description = GetText("pruned_members", toprune), Color = Mewdeko.OkColor
+                        Description = Strings.PrunedMembers(ctx.Guild.Id, toprune), Color = Mewdeko.OkColor
                     };
                     await msg.ModifyAsync(x => x.Embed = ebi.Build()).ConfigureAwait(false);
                 }
@@ -611,21 +610,21 @@ public partial class Administration(InteractiveService serv, BotConfigService co
                     ]).ConfigureAwait(false);
                 if (toprune == 0)
                 {
-                    await ErrorLocalizedAsync("prune_no_members").ConfigureAwait(false);
+                    await ErrorAsync(Strings.PruneNoMembers(ctx.Guild.Id)).ConfigureAwait(false);
                     return;
                 }
 
                 var eb = new EmbedBuilder
                 {
-                    Description = GetText("prune_confirm", toprune), Color = Mewdeko.OkColor
+                    Description = Strings.PruneConfirm(ctx.Guild.Id, toprune), Color = Mewdeko.OkColor
                 };
                 if (!await PromptUserConfirmAsync(eb, ctx.User.Id).ConfigureAwait(false))
                 {
-                    await ConfirmLocalizedAsync("prune_canceled").ConfigureAwait(false);
+                    await ConfirmAsync(Strings.PruneCanceled(ctx.Guild.Id)).ConfigureAwait(false);
                 }
                 else
                 {
-                    var msg = await ConfirmLocalizedAsync("pruning_members", toprune).ConfigureAwait(false);
+                    var msg = await ConfirmAsync(Strings.PruningMembers(ctx.Guild.Id, toprune)).ConfigureAwait(false);
                     await ctx.Guild.PruneUsersAsync(time.Time.Days,
                         includeRoleIds:
                         [
@@ -633,7 +632,7 @@ public partial class Administration(InteractiveService serv, BotConfigService co
                         ]);
                     var ebi = new EmbedBuilder
                     {
-                        Description = GetText("pruned_members", toprune), Color = Mewdeko.OkColor
+                        Description = Strings.PrunedMembers(ctx.Guild.Id, toprune), Color = Mewdeko.OkColor
                     };
                     await msg.ModifyAsync(x => x.Embed = ebi.Build()).ConfigureAwait(false);
                 }
@@ -664,25 +663,25 @@ public partial class Administration(InteractiveService serv, BotConfigService co
         if (rol is 0 && role != null)
         {
             await Service.MemberRoleSet(ctx.Guild, role.Id).ConfigureAwait(false);
-            await ConfirmLocalizedAsync("member_role_set", role.Id).ConfigureAwait(false);
+            await ConfirmAsync(Strings.MemberRoleSet(ctx.Guild.Id, role.Id)).ConfigureAwait(false);
         }
 
         if (rol != 0 && role != null && rol == role.Id)
         {
-            await ErrorLocalizedAsync("member_role_already_set").ConfigureAwait(false);
+            await ErrorAsync(Strings.MemberRoleAlreadySet(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
         if (rol is 0 && role == null)
         {
-            await ErrorLocalizedAsync("member_role_missing").ConfigureAwait(false);
+            await ErrorAsync(Strings.MemberRoleDisabled(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
         if (rol != 0 && role is null)
         {
             var r = ctx.Guild.GetRole(rol);
-            await ConfirmLocalizedAsync("member_role_current", r.Id).ConfigureAwait(false);
+            await ConfirmAsync(Strings.MemberRoleCurrent(ctx.Guild.Id, r.Id)).ConfigureAwait(false);
             return;
         }
 
@@ -690,7 +689,7 @@ public partial class Administration(InteractiveService serv, BotConfigService co
         {
             var oldrole = ctx.Guild.GetRole(rol);
             await Service.MemberRoleSet(ctx.Guild, role.Id).ConfigureAwait(false);
-            await ConfirmLocalizedAsync("member_role_updated", oldrole.Id, role.Id).ConfigureAwait(false);
+            await ConfirmAsync(Strings.MemberRoleUpdated(ctx.Guild.Id, oldrole.Id, role.Id)).ConfigureAwait(false);
         }
     }
 
@@ -713,25 +712,25 @@ public partial class Administration(InteractiveService serv, BotConfigService co
         if (rol is 0 && role != null)
         {
             await Service.StaffRoleSet(ctx.Guild, role.Id).ConfigureAwait(false);
-            await ConfirmLocalizedAsync("staff_role_set", role.Id).ConfigureAwait(false);
+            await ConfirmAsync(Strings.StaffRoleSet(ctx.Guild.Id, role.Id)).ConfigureAwait(false);
         }
 
         if (rol != 0 && role != null && rol == role.Id)
         {
-            await ErrorLocalizedAsync("staff_role_already_set").ConfigureAwait(false);
+            await ErrorAsync(Strings.StaffRoleAlreadySet(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
         if (rol is 0 && role == null)
         {
-            await ErrorLocalizedAsync("staff_role_missing").ConfigureAwait(false);
+            await ErrorAsync(Strings.StaffRoleMissing(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
         if (rol != 0 && role is null)
         {
             var r = ctx.Guild.GetRole(rol);
-            await ConfirmLocalizedAsync("staff_role_current", r.Id).ConfigureAwait(false);
+            await ConfirmAsync(Strings.StaffRoleCurrent(ctx.Guild.Id, r.Id)).ConfigureAwait(false);
             return;
         }
 
@@ -739,7 +738,7 @@ public partial class Administration(InteractiveService serv, BotConfigService co
         {
             var oldrole = ctx.Guild.GetRole(rol);
             await Service.StaffRoleSet(ctx.Guild, role.Id).ConfigureAwait(false);
-            await ConfirmLocalizedAsync("staff_role_updated", oldrole.Id, role.Id).ConfigureAwait(false);
+            await ConfirmAsync(Strings.StaffRoleUpdated(ctx.Guild.Id, oldrole.Id, role.Id)).ConfigureAwait(false);
         }
     }
 
@@ -760,12 +759,12 @@ public partial class Administration(InteractiveService serv, BotConfigService co
         var r = await Service.GetStaffRole(ctx.Guild.Id);
         if (r == 0)
         {
-            await ctx.Channel.SendErrorAsync(GetText("staff_role_missing"), Config).ConfigureAwait(false);
+            await ctx.Channel.SendErrorAsync(Strings.StaffRoleMissing(ctx.Guild.Id), Config).ConfigureAwait(false);
         }
         else
         {
             await Service.StaffRoleSet(ctx.Guild, 0).ConfigureAwait(false);
-            await ctx.Channel.SendConfirmAsync(GetText("staff_role_disabled")).ConfigureAwait(false);
+            await ctx.Channel.SendConfirmAsync(Strings.StaffRoleDisabled(ctx.Guild.Id)).ConfigureAwait(false);
         }
     }
 
@@ -791,7 +790,7 @@ public partial class Administration(InteractiveService serv, BotConfigService co
 
         var embed = new EmbedBuilder()
             .WithOkColor()
-            .WithTitle(GetText("server_delmsgoncmd"))
+            .WithTitle(Strings.ServerDelmsgoncmd(ctx.Guild.Id))
             .WithDescription(enabled ? "✅" : "❌");
 
         var str = string.Join("\n", channels
@@ -806,7 +805,7 @@ public partial class Administration(InteractiveService serv, BotConfigService co
         if (string.IsNullOrWhiteSpace(str))
             str = "-";
 
-        embed.AddField(GetText("channel_delmsgoncmd"), str);
+        embed.AddField(Strings.ChannelDelmsgoncmd(ctx.Guild.Id), str);
 
         await ctx.Channel.EmbedAsync(embed).ConfigureAwait(false);
     }
@@ -831,11 +830,11 @@ public partial class Administration(InteractiveService serv, BotConfigService co
     {
         if (await Service.ToggleDeleteMessageOnCommand(ctx.Guild.Id))
         {
-            await ReplyConfirmLocalizedAsync("delmsg_on").ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.DelmsgOn(ctx.Guild.Id)).ConfigureAwait(false);
         }
         else
         {
-            await ReplyConfirmLocalizedAsync("delmsg_off").ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.DelmsgOff(ctx.Guild.Id)).ConfigureAwait(false);
         }
     }
 
@@ -889,13 +888,13 @@ public partial class Administration(InteractiveService serv, BotConfigService co
         switch (s)
         {
             case State.Disable:
-                await ReplyConfirmLocalizedAsync("delmsg_channel_off").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.DelmsgChannelOff(ctx.Guild.Id)).ConfigureAwait(false);
                 break;
             case State.Enable:
-                await ReplyConfirmLocalizedAsync("delmsg_channel_on").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.DelmsgChannelOn(ctx.Guild.Id)).ConfigureAwait(false);
                 break;
             default:
-                await ReplyConfirmLocalizedAsync("delmsg_channel_inherit").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.DelmsgChannelInherit(ctx.Guild.Id)).ConfigureAwait(false);
                 break;
         }
     }
@@ -918,7 +917,7 @@ public partial class Administration(InteractiveService serv, BotConfigService co
     public async Task Deafen(params IGuildUser[] users)
     {
         await AdministrationService.DeafenUsers(true, users).ConfigureAwait(false);
-        await ReplyConfirmLocalizedAsync("deafen").ConfigureAwait(false);
+        await ReplyConfirmAsync(Strings.Deafen(ctx.Guild.Id)).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -938,7 +937,7 @@ public partial class Administration(InteractiveService serv, BotConfigService co
     public async Task UnDeafen(params IGuildUser[] users)
     {
         await AdministrationService.DeafenUsers(false, users).ConfigureAwait(false);
-        await ReplyConfirmLocalizedAsync("undeafen").ConfigureAwait(false);
+        await ReplyConfirmAsync(Strings.Undeafen(ctx.Guild.Id)).ConfigureAwait(false);
     }
 
 
@@ -959,7 +958,7 @@ public partial class Administration(InteractiveService serv, BotConfigService co
     public async Task DelVoiChanl([Remainder] IVoiceChannel voiceChannel)
     {
         await voiceChannel.DeleteAsync().ConfigureAwait(false);
-        await ReplyConfirmLocalizedAsync("delvoich", Format.Bold(voiceChannel.Name)).ConfigureAwait(false);
+        await ReplyConfirmAsync(Strings.Delvoich(ctx.Guild.Id, Format.Bold(voiceChannel.Name))).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -979,7 +978,7 @@ public partial class Administration(InteractiveService serv, BotConfigService co
     public async Task CreatVoiChanl([Remainder] string channelName)
     {
         var ch = await ctx.Guild.CreateVoiceChannelAsync(channelName).ConfigureAwait(false);
-        await ReplyConfirmLocalizedAsync("createvoich", Format.Bold(ch.Name)).ConfigureAwait(false);
+        await ReplyConfirmAsync(Strings.Createvoich(ctx.Guild.Id, Format.Bold(ch.Name))).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -999,7 +998,7 @@ public partial class Administration(InteractiveService serv, BotConfigService co
     public async Task DelTxtChanl([Remainder] ITextChannel toDelete)
     {
         await toDelete.DeleteAsync().ConfigureAwait(false);
-        await ReplyConfirmLocalizedAsync("deltextchan", Format.Bold(toDelete.Name)).ConfigureAwait(false);
+        await ReplyConfirmAsync(Strings.Deltextchan(ctx.Guild.Id, Format.Bold(toDelete.Name))).ConfigureAwait(false);
     }
 
 
@@ -1020,7 +1019,7 @@ public partial class Administration(InteractiveService serv, BotConfigService co
     public async Task CreaTxtChanl([Remainder] string channelName)
     {
         var txtCh = await ctx.Guild.CreateTextChannelAsync(channelName).ConfigureAwait(false);
-        await ReplyConfirmLocalizedAsync("createtextchan", Format.Bold(txtCh.Name)).ConfigureAwait(false);
+        await ReplyConfirmAsync(Strings.Createtextchan(ctx.Guild.Id, Format.Bold(txtCh.Name))).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -1042,7 +1041,7 @@ public partial class Administration(InteractiveService serv, BotConfigService co
         var channel = (ITextChannel)ctx.Channel;
         topic ??= "";
         await channel.ModifyAsync(c => c.Topic = topic).ConfigureAwait(false);
-        await ReplyConfirmLocalizedAsync("set_topic").ConfigureAwait(false);
+        await ReplyConfirmAsync(Strings.SetTopic(ctx.Guild.Id)).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -1063,7 +1062,7 @@ public partial class Administration(InteractiveService serv, BotConfigService co
     {
         var channel = (ITextChannel)ctx.Channel;
         await channel.ModifyAsync(c => c.Name = name).ConfigureAwait(false);
-        await ReplyConfirmLocalizedAsync("set_channel_name").ConfigureAwait(false);
+        await ReplyConfirmAsync(Strings.SetChannelName(ctx.Guild.Id)).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -1087,9 +1086,9 @@ public partial class Administration(InteractiveService serv, BotConfigService co
         await channel.ModifyAsync(c => c.IsNsfw = !isEnabled).ConfigureAwait(false);
 
         if (isEnabled)
-            await ReplyConfirmLocalizedAsync("nsfw_set_false").ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.NsfwSetFalse(ctx.Guild.Id)).ConfigureAwait(false);
         else
-            await ReplyConfirmLocalizedAsync("nsfw_set_true").ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.NsfwSetTrue(ctx.Guild.Id)).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -1112,13 +1111,13 @@ public partial class Administration(InteractiveService serv, BotConfigService co
         var botPerms = ((SocketGuild)ctx.Guild).CurrentUser.GetPermissions(channel);
         if (!userPerms.Has(ChannelPermission.ManageMessages))
         {
-            await ReplyErrorLocalizedAsync("insuf_perms_u").ConfigureAwait(false);
+            await ReplyErrorAsync(Strings.InsufPermsU(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
         if (!botPerms.Has(ChannelPermission.ViewChannel))
         {
-            await ReplyErrorLocalizedAsync("insuf_perms_i").ConfigureAwait(false);
+            await ReplyErrorAsync(Strings.InsufPermsI(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
@@ -1175,20 +1174,20 @@ public partial class Administration(InteractiveService serv, BotConfigService co
         var botPerms = ((SocketGuild)ctx.Guild).CurrentUser.GetPermissions(channel);
         if (!userPerms.Has(ChannelPermission.ManageMessages))
         {
-            await ReplyErrorLocalizedAsync("insuf_perms_u").ConfigureAwait(false);
+            await ReplyErrorAsync(Strings.InsufPermsU(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
         if (!botPerms.Has(ChannelPermission.ManageMessages))
         {
-            await ReplyErrorLocalizedAsync("insuf_perms_i").ConfigureAwait(false);
+            await ReplyAsync(Strings.InsufPermsI(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
         var msg = await channel.GetMessageAsync(messageId).ConfigureAwait(false);
         if (msg == null)
         {
-            await ReplyErrorLocalizedAsync("msg_not_found").ConfigureAwait(false);
+            await ReplyErrorAsync(Strings.MsgNotFound(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
@@ -1206,7 +1205,7 @@ public partial class Administration(InteractiveService serv, BotConfigService co
         }
         else
         {
-            await ReplyErrorLocalizedAsync("time_too_long").ConfigureAwait(false);
+            await ReplyErrorAsync(Strings.TimeTooLong(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
@@ -1229,6 +1228,6 @@ public partial class Administration(InteractiveService serv, BotConfigService co
     public async Task RenameChannel(IGuildChannel channel, [Remainder] string name)
     {
         await channel.ModifyAsync(x => x.Name = name).ConfigureAwait(false);
-        await ConfirmLocalizedAsync("channel_renamed").ConfigureAwait(false);
+        await ConfirmAsync(Strings.ChannelRenamed(ctx.Guild.Id)).ConfigureAwait(false);
     }
 }

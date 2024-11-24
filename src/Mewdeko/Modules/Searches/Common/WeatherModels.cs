@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿
+
+using System.Text.Json.Serialization;
 
 namespace Mewdeko.Modules.Searches.Common;
 
@@ -67,13 +69,13 @@ public class Main
     /// <summary>
     ///     Gets or sets the minimum temperature at the moment.
     /// </summary>
-    [JsonProperty("temp_min")]
+    [JsonPropertyName("temp_min")]
     public double TempMin { get; set; }
 
     /// <summary>
     ///     Gets or sets the maximum temperature at the moment.
     /// </summary>
-    [JsonProperty("temp_max")]
+    [JsonPropertyName("temp_max")]
     public double TempMax { get; set; }
 }
 

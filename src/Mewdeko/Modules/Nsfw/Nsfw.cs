@@ -53,10 +53,10 @@ public class Nsfw(
     public async Task RedditNsfw(string subreddit)
     {
         var msg = await ctx.Channel.SendConfirmAsync(
-            $"{Config.LoadingEmote} Trying to get a post from `{subreddit}`...");
+            Strings.NsfwLoadingSubreddit(ctx.Guild.Id, subreddit));
         try
         {
-            RedditPost image;
+            RedditPost image = null;
             try
             {
                 image = await martineApi.RedditApi.GetRandomFromSubreddit(subreddit, Toptype.year)
@@ -69,9 +69,10 @@ public class Nsfw(
                     "Seems that NSFW Subreddit fetching has failed. Here\'s the error:\\nCode:{ExStatusCode}\\nContent: {ExContent}",
                     ex.StatusCode, ex.HasContent ? ex.Content : "No Content.");
                 await ctx.Channel.SendErrorAsync(
-                    "Unable to fetch nsfw subreddit. Please check console or report the issue at https://discord.gg/mewdeko.",
-                    Config);
-                return;
+                    Strings.NsfwApiFetchError(ctx.Guild.Id),
+                    Config
+                );
+
             }
 
             var eb = new EmbedBuilder
@@ -159,9 +160,10 @@ public class Nsfw(
         var tags = book.Tags.Select(i => i.Name).ToList();
         if (tags.Contains("lolicon") || tags.Contains("loli") || tags.Contains("shotacon") || tags.Contains("shota"))
         {
-            await ctx.Channel
-                .SendErrorAsync("This manga contains loli/shota content and is not allowed by Discord TOS!", Config)
-                .ConfigureAwait(false);
+            await ctx.Channel.SendErrorAsync(
+                Strings.NsfwLoliShotaContent(ctx.Guild.Id),
+                Config
+            );
             return;
         }
 
@@ -204,9 +206,10 @@ public class Nsfw(
             .GetSearchPageListAsync($"{search} {exclude} -lolicon -loli -shota -shotacon", page).ConfigureAwait(false);
         if (result.Result.Count == 0)
         {
-            await ctx.Channel
-                .SendErrorAsync("The search returned no results. Try again with a different query!", Config)
-                .ConfigureAwait(false);
+            await ctx.Channel.SendErrorAsync(
+                Strings.NsfwSearchNoResults(ctx.Guild.Id),
+                Config
+            );
             return;
         }
 
@@ -405,7 +408,9 @@ public class Nsfw(
                 return;
             case 0:
                 t.Change(Timeout.Infinite, Timeout.Infinite); //proper way to disable the timer
-                await ReplyConfirmLocalizedAsync("stopped").ConfigureAwait(false);
+                await ReplyConfirmAsync(
+                    Strings.NsfwAutohentaiStopped(ctx.Guild.Id)
+                );
                 return;
             case < 20:
                 return;
@@ -438,9 +443,10 @@ public class Nsfw(
             return t;
         });
 
-        await ReplyConfirmLocalizedAsync("autohentai_started",
-            interval,
-            string.Join(", ", tags)).ConfigureAwait(false);
+
+        await ReplyConfirmAsync(
+            Strings.NsfwAutohentaiStarted(ctx.Guild.Id, interval, string.Join(", ", tags))
+        );
     }
 
     /// <summary>
@@ -463,7 +469,7 @@ public class Nsfw(
             if (!Service.AutoHentaiTimers.TryRemove(ctx.Channel.Id, out t)) return;
 
             t.Change(Timeout.Infinite, Timeout.Infinite); //proper way to disable the timer
-            await ReplyConfirmLocalizedAsync("stopped").ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.Stopped(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
@@ -485,7 +491,7 @@ public class Nsfw(
             return t;
         });
 
-        await ReplyConfirmLocalizedAsync("started", interval).ConfigureAwait(false);
+        await ReplyConfirmAsync(Strings.Started(ctx.Guild.Id, interval)).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -510,7 +516,7 @@ public class Nsfw(
                 return;
             case 0:
                 t.Change(Timeout.Infinite, Timeout.Infinite); //proper way to disable the timer
-                await ReplyConfirmLocalizedAsync("stopped").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.Stopped(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             case < 20:
                 return;
@@ -534,7 +540,7 @@ public class Nsfw(
             return t;
         });
 
-        await ReplyConfirmLocalizedAsync("started", interval).ConfigureAwait(false);
+        await ReplyConfirmAsync(Strings.Started(ctx.Guild.Id, interval)).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -576,7 +582,7 @@ public class Nsfw(
             var linksEnum = images.Where(l => l != null).ToArray();
             if (!images.Any())
             {
-                await ReplyErrorLocalizedAsync("no_results").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.NoResults(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
@@ -621,7 +627,7 @@ public class Nsfw(
             var linksEnum = images.Where(l => l != null).ToArray();
             if (!images.Any())
             {
-                await ReplyErrorLocalizedAsync("no_results").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.NoResults(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
@@ -836,10 +842,10 @@ public class Nsfw(
         if (string.IsNullOrWhiteSpace(tag))
         {
             var blTags = await Service.GetBlacklistedTags(ctx.Guild.Id).ConfigureAwait(false);
-            await ctx.Channel.SendConfirmAsync(GetText("blacklisted_tag_list"),
-                blTags.Length > 0
-                    ? string.Join(", ", blTags)
-                    : "-").ConfigureAwait(false);
+            await ctx.Channel.SendConfirmAsync(
+                Strings.NsfwBlacklistTitle(ctx.Guild.Id),
+                blTags.Length > 0 ? string.Join(", ", blTags) : "-"
+            );
         }
         else
         {
@@ -847,9 +853,9 @@ public class Nsfw(
             var added = await Service.ToggleBlacklistTag(ctx.Guild.Id, tag).ConfigureAwait(false);
 
             if (added)
-                await ReplyConfirmLocalizedAsync("blacklisted_tag_add", tag).ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.BlacklistedTagAdd(ctx.Guild.Id, tag)).ConfigureAwait(false);
             else
-                await ReplyConfirmLocalizedAsync("blacklisted_tag_remove", tag).ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.BlacklistedTagRemove(ctx.Guild.Id, tag)).ConfigureAwait(false);
         }
     }
 
@@ -889,7 +895,7 @@ public class Nsfw(
 
         if (data is null || !string.IsNullOrWhiteSpace(data.Error))
         {
-            await ReplyErrorLocalizedAsync("no_results").ConfigureAwait(false);
+            await ReplyErrorAsync(Strings.NoResults(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 

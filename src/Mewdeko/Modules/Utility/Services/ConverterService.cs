@@ -1,10 +1,12 @@
 ﻿using System.Globalization;
 using System.IO;
 using System.Net.Http;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Xml;
 using Mewdeko.Modules.Utility.Common;
-using Newtonsoft.Json;
+
 using StackExchange.Redis;
 
 namespace Mewdeko.Modules.Utility.Services;
@@ -111,12 +113,12 @@ public class ConverterService : INService, IUnloadableService
                     Triggers = [u.Key], Modifier = u.Value, UnitType = unitTypeString
                 }).ToArray();
 
-                var fileData = (JsonConvert.DeserializeObject<ConvertUnit[]>(
+                var fileData = (JsonSerializer.Deserialize<ConvertUnit[]>(
                                     await File.ReadAllTextAsync("data/units.json").ConfigureAwait(false)) ??
                                 [])
                     .Where(x => x.UnitType != "currency");
 
-                var data = JsonConvert.SerializeObject(range.Append(baseType).Concat(fileData).ToList());
+                var data = JsonSerializer.Serialize(range.Append(baseType).Concat(fileData).ToList());
                 cache.Redis.GetDatabase()
                     .StringSet("converter_units", data, flags: CommandFlags.FireAndForget);
             }
@@ -147,6 +149,6 @@ public class Rates
     ///     Gets or sets the conversion rates for different currencies.
     ///     The key is the currency code and the value is the conversion rate to the base currency.
     /// </summary>
-    [JsonProperty("rates")]
+    [JsonPropertyName("rates")]
     public Dictionary<string, decimal> ConversionRates { get; set; }
 }

@@ -43,7 +43,7 @@ public partial class Utility
 
             if (!enabled)
             {
-                await ReplyErrorLocalizedAsync("message_count_disabled");
+                await ReplyErrorAsync(Strings.MessageCountDisabled(ctx.Guild.Id));
                 return;
             }
 
@@ -51,8 +51,8 @@ public partial class Utility
             var leastActive = cnt.MinBy(x => x.Count);
 
             var eb = new EmbedBuilder()
-                .WithTitle(GetText("user_message_count_title", user))
-                .WithDescription(GetText("user_message_count_description",
+                .WithTitle(Strings.UserMessageCountTitle(ctx.Guild.Id, user))
+                .WithDescription(Strings.UserMessageCountDescription(ctx.Guild.Id,
                     cnt.SumUlong(x => x.Count),
                     mostActive.ChannelId, mostActive.Count,
                     leastActive.ChannelId, leastActive.Count))
@@ -78,7 +78,7 @@ public partial class Utility
 
             if (!enabled)
             {
-                await ReplyErrorLocalizedAsync("message_count_disabled");
+                await ReplyErrorAsync(Strings.MessageCountDisabled(ctx.Guild.Id));
                 return;
             }
 
@@ -86,8 +86,8 @@ public partial class Utility
             var leastActive = cnt.MinBy(x => x.Count);
 
             var eb = new EmbedBuilder()
-                .WithTitle(GetText("channel_message_count_title", channel.Name))
-                .WithDescription(GetText("channel_message_count_description",
+                .WithTitle(Strings.ChannelMessageCountTitle(ctx.Guild.Id, channel.Name))
+                .WithDescription(Strings.ChannelMessageCountDescription(ctx.Guild.Id,
                     cnt.SumUlong(x => x.Count),
                     mostActive.UserId, mostActive.Count,
                     leastActive.UserId, leastActive.Count))
@@ -111,7 +111,7 @@ public partial class Utility
 
             if (!enabled)
             {
-                await ReplyErrorLocalizedAsync("message_count_disabled");
+                await ReplyErrorAsync(Strings.MessageCountDisabled(ctx.Guild.Id));
                 return;
             }
 
@@ -137,8 +137,8 @@ public partial class Utility
             var totalMessages = channelGroups.SumUlong(x => x.Count);
 
             var eb = new EmbedBuilder()
-                .WithTitle(GetText("server_message_stats_title", ctx.Guild.Name))
-                .WithDescription(GetText("server_message_stats_description",
+                .WithTitle(Strings.ServerMessageStatsTitle(ctx.Guild.Id, ctx.Guild.Name))
+                .WithDescription(Strings.ServerMessageStatsDescription(ctx.Guild.Id,
                     totalMessages,
                     mostActiveUser.UserId, mostActiveUser.Count,
                     leastActiveUser.UserId, leastActiveUser.Count,
@@ -164,7 +164,7 @@ public partial class Utility
 
             if (!enabled)
             {
-                await ReplyErrorLocalizedAsync("message_count_disabled");
+                await ReplyErrorAsync(Strings.MessageCountDisabled(ctx.Guild.Id));
                 return;
             }
 
@@ -180,7 +180,7 @@ public partial class Utility
             var totalMessages = cnt.SumUlong(x => x.Count);
 
             var eb = new EmbedBuilder()
-                .WithTitle(GetText("top_users_title", ctx.Guild.Name))
+                .WithTitle(Strings.TopUsersTitle(ctx.Guild.Id, ctx.Guild.Name))
                 .WithOkColor();
 
             var description = new StringBuilder();
@@ -189,7 +189,7 @@ public partial class Utility
                 var user = userGroups[i];
                 var userMention = MentionUtils.MentionUser(user.UserId);
                 var percentage = (user.Count * 100.0 / totalMessages).ToString("F2");
-                description.AppendLine(GetText("top_users_entry", i + 1, userMention, user.Count, percentage));
+                description.AppendLine(Strings.TopUsersEntry(ctx.Guild.Id, i + 1, userMention, user.Count, percentage));
             }
 
             eb.WithDescription(description.ToString());
@@ -212,15 +212,15 @@ public partial class Utility
             switch (minLength)
             {
                 case > 4098:
-                    await ReplyErrorLocalizedAsync("max_count_reached");
+                    await ReplyErrorAsync(Strings.MaxCountReached(ctx.Guild.Id));
                     return;
                 case 0:
-                    await ReplyConfirmLocalizedAsync("current_min_message_setting", config.MinMessageLength);
+                    await ReplyConfirmAsync(Strings.CurrentMinMessageSetting(ctx.Guild.Id, config.MinMessageLength));
                     break;
                 default:
                     config.MinMessageLength = minLength;
                     await guildSettingsService.UpdateGuildConfig(ctx.Guild.Id, config);
-                    await ReplyConfirmLocalizedAsync("min_message_length_set", minLength);
+                    await ReplyConfirmAsync(Strings.MinMessageLengthSet(ctx.Guild.Id, minLength));
                     break;
             }
         }
@@ -260,9 +260,9 @@ public partial class Utility
             var toggled = await Service.ToggleGuildMessageCount(ctx.Guild.Id);
 
             if (toggled)
-                await ReplyConfirmLocalizedAsync("message_counting_enabled");
+                await ReplyConfirmAsync(Strings.MessageCountingEnabled(ctx.Guild.Id));
             else
-                await ReplyConfirmLocalizedAsync("message_counting_disabled");
+                await ReplyConfirmAsync(Strings.MessageCountingDisabled(ctx.Guild.Id));
         }
 
         private async Task GenerateBusiestDaysGraph()
@@ -271,7 +271,7 @@ public partial class Utility
 
             if (busiestDays == null || busiestDays.Count() < 7)
             {
-                await ReplyErrorLocalizedAsync("insufficient_day_data", busiestDays?.Count() ?? 0);
+                await ReplyErrorAsync(Strings.InsufficientDayData(ctx.Guild.Id, busiestDays?.Count() ?? 0));
                 return;
             }
 
@@ -281,7 +281,7 @@ public partial class Utility
             ms.Position = 0;
 
             await ctx.Channel.SendFileAsync(ms, "busiest_days.png",
-                GetText("busiest_days_graph_title", ctx.Guild.Name));
+                Strings.BusiestDaysGraphTitle(ctx.Guild.Id, ctx.Guild.Name));
         }
 
         private async Task GenerateBusiestHoursGraph()
@@ -290,14 +290,14 @@ public partial class Utility
 
             if (busiestHours == null || busiestHours.Count() < 24)
             {
-                await ReplyErrorLocalizedAsync("insufficient_hour_data", busiestHours?.Count() ?? 0);
+                await ReplyErrorAsync(Strings.InsufficientHourData(ctx.Guild.Id, busiestHours?.Count() ?? 0));
                 return;
             }
 
             var userTimezone = await PromptForTimezone();
             if (userTimezone == null)
             {
-                await ReplyErrorLocalizedAsync("timezone_not_selected");
+                await ReplyErrorAsync(Strings.TimezoneNotSelected(ctx.Guild.Id));
                 return;
             }
 
@@ -308,7 +308,7 @@ public partial class Utility
             ms.Position = 0;
 
             await ctx.Channel.SendFileAsync(ms, "busiest_hours.png",
-                GetText("busiest_hours_graph_title", ctx.Guild.Name, userTimezone.Id));
+                Strings.BusiestHoursGraphTitle(ctx.Guild.Id, ctx.Guild.Name, userTimezone.Id));
         }
 
         private async Task<TimeZoneInfo?> PromptForTimezone()
@@ -327,10 +327,10 @@ public partial class Utility
             };
 
             var eb = new EmbedBuilder()
-                .WithTitle(GetText("timezone_select_title"))
-                .WithDescription(GetText("timezone_select_description",
+                .WithTitle(Strings.TimezoneSelectTitle(ctx.Guild.Id))
+                .WithDescription(Strings.TimezoneSelectDescription(ctx.Guild.Id,
                     string.Join("\n", commonTimeZones.Select((tz, i) => $"{i + 1}. {tz.DisplayName}"))))
-                .WithFooter(GetText("timezone_select_footer"))
+                .WithFooter(Strings.TimezoneSelectFooter(ctx.Guild.Id))
                 .WithOkColor();
 
             await ctx.Channel.SendMessageAsync(embed: eb.Build());
@@ -343,17 +343,17 @@ public partial class Utility
 
                 response = response.Trim().ToLowerInvariant();
 
-                if (response == GetText("timezone_cancel_keyword"))
+                if (response == Strings.TimezoneCancelKeyword(ctx.Guild.Id))
                     return null;
 
-                if (response == GetText("timezone_list_keyword"))
+                if (response == Strings.TimezoneListKeyword(ctx.Guild.Id))
                 {
                     var allTimeZones = TimeZoneInfo.GetSystemTimeZones()
                         .OrderBy(tz => tz.BaseUtcOffset)
                         .ThenBy(tz => tz.DisplayName);
 
                     var tzList = string.Join("\n", allTimeZones.Select(tz => $"{tz.Id}: {tz.DisplayName}"));
-                    await ctx.Channel.SendMessageAsync(GetText("timezone_full_list", tzList));
+                    await ctx.Channel.SendMessageAsync(Strings.TimezoneFullList(ctx.Guild.Id, tzList));
                     continue;
                 }
 
@@ -375,15 +375,15 @@ public partial class Utility
                     case > 1:
                     {
                         var matchEmbed = new EmbedBuilder()
-                            .WithTitle(GetText("timezone_multiple_matches_title"))
-                            .WithDescription(GetText("timezone_multiple_matches_description",
+                            .WithTitle(Strings.TimezoneMultipleMatchesTitle(ctx.Guild.Id))
+                            .WithDescription(Strings.TimezoneMultipleMatchesDescription(ctx.Guild.Id,
                                 string.Join("\n", matchingTimeZones.Select(tz => $"{tz.Id}: {tz.DisplayName}"))))
                             .WithColor(Color.Orange);
                         await ctx.Channel.SendMessageAsync(embed: matchEmbed.Build());
                         break;
                     }
                     default:
-                        await ctx.Channel.SendMessageAsync(GetText("timezone_no_match"));
+                        await ctx.Channel.SendMessageAsync(Strings.TimezoneNoMatch(ctx.Guild.Id));
                         break;
                 }
             }
@@ -403,10 +403,10 @@ public partial class Utility
         {
             var confirmMessage = (user, channel) switch
             {
-                (null, null) => GetText("confirm_reset_message_count_guild"),
-                (not null, null) => GetText("confirm_reset_message_count_user", user.Mention),
-                (null, not null) => GetText("confirm_reset_message_count_channel", channel.Mention),
-                (not null, not null) => GetText("confirm_reset_message_count_user_channel", user.Mention, channel.Mention)
+                (null, null) => Strings.ConfirmResetMessageCountGuild(ctx.Guild.Id),
+                (not null, null) => Strings.ConfirmResetMessageCountUser(ctx.Guild.Id, user.Mention),
+                (null, not null) => Strings.ConfirmResetMessageCountChannel(ctx.Guild.Id, channel.Mention),
+                (not null, not null) => Strings.ConfirmResetMessageCountUserChannel(ctx.Guild.Id, user.Mention, channel.Mention)
             };
 
             if (!await PromptUserConfirmAsync(confirmMessage, ctx.User.Id))
@@ -416,14 +416,14 @@ public partial class Utility
 
             var responseMessage = (user, channel, result) switch
             {
-                (null, null, true) => GetText("reset_message_count_success_guild"),
-                (not null, null, true) => GetText("reset_message_count_success_user", user.Mention),
-                (null, not null, true) => GetText("reset_message_count_success_channel", channel.Mention),
-                (not null, not null, true) => GetText("reset_message_count_success_user_channel", user.Mention, channel.Mention),
-                (null, null, false) => GetText("reset_message_count_fail_guild"),
-                (not null, null, false) => GetText("reset_message_count_fail_user", user.Mention),
-                (null, not null, false) => GetText("reset_message_count_fail_channel", channel.Mention),
-                (not null, not null, false) => GetText("reset_message_count_fail_user_channel", user.Mention, channel.Mention)
+                (null, null, true) => Strings.ResetMessageCountSuccessGuild(ctx.Guild.Id),
+                (not null, null, true) => Strings.ResetMessageCountSuccessUser(ctx.Guild.Id, user.Mention),
+                (null, not null, true) => Strings.ResetMessageCountSuccessChannel(ctx.Guild.Id, channel.Mention),
+                (not null, not null, true) => Strings.ResetMessageCountSuccessUserChannel(ctx.Guild.Id, user.Mention, channel.Mention),
+                (null, null, false) => Strings.ResetMessageCountFailGuild(ctx.Guild.Id),
+                (not null, null, false) => Strings.ResetMessageCountFailUser(ctx.Guild.Id, user.Mention),
+                (null, not null, false) => Strings.ResetMessageCountFailChannel(ctx.Guild.Id, channel.Mention),
+                (not null, not null, false) => Strings.ResetMessageCountFailUserChannel(ctx.Guild.Id, user.Mention, channel.Mention)
             };
 
             await (result ? ctx.Channel.SendConfirmAsync(responseMessage) : ctx.Channel.SendErrorAsync(responseMessage, Config));

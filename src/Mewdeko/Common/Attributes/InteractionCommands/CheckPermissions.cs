@@ -62,7 +62,7 @@ public sealed class CheckPermissions : PreconditionAttribute
             pc.Permissions != null &&
             pc.Permissions.CheckSlashPermissions(groupname, commandname, context.User, context.Channel, out index)
                 ? PreconditionResult.FromSuccess()
-                : PreconditionResult.FromError(perms.Strings.GetText("perm_prevent", context.Guild.Id, index + 1,
+                : PreconditionResult.FromError(perms.Strings.PermPrevent( context.Guild.Id, index + 1,
                     Format.Bold(pc.Permissions[index].GetCommand(await guildSettingsService.GetPrefix(context.Guild),
                         context.Guild as SocketGuild))));
     }

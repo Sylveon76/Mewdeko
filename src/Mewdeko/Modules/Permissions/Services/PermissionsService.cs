@@ -5,6 +5,7 @@ using Mewdeko.Common.ModuleBehaviors;
 using Mewdeko.Database.DbContextStuff;
 using Mewdeko.Modules.Permissions.Common;
 using Mewdeko.Services.strings;
+using Mewdeko.Services.Strings;
 using Microsoft.EntityFrameworkCore;
 
 namespace Mewdeko.Modules.Permissions.Services;
@@ -23,7 +24,7 @@ public class PermissionService : ILateBlocker, INService, IReadyExecutor
     /// <summary>
     ///     Service for accessing localized bot strings.
     /// </summary>
-    public readonly IBotStrings Strings;
+    public readonly GeneratedBotStrings Strings;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="PermissionService" /> class.
@@ -34,7 +35,7 @@ public class PermissionService : ILateBlocker, INService, IReadyExecutor
     /// <param name="client">The discord socket client</param>
     /// <param name="configService">The service for bot-wide configurations.</param>
     public PermissionService(DbContextProvider dbProvider,
-        IBotStrings strings,
+        GeneratedBotStrings strings,
         GuildSettingsService guildSettings, DiscordShardedClient client, BotConfig configService)
     {
         config = configService;
@@ -87,7 +88,7 @@ public class PermissionService : ILateBlocker, INService, IReadyExecutor
             {
                 try
                 {
-                    await channel.SendErrorAsync(Strings.GetText("perm_prevent", guild.Id, index + 1,
+                    await channel.SendErrorAsync(Strings.PermPrevent(ctx.Guild.Id, index + 1,
                             Format.Bold(pc.Permissions[index]
                                 .GetCommand(await guildSettings.GetPrefix(guild), (SocketGuild)guild))), config)
                         .ConfigureAwait(false);
@@ -181,7 +182,7 @@ public class PermissionService : ILateBlocker, INService, IReadyExecutor
             return false;
         try
         {
-            await ctx.Interaction.SendEphemeralErrorAsync(Strings.GetText("perm_prevent", guild.Id, index + 1,
+            await ctx.Interaction.SendEphemeralErrorAsync(Strings.PermPrevent(ctx.Guild.Id, index + 1,
                     Format.Bold(pc.Permissions[index]
                         .GetCommand(await guildSettings.GetPrefix(guild), (SocketGuild)guild))), config)
                 .ConfigureAwait(false);

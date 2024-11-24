@@ -6,6 +6,7 @@ using Mewdeko.Database.DbContextStuff;
 using Mewdeko.Modules.Administration.Services;
 using Mewdeko.Modules.Permissions.Common;
 using Mewdeko.Modules.Permissions.Services;
+using Mewdeko.Services.Strings;
 using Serilog;
 using Embed = Discord.Embed;
 
@@ -56,6 +57,7 @@ public class SuggestionsService : INService
     private readonly PermissionService perms;
     private readonly List<ulong> repostChecking;
     private readonly List<ulong> spamCheck;
+    private readonly GeneratedBotStrings Strings;
 
     /// <summary>
     ///     Initializes a new instance of the SuggestionsService class.
@@ -72,11 +74,12 @@ public class SuggestionsService : INService
         DiscordShardedClient client,
         AdministrationService aserv,
         PermissionService permserv,
-        GuildSettingsService guildSettings, EventHandler eventHandler, BotConfig config)
+        GuildSettingsService guildSettings, EventHandler eventHandler, BotConfig config, GeneratedBotStrings strings)
     {
         perms = permserv;
         this.guildSettings = guildSettings;
         this.config = config;
+        Strings = strings;
         repostChecking = [];
         spamCheck = [];
         adminserv = aserv;
@@ -1881,7 +1884,7 @@ public class SuggestionsService : INService
             await Sugnum(guild, sugnum1 + 1).ConfigureAwait(false);
             await Suggest(guild, sugnum1, t.Id, user.Id, suggestion).ConfigureAwait(false);
             if (interaction is not null)
-                await interaction.SendEphemeralFollowupConfirmAsync("Suggestion has been sent!").ConfigureAwait(false);
+                await interaction.SendEphemeralFollowupConfirmAsync(Strings.SuggestionSent(guild.Id)).ConfigureAwait(false);
         }
         else
         {
@@ -1932,9 +1935,9 @@ public class SuggestionsService : INService
             await Suggest(guild, sugnum1, msg.Id, user.Id, suggestion).ConfigureAwait(false);
 
             if (interaction is not null)
-                await interaction.SendEphemeralConfirmAsync("Suggestion has been sent!").ConfigureAwait(false);
+                await interaction.SendEphemeralFollowupConfirmAsync(Strings.SuggestionSent(guild.Id));
             else
-                await channel.SendConfirmAsync("Suggestion sent!").ConfigureAwait(false);
+                await channel.SendConfirmAsync(Strings.SuggestionSent(guild.Id)).ConfigureAwait(false);
         }
     }
 

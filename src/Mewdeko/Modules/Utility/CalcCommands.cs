@@ -29,12 +29,12 @@ public partial class Utility
             try
             {
                 var result = Evaluate(expression);
-                await ctx.Channel.SendConfirmAsync($"⚙ {GetText("calc_result")}", result.ToString())
+                await ctx.Channel.SendConfirmAsync($"⚙ {Strings.CalcResult(ctx.Guild.Id)}", result.ToString())
                     .ConfigureAwait(false);
             }
             catch (Exception ex)
             {
-                await ctx.Channel.SendErrorAsync($"⚙ {GetText("calc_error")}", ex.Message).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync($"⚙ {Strings.CalcError(ctx.Guild.Id)}", ex.Message).ConfigureAwait(false);
             }
         }
 
@@ -53,7 +53,7 @@ public partial class Utility
             {
                 var plotModel = new PlotModel
                 {
-                    Title = GetText("graph_title", function)
+                    Title = Strings.GraphTitle(ctx.Guild.Id, function)
                 };
                 plotModel.Axes.Add(new LinearAxis
                 {
@@ -77,12 +77,12 @@ public partial class Utility
                 pngExporter.Export(plotModel, stream);
                 stream.Position = 0;
 
-                await ctx.Channel.SendFileAsync(stream, "graph.png", GetText("graph_caption", function))
+                await ctx.Channel.SendFileAsync(stream, "graph.png", Strings.GraphCaption(ctx.Guild.Id, function))
                     .ConfigureAwait(false);
             }
             catch (Exception ex)
             {
-                await ctx.Channel.SendErrorAsync($"⚙ {GetText("graph_error")}", ex.Message).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync($"⚙ {Strings.GraphError(ctx.Guild.Id)}", ex.Message).ConfigureAwait(false);
             }
         }
 
@@ -99,12 +99,12 @@ public partial class Utility
             {
                 var expr = Infix.ParseOrThrow(expression);
                 var expanded = Algebraic.Expand(expr);
-                await ctx.Channel.SendConfirmAsync($"⚙ {GetText("symbolic_result")}", Infix.Format(expanded))
+                await ctx.Channel.SendConfirmAsync($"⚙ {Strings.SymbolicResult(ctx.Guild.Id)}", Infix.Format(expanded))
                     .ConfigureAwait(false);
             }
             catch (Exception ex)
             {
-                await ctx.Channel.SendErrorAsync($"⚙ {GetText("symbolic_error")}", ex.Message).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync($"⚙ {Strings.SymbolicError(ctx.Guild.Id)}", ex.Message).ConfigureAwait(false);
             }
         }
 
@@ -123,9 +123,9 @@ public partial class Utility
             };
 
             var prefix = await guildSettings.GetPrefix(ctx.Guild);
-            var message = GetText("calcops", prefix) + "\n" + string.Join(", ", operations);
+            var message = Strings.CalcOps(ctx.Guild.Id, prefix) + "\n" + string.Join(", ", operations);
 
-            await ctx.Channel.SendConfirmAsync("⚙ " + GetText("available_operations"), message).ConfigureAwait(false);
+            await ctx.Channel.SendConfirmAsync(Strings.CalcOpsTitle(ctx.Guild.Id), message).ConfigureAwait(false);
         }
 
         private static double Evaluate(string expression)

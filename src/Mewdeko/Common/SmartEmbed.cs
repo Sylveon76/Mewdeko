@@ -1,4 +1,5 @@
-using Newtonsoft.Json;
+
+using System.Text.Json;
 using Serilog;
 
 namespace Mewdeko.Common;
@@ -41,7 +42,7 @@ public static class SmartEmbed
             NewEmbed newEmbed;
             try
             {
-                newEmbed = JsonConvert.DeserializeObject<NewEmbed>(input);
+                newEmbed = JsonSerializer.Deserialize<NewEmbed>(input);
             }
             catch
             {

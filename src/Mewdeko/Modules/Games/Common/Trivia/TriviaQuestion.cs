@@ -1,6 +1,6 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 
-// THANKS @ShoMinamimoto for suggestions and coding help
 namespace Mewdeko.Modules.Games.Common.Trivia;
 
 /// <summary>
@@ -22,45 +22,63 @@ public class TriviaQuestion
     private string? cleanAnswer;
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="TriviaQuestion" /> class.
+    /// Initializes a new instance of the <see cref="TriviaQuestion"/> class.
+    /// Used for JSON deserialization.
     /// </summary>
-    /// <param name="q">The question.</param>
-    /// <param name="a">The answer.</param>
-    /// <param name="c">The category.</param>
-    /// <param name="img">The image URL.</param>
-    /// <param name="answerImage">The answer image URL.</param>
+    public TriviaQuestion()
+    {
+        Question = "";
+        Answer = "";
+        Category = "";
+        ImageUrl = "";
+        AnswerImageUrl = "";
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TriviaQuestion"/> class with specified values.
+    /// </summary>
+    /// <param name="q">The question text.</param>
+    /// <param name="a">The answer text.</param>
+    /// <param name="c">The category of the question.</param>
+    /// <param name="img">Optional URL for an image associated with the question.</param>
+    /// <param name="answerImage">Optional URL for an image associated with the answer. If not provided, uses the question image URL.</param>
     public TriviaQuestion(string q, string a, string c, string? img = null, string? answerImage = null)
     {
         Question = q;
         Answer = a;
         Category = c;
-        ImageUrl = img;
-        AnswerImageUrl = answerImage ?? img;
+        ImageUrl = img ?? "";
+        AnswerImageUrl = answerImage ?? img ?? "";
     }
 
     /// <summary>
     ///     Gets or sets the category of the question.
     /// </summary>
+    [JsonPropertyName("c")]
     public string Category { get; set; }
 
     /// <summary>
     ///     Gets or sets the question.
     /// </summary>
+    [JsonPropertyName("q")]
     public string Question { get; set; }
 
     /// <summary>
     ///     Gets or sets the image URL associated with the question.
     /// </summary>
+    [JsonPropertyName("img")]
     public string ImageUrl { get; set; }
 
     /// <summary>
     ///     Gets or sets the answer image URL associated with the question.
     /// </summary>
+    [JsonPropertyName("answerImage")]
     public string AnswerImageUrl { get; set; }
 
     /// <summary>
     ///     Gets or sets the answer to the question.
     /// </summary>
+    [JsonPropertyName("a")]
     public string Answer { get; set; }
 
     /// <summary>

@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text;
+using System.Text.Json;
 using Discord.Commands;
 using Fergun.Interactive;
 using Fergun.Interactive.Pagination;
@@ -10,7 +11,6 @@ using Mewdeko.Modules.Permissions.Services;
 using Mewdeko.Services.Impl;
 using Mewdeko.Services.Settings;
 using Mewdeko.Services.strings;
-using Newtonsoft.Json;
 using Serilog;
 using Swan;
 
@@ -47,10 +47,14 @@ public class Help(
         try
         {
             var msg = await ctx.Channel.SendConfirmAsync(
-                $"{config.Data.LoadingEmote} Exporting commands to json, please wait a moment...");
+                Strings.CommandsExportInProgress(ctx.Guild.Id, config.Data.LoadingEmote));
             var prefix = await guildSettings.GetPrefix(ctx.Guild);
             var modules = cmds.Modules;
             var newList = new ConcurrentDictionary<string, List<Command>>();
+            var options = new JsonSerializerOptions
+            {
+                WriteIndented = true, PropertyNamingPolicy = new OrderedResolver()
+            };
             foreach (var i in modules)
             {
                 var modulename = i.IsSubmodule ? i.Parent.Name : i.Name;
@@ -86,22 +90,15 @@ public class Help(
                 });
             }
 
-            var settings = new JsonSerializerSettings
-            {
-                ContractResolver = new OrderedResolver()
-            };
-            var jsonVersion = JsonConvert.SerializeObject(newList.Select(x => new Module(x.Value, x.Key)),
-                Formatting.Indented, settings);
-            await using var stream = new MemoryStream(Encoding.Default.GetBytes(jsonVersion));
+            var jsonVersion = JsonSerializer.Serialize(newList.Select(x => new Module(x.Value, x.Key)), options);
+            await using var stream = new MemoryStream(Encoding.UTF8.GetBytes(jsonVersion));
             await ctx.Channel.SendFileAsync(stream, $"Commands-{DateTime.UtcNow:u}.json");
             await msg.DeleteAsync();
             await stream.DisposeAsync();
         }
         catch (Exception e)
         {
-            await ctx.Channel.SendErrorAsync(
-                "Seems like there was an issue dumping commands to a json file. Please check console for issues.",
-                Config);
+            await ctx.Channel.SendErrorAsync(Strings.CommandsExportError(ctx.Guild.Id), Config);
             Log.Error(e, "An error has occured while dumping commands to json");
         }
     }
@@ -118,9 +115,7 @@ public class Help(
             .Where(c => c.Name.Contains(commandname, StringComparison.InvariantCulture));
         if (!commandInfos.Any())
         {
-            await ctx.Channel.SendErrorAsync(
-                    "That command wasn't found! Please retry your search with a different term.", Config)
-                .ConfigureAwait(false);
+            await ctx.Channel.SendErrorAsync(Strings.SearchCommandNotFound(ctx.Guild.Id), Config);
         }
         else
         {
@@ -135,8 +130,8 @@ public class Help(
 
             var eb = new EmbedBuilder()
                 .WithOkColor()
-                .AddField("Command", cmdnames, true)
-                .AddField("Description", cmdremarks, true);
+                .AddField(Strings.SearchCommandTitleCommand(ctx.Guild.Id), cmdnames, true)
+                .AddField(Strings.SearchCommandTitleDescription(ctx.Guild.Id), cmdremarks, true);
             await ctx.Channel.SendMessageAsync(embed: eb.Build()).ConfigureAwait(false);
         }
     }
@@ -157,9 +152,8 @@ public class Help(
         }
         catch (Exception e)
         {
-            await ctx.Channel.SendErrorAsync(
-                "There was an issue sending the help command, please check console and report to the support server.",
-                Config);
+            await ctx.Channel.SendErrorAsync(Strings.HelpError(ctx.Guild?.Id ?? 0), Config);
+
             Log.Error(e, "There was an issue embedding the help command");
         }
     }
@@ -171,9 +165,7 @@ public class Help(
     [Aliases]
     public async Task Donate()
     {
-        await ctx.Channel.SendConfirmAsync(
-                "If you would like to support the project, here's how:\nKo-Fi: https://ko-fi.com/mewdeko\nI appreciate any donations as they will help improve Mewdeko for the better!")
-            .ConfigureAwait(false);
+        await ctx.Channel.SendConfirmAsync(Strings.DonateMessage(ctx.Guild.Id));
     }
 
     /// <summary>
@@ -204,7 +196,7 @@ public class Help(
 
         if (!commandInfos.Any())
         {
-            await ReplyErrorLocalizedAsync("module_not_found_or_cant_exec").ConfigureAwait(false);
+            await ReplyErrorAsync(Strings.ModuleNotFoundOrCantExec(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
@@ -246,6 +238,7 @@ public class Help(
             .Build();
 
         await serv.SendPaginatorAsync(paginator, Context.Channel, TimeSpan.FromMinutes(60)).ConfigureAwait(false);
+        return;
 
         Task<PageBuilder> PageFactory(int page)
         {
@@ -286,10 +279,10 @@ public class Help(
             if (commandsOnPage.Any())
                 pageBuilder.AddField(currentModule, $"```css\n{string.Join("\n", commandsOnPage)}\n```");
 
-            pageBuilder.WithDescription(
-                $"✅: You can use this command.\n❌: You cannot use this command.\n" +
-                $"{config.Data.LoadingEmote}: If you need any help don't hesitate to join [The Support Server](https://discord.gg/mewdeko)\n" +
-                $"Do `{prefix}h commandname` to see info on that command");
+            pageBuilder.WithDescription(Strings.HelpCommandListDescription(
+                ctx.Guild?.Id ?? 0,
+                config.Data.LoadingEmote,
+                prefix));
 
             return Task.FromResult(pageBuilder);
         }
@@ -311,7 +304,7 @@ public class Help(
             com = cmds.Commands.FirstOrDefault(x => x.Aliases.Any(cmdName => cmdName.ToLowerInvariant() == toSearch));
             if (com == null)
             {
-                await ReplyErrorLocalizedAsync("command_not_found").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.CommandNotFound(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
         }
@@ -336,8 +329,7 @@ public class Help(
     [Aliases]
     public async Task Guide()
     {
-        await ctx.Channel.SendConfirmAsync("You can find the website at https://mewdeko.tech")
-            .ConfigureAwait(false);
+        await ctx.Channel.SendConfirmAsync(Strings.GuideMessage(ctx.Guild.Id));
     }
 
     /// <summary>
@@ -347,7 +339,7 @@ public class Help(
     [Aliases]
     public async Task Source()
     {
-        await ctx.Channel.SendConfirmAsync("https://github.com/SylveonDeko/Mewdeko").ConfigureAwait(false);
+        await ctx.Channel.SendConfirmAsync(Strings.SourceMessage(ctx.Guild.Id));
     }
 
     /// <summary>
@@ -358,10 +350,9 @@ public class Help(
     [RequireContext(ContextType.Guild)]
     public async Task Vote()
     {
-        await ctx.Channel.EmbedAsync(new EmbedBuilder().WithOkColor()
-                .WithDescription(
-                    "Vote here for Mewdeko!\n[Vote Link](https://top.gg/bot/752236274261426212)\nMake sure to join the support server! \n[Link](https://mewdeko.tech/support)"))
-            .ConfigureAwait(false);
+        await ctx.Channel.EmbedAsync(new EmbedBuilder()
+            .WithOkColor()
+            .WithDescription(Strings.VoteDescription(ctx.Guild.Id)));
     }
 }
 

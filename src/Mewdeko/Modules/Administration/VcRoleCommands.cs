@@ -25,12 +25,12 @@ public partial class Administration
         {
             if (await Service.RemoveVcRole(ctx.Guild.Id, vcId))
             {
-                await ReplyConfirmLocalizedAsync("vcrole_removed", Format.Bold(vcId.ToString()))
+                await ReplyConfirmAsync(Strings.VcroleRemoved(ctx.Guild.Id, Format.Bold(vcId.ToString())))
                     .ConfigureAwait(false);
             }
             else
             {
-                await ReplyErrorLocalizedAsync("vcrole_not_found").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.VcroleNotFound(ctx.Guild.Id)).ConfigureAwait(false);
             }
         }
 
@@ -52,20 +52,20 @@ public partial class Administration
                 {
                     if (await Service.RemoveVcRole(ctx.Guild.Id, chan.Id))
                     {
-                        await ReplyConfirmLocalizedAsync("vcrole_removed", Format.Bold(chan.Name))
+                        await ReplyConfirmAsync(Strings.VcroleRemoved(ctx.Guild.Id, Format.Bold(chan.Name)))
                             .ConfigureAwait(false);
                     }
                 }
                 else
                 {
                     await Service.AddVcRole(ctx.Guild.Id, role, chan.Id);
-                    await ReplyConfirmLocalizedAsync("vcrole_added", Format.Bold(chan.Name), Format.Bold(role.Name))
+                    await ReplyConfirmAsync(Strings.VcroleAdded(ctx.Guild.Id, Format.Bold(chan.Name), Format.Bold(role.Name)))
                         .ConfigureAwait(false);
                 }
             }
             else
             {
-                await ctx.Channel.SendErrorAsync("This is not a voice channel!", Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.NotVoiceChannel(ctx.Guild.Id), Config);
             }
         }
 
@@ -86,19 +86,19 @@ public partial class Administration
 
             if (vc == null || vc.GuildId != user.GuildId)
             {
-                await ReplyErrorLocalizedAsync("must_be_in_voice").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.MustBeInVoice(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
             if (role == null)
             {
                 if (await Service.RemoveVcRole(ctx.Guild.Id, vc.Id))
-                    await ReplyConfirmLocalizedAsync("vcrole_removed", Format.Bold(vc.Name)).ConfigureAwait(false);
+                    await ReplyConfirmAsync(Strings.VcroleRemoved(ctx.Guild.Id, Format.Bold(vc.Name))).ConfigureAwait(false);
             }
             else
             {
                 await Service.AddVcRole(ctx.Guild.Id, role, vc.Id);
-                await ReplyConfirmLocalizedAsync("vcrole_added", Format.Bold(vc.Name), Format.Bold(role.Name))
+                await ReplyConfirmAsync(Strings.VcroleAdded(ctx.Guild.Id, Format.Bold(vc.Name), Format.Bold(role.Name)))
                     .ConfigureAwait(false);
             }
         }
@@ -118,7 +118,7 @@ public partial class Administration
             {
                 if (roles.Count == 0)
                 {
-                    text = GetText("no_vcroles");
+                    text = Strings.NoVcroles(ctx.Guild.Id);
                 }
                 else
                 {
@@ -128,11 +128,11 @@ public partial class Administration
             }
             else
             {
-                text = GetText("no_vcroles");
+                text = Strings.NoVcroles(ctx.Guild.Id);
             }
 
             await ctx.Channel.EmbedAsync(new EmbedBuilder().WithOkColor()
-                    .WithTitle(GetText("vc_role_list"))
+                    .WithTitle(Strings.VcRoleList(ctx.Guild.Id))
                     .WithDescription(text))
                 .ConfigureAwait(false);
         }

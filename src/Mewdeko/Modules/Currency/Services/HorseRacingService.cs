@@ -96,7 +96,7 @@ public class HorseRacingService : INService
     /// </summary>
     /// <param name="guildId">The ID of the guild where the race is taking place.</param>
     /// <returns>A list of updated racer progress.</returns>
-    public async Task<List<RacerProgress>> UpdateRaceProgress(ulong guildId)
+    public async Task<List<RacerProgress>>? UpdateRaceProgress(ulong guildId)
     {
         if (!races.TryGetValue(guildId, out var race))
             return [];

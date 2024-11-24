@@ -38,7 +38,6 @@ public class MewdekoService : IHostedService
     /// </summary>
     /// <param name="cancellationToken">A <see cref="CancellationToken" /> that can be used to cancel the stop operation.</param>
     /// <returns>A <see cref="Task" /> representing the asynchronous operation of stopping the bot.</returns>
-    /// <remarks>
     public Task StopAsync(CancellationToken cancellationToken)
     {
         Environment.Exit(0);

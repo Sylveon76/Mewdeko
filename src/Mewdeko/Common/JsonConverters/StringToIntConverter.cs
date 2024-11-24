@@ -1,51 +1,47 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Mewdeko.Common.JsonConverters;
 
 /// <summary>
 ///     Provides a converter for converting string to int and vice versa for JSON operations.
 /// </summary>
-public class StringToIntConverter : JsonConverter
+/// <summary>
+///     Provides a converter for converting between string and integer values during JSON serialization.
+/// </summary>
+public class StringToIntConverter : JsonConverter<string>
 {
     /// <summary>
-    ///     Determines whether this instance can convert the specified object type.
+    ///     Reads and converts the JSON to a string.
     /// </summary>
-    /// <param name="objectType">Type of the object.</param>
-    /// <returns>true if this instance can convert the specified object type; otherwise, false.</returns>
-    public override bool CanConvert(Type objectType)
+    /// <param name="reader">The reader to get the value from.</param>
+    /// <param name="typeToConvert">The type to convert.</param>
+    /// <param name="options">Options for reading the JSON.</param>
+    /// <returns>A string representation of the value.</returns>
+    public override string Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        return objectType == typeof(string);
+        return reader.GetString();
     }
 
     /// <summary>
-    ///     Writes the JSON representation of the object.
+    ///     Writes a string value as JSON.
     /// </summary>
-    /// <param name="writer">The JsonWriter to write to.</param>
-    /// <param name="value">The value to write.</param>
-    /// <param name="serializer">The calling serializer.</param>
-    public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+    /// <param name="writer">The writer to write to.</param>
+    /// <param name="value">The value to convert.</param>
+    /// <param name="options">Options for writing the JSON.</param>
+    /// <remarks>
+    ///     If the string can be parsed as an integer, writes it as a number.
+    ///     Otherwise, writes a null value.
+    /// </remarks>
+    public override void Write(Utf8JsonWriter writer, string value, JsonSerializerOptions options)
     {
-        if (value is string strValue && int.TryParse(strValue, out var intValue))
+        if (int.TryParse(value, out var intValue))
         {
-            writer.WriteValue(intValue);
+            writer.WriteNumberValue(intValue);
         }
         else
         {
-            writer.WriteNull();
+            writer.WriteNullValue();
         }
-    }
-
-    /// <summary>
-    ///     Reads the JSON representation of the object.
-    /// </summary>
-    /// <param name="reader">The JsonReader to read from.</param>
-    /// <param name="objectType">Type of the object.</param>
-    /// <param name="existingValue">The existing value of object being read.</param>
-    /// <param name="serializer">The calling serializer.</param>
-    /// <returns>The object value.</returns>
-    public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
-    {
-        // Convert back to string during deserialization
-        return reader.Value?.ToString();
     }
 }

@@ -22,11 +22,11 @@ public partial class SlashAdministration
             var success = await Service.AddAutoBanRole(Context.Guild.Id, role.Id);
             if (success)
             {
-                await ReplyConfirmLocalizedAsync("abrole_add", role.Mention).ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.AbroleAdd(ctx.Guild.Id, role.Mention)).ConfigureAwait(false);
             }
             else
             {
-                await ReplyErrorLocalizedAsync("abrole_exists", role.Mention).ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.AbroleExists(ctx.Guild.Id, role.Mention)).ConfigureAwait(false);
             }
         }
 
@@ -40,11 +40,11 @@ public partial class SlashAdministration
             var success = await Service.RemoveAutoBanRole(Context.Guild.Id, role.Id);
             if (success)
             {
-                await ReplyConfirmLocalizedAsync("abrole_remove", role.Mention).ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.AbroleRemove(ctx.Guild.Id, role.Mention)).ConfigureAwait(false);
             }
             else
             {
-                await ReplyErrorLocalizedAsync("abrole_notexists", role.Mention).ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.AbroleNotexists(ctx.Guild.Id, role.Mention)).ConfigureAwait(false);
             }
         }
     }

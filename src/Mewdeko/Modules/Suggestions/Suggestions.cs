@@ -27,7 +27,7 @@ public partial class Suggestions : MewdekoModuleBase<SuggestionsService>
         if (channel == null)
         {
             await Service.SetSuggestionChannelId(ctx.Guild, 0).ConfigureAwait(false);
-            await ctx.Channel.SendConfirmAsync("Suggestions Disabled!").ConfigureAwait(false);
+            await ctx.Channel.SendConfirmAsync(Strings.SuggestionsDisabled(ctx.Guild.Id));
         }
         else
         {
@@ -56,7 +56,7 @@ public partial class Suggestions : MewdekoModuleBase<SuggestionsService>
         var suggest = (await Service.Suggestions(ctx.Guild.Id, num)).FirstOrDefault();
         if (suggest is null)
         {
-            await ctx.Channel.SendErrorAsync("That suggestion wasn't found! Please double check the number.", Config)
+            await ctx.Channel.SendErrorAsync(Strings.SuggestionNotFound(ctx.Guild.Id), Config)
                 .ConfigureAwait(false);
             return;
         }
@@ -112,15 +112,15 @@ public partial class Suggestions : MewdekoModuleBase<SuggestionsService>
         var suggests = await Service.Suggestions(ctx.Guild.Id);
         if (suggests.Count == 0)
         {
-            await ctx.Channel.SendErrorAsync("There are no suggestions to clear.", Config).ConfigureAwait(false);
+            await ctx.Channel.SendErrorAsync(Strings.NoSuggestionsToClear(ctx.Guild.Id), Config);
             return;
         }
 
-        if (await PromptUserConfirmAsync("Are you sure you want to clear all suggestions? ***This cannot be undone.***",
+        if (await PromptUserConfirmAsync(Strings.ClearSuggestionsConfirm(ctx.Guild.Id),
                 ctx.User.Id).ConfigureAwait(false))
         {
             await Service.SuggestReset(ctx.Guild).ConfigureAwait(false);
-            await ctx.Channel.SendConfirmAsync("Suggestions cleared.").ConfigureAwait(false);
+            await ctx.Channel.SendConfirmAsync(Strings.SuggestionsCleared(ctx.Guild.Id));
         }
     }
 

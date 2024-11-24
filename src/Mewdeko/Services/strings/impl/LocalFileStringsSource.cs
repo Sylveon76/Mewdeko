@@ -1,5 +1,5 @@
 ﻿using System.IO;
-using Newtonsoft.Json;
+using System.Text.Json;
 using Serilog;
 using YamlDotNet.Serialization;
 
@@ -36,7 +36,7 @@ public class LocalFileStringsSource : IStringsSource
         {
             try
             {
-                var langDict = JsonConvert.DeserializeObject<Dictionary<string, string>>(File.ReadAllText(file));
+                var langDict = JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText(file));
                 var localeName = GetLocaleName(file);
                 outputDict[localeName] = langDict;
             }

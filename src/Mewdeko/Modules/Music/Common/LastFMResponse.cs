@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿
+
+using System.Text.Json.Serialization;
 
 namespace Mewdeko.Modules.Music.Common;
 
@@ -10,17 +12,17 @@ public class Artist
     /// <summary>
     ///     Gets or sets the MusicBrainz ID of the artist.
     /// </summary>
-    [JsonProperty("mbid")] public string Mbid;
+    [JsonPropertyName("mbid")] public string Mbid;
 
     /// <summary>
     ///     Gets or sets the name of the artist.
     /// </summary>
-    [JsonProperty("name")] public string Name;
+    [JsonPropertyName("name")] public string Name;
 
     /// <summary>
     ///     Gets or sets the URL of the Last.fm page for the artist.
     /// </summary>
-    [JsonProperty("url")] public string Url;
+    [JsonPropertyName("url")] public string Url;
 }
 
 /// <summary>
@@ -31,7 +33,7 @@ public class Attr
     /// <summary>
     ///     Gets or sets the artist name associated with the similar tracks.
     /// </summary>
-    [JsonProperty("artist")] public string Artist;
+    [JsonPropertyName("artist")] public string Artist;
 }
 
 /// <summary>
@@ -42,12 +44,12 @@ public class Image
     /// <summary>
     ///     Gets or sets the size of the image (e.g., small, medium, large).
     /// </summary>
-    [JsonProperty("size")] public string Size;
+    [JsonPropertyName("size")] public string Size;
 
     /// <summary>
     ///     Gets or sets the URL of the image.
     /// </summary>
-    [JsonProperty("#text")] public string Text;
+    [JsonPropertyName("#text")] public string Text;
 }
 
 /// <summary>
@@ -58,7 +60,7 @@ public class LastFmResponse
     /// <summary>
     ///     Gets or sets the similar tracks returned by the API.
     /// </summary>
-    [JsonProperty("similartracks")] public Similartracks? Similartracks;
+    [JsonPropertyName("similartracks")] public Similartracks? Similartracks;
 }
 
 /// <summary>
@@ -69,12 +71,12 @@ public class Similartracks
     /// <summary>
     ///     Gets or sets additional attributes for the similar tracks.
     /// </summary>
-    [JsonProperty("@attr")] public Attr Attr;
+    [JsonPropertyName("@attr")] public Attr Attr;
 
     /// <summary>
     ///     Gets or sets the list of similar tracks.
     /// </summary>
-    [JsonProperty("track")] public List<Track> Track;
+    [JsonPropertyName("track")] public List<Track> Track;
 }
 
 /// <summary>
@@ -85,12 +87,12 @@ public class Streamable
     /// <summary>
     ///     Gets or sets the flag indicating if the full track is streamable.
     /// </summary>
-    [JsonProperty("fulltrack")] public string Fulltrack;
+    [JsonPropertyName("fulltrack")] public string Fulltrack;
 
     /// <summary>
     ///     Gets or sets the text indicating whether a track is streamable.
     /// </summary>
-    [JsonProperty("#text")] public string Text;
+    [JsonPropertyName("#text")] public string Text;
 }
 
 /// <summary>
@@ -101,45 +103,45 @@ public class Track
     /// <summary>
     ///     Gets or sets the artist of the track.
     /// </summary>
-    [JsonProperty("artist")] public Artist Artist;
+    [JsonPropertyName("artist")] public Artist Artist;
 
     /// <summary>
     ///     Gets or sets the duration of the track in milliseconds.
     /// </summary>
-    [JsonProperty("duration")] public int? Duration;
+    [JsonPropertyName("duration")] public int? Duration;
 
     /// <summary>
     ///     Gets or sets the list of images associated with the track.
     /// </summary>
-    [JsonProperty("image")] public List<Image> Image;
+    [JsonPropertyName("image")] public List<Image> Image;
 
     /// <summary>
     ///     Gets or sets the match score indicating the relevance of the track in the context of the search.
     /// </summary>
-    [JsonProperty("match")] public double? Match;
+    [JsonPropertyName("match")] public double? Match;
 
     /// <summary>
     ///     Gets or sets the MusicBrainz ID of the track.
     /// </summary>
-    [JsonProperty("mbid")] public string Mbid;
+    [JsonPropertyName("mbid")] public string Mbid;
 
     /// <summary>
     ///     Gets or sets the name of the track.
     /// </summary>
-    [JsonProperty("name")] public string Name;
+    [JsonPropertyName("name")] public string Name;
 
     /// <summary>
     ///     Gets or sets the play count of the track.
     /// </summary>
-    [JsonProperty("playcount")] public int? Playcount;
+    [JsonPropertyName("playcount")] public int? Playcount;
 
     /// <summary>
     ///     Gets or sets the streamable status of the track.
     /// </summary>
-    [JsonProperty("streamable")] public Streamable Streamable;
+    [JsonPropertyName("streamable")] public Streamable Streamable;
 
     /// <summary>
     ///     Gets or sets the URL of the Last.fm page for the track.
     /// </summary>
-    [JsonProperty("url")] public string Url;
+    [JsonPropertyName("url")] public string Url;
 }

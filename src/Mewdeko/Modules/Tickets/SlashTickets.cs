@@ -614,12 +614,12 @@ public class TicketCommands : MewdekoSlashModuleBase<TicketService>
             await cache.Redis.GetDatabase().StringSetAsync($"btn_creation:{ctx.User.Id}:style", style);
 
             // Ask for label using NextMessageAsync
-            await ctx.Interaction.SendConfirmAsync("Please enter the label for the button:");
+            await ctx.Interaction.SendConfirmAsync(Strings.EnterButtonLabel(ctx.Guild.Id));
             var label = await NextMessageAsync(ctx.Channel.Id, ctx.User.Id);
 
             if (string.IsNullOrEmpty(label))
             {
-                await ctx.Interaction.SendErrorAsync("Button creation canceled - no label provided.", Config);
+                await ctx.Interaction.SendErrorAsync(Strings.ButtonCreationNoLabel(ctx.Guild.Id), Config);
                 return;
             }
 
@@ -666,7 +666,7 @@ public class TicketCommands : MewdekoSlashModuleBase<TicketService>
     {
         if (choice == "yes")
         {
-            await ctx.Interaction.SendConfirmAsync("Please enter the emoji you'd like to use:");
+            await ctx.Interaction.SendConfirmAsync(Strings.EnterEmoji(ctx.Guild.Id));
             var emoji = await NextMessageAsync(ctx.Channel.Id, ctx.User.Id);
 
             if (!string.IsNullOrEmpty(emoji))
@@ -903,7 +903,7 @@ public class TicketCommands : MewdekoSlashModuleBase<TicketService>
                 .StringSetAsync($"btn_creation:{ctx.User.Id}:viewer_roles", JsonSerializer.Serialize(values));
         }
 
-        await ctx.Interaction.SendConfirmAsync("Please enter the ticket opening message (or type 'skip' to skip):");
+        await ctx.Interaction.SendConfirmAsync(Strings.EnterTicketOpening(ctx.Guild.Id));
 
         var openMsg = await NextMessageAsync(ctx.Channel.Id, ctx.User.Id);
         if (!string.IsNullOrEmpty(openMsg) && openMsg.ToLower() != "skip")
@@ -912,7 +912,7 @@ public class TicketCommands : MewdekoSlashModuleBase<TicketService>
                 .StringSetAsync($"btn_creation:{ctx.User.Id}:open_message", openMsg);
         }
 
-        await ctx.Interaction.SendConfirmAsync("Please enter the modal JSON configuration (or type 'skip' to skip):");
+        await ctx.Interaction.SendConfirmAsync(Strings.EnterModalJson(ctx.Guild.Id));
 
         var modalJson = await NextMessageAsync(ctx.Channel.Id, ctx.User.Id);
         if (!string.IsNullOrEmpty(modalJson) && modalJson.ToLower() != "skip")
@@ -930,7 +930,7 @@ public class TicketCommands : MewdekoSlashModuleBase<TicketService>
             await cache.Redis.GetDatabase()
                 .StringSetAsync($"btn_creation:{ctx.User.Id}:priorities",
                     JsonSerializer.Serialize(priorities.Split(',').Select(p => p.Trim())));
-            await ctx.Interaction.SendConfirmAsync("Please enter the default priority (or type 'skip' to skip):");
+            await ctx.Interaction.SendConfirmAsync(Strings.EnterPriority(ctx.Guild.Id));
             var defaultPriority = await NextMessageAsync(ctx.Channel.Id, ctx.User.Id);
             if (!string.IsNullOrEmpty(defaultPriority) && defaultPriority.ToLower() != "skip")
             {

@@ -1,7 +1,9 @@
 using System.Net.Http;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Xml;
-using Newtonsoft.Json;
+using Mewdeko.Modules.Nsfw.Common.Downloaders;
 using Serilog;
 
 namespace Mewdeko.Modules.Searches.Common;
@@ -122,103 +124,116 @@ public class SearchImageCacher
     /// <param name="isExplicit">A value indicating whether to allow explicit content.</param>
     /// <param name="type">The type of image search.</param>
     /// <returns>An array of <see cref="ImageCacherObject" /> representing the downloaded images.</returns>
-    public async Task<ImageCacherObject[]> DownloadImagesAsync(string[] tags, bool isExplicit, DapiSearchType type)
+   public async Task<ImageCacherObject[]> DownloadImagesAsync(string[] tags, bool isExplicit, DapiSearchType type)
+{
+    // Determine if explicit content should be allowed based on search type
+    isExplicit = type != DapiSearchType.Safebooru && isExplicit;
+    var tag = "";
+    tag += string.Join('+',
+        tags.Select(x => x.Replace(" ", "_", StringComparison.InvariantCulture).ToLowerInvariant()));
+    if (isExplicit)
+        tag = $"rating%3Aexplicit+{tag}";
+    var website = "";
+    switch (type)
     {
-        // Determine if explicit content should be allowed based on search type
-        isExplicit = type != DapiSearchType.Safebooru && isExplicit;
-        var tag = "";
-        tag += string.Join('+',
-            tags.Select(x => x.Replace(" ", "_", StringComparison.InvariantCulture).ToLowerInvariant()));
-        if (isExplicit)
-            tag = $"rating%3Aexplicit+{tag}";
-        var website = "";
+        case DapiSearchType.Safebooru:
+            website = $"https://safebooru.org/index.php?page=dapi&s=post&q=index&limit=1000&tags={tag}&json=1";
+            break;
+        case DapiSearchType.E621:
+            website = $"https://e621.net/posts.json?limit=200&tags={tag}";
+            break;
+        case DapiSearchType.Danbooru:
+            website = $"http://danbooru.donmai.us/posts.json?limit=100&tags={tag}";
+            break;
+        case DapiSearchType.Gelbooru:
+            website = $"https://gelbooru.com/index.php?page=dapi&s=post&json=1&q=index&limit=100&tags={tag}";
+            break;
+        case DapiSearchType.Rule34:
+            website = $"https://rule34.xxx/index.php?page=dapi&s=post&q=index&limit=100&tags={tag}";
+            break;
+        case DapiSearchType.Konachan:
+            website = $"https://konachan.com/post.json?s=post&q=index&limit=100&tags={tag}";
+            break;
+        case DapiSearchType.Yandere:
+            website = $"https://yande.re/post.json?limit=100&tags={tag}";
+            break;
+        case DapiSearchType.Derpibooru:
+            tag = string.IsNullOrWhiteSpace(tag) ? "safe" : tag;
+            website = $"https://www.derpibooru.org/api/v1/json/search/images?q={tag.Replace('+', ',')}&per_page=49";
+            break;
+    }
+
+    try
+    {
+        using var http = httpFactory.CreateClient();
+        http.AddFakeHeaders();
         switch (type)
         {
-            case DapiSearchType.Safebooru:
-                website = $"https://safebooru.org/index.php?page=dapi&s=post&q=index&limit=1000&tags={tag}&json=1";
-                break;
-            case DapiSearchType.E621:
-                website = $"https://e621.net/posts.json?limit=200&tags={tag}";
-                break;
-            case DapiSearchType.Danbooru:
-                website = $"http://danbooru.donmai.us/posts.json?limit=100&tags={tag}";
-                break;
-            case DapiSearchType.Gelbooru:
-                website = $"https://gelbooru.com/index.php?page=dapi&s=post&json=1&q=index&limit=100&tags={tag}";
-                break;
-            case DapiSearchType.Rule34:
-                website = $"https://rule34.xxx/index.php?page=dapi&s=post&q=index&limit=100&tags={tag}";
-                break;
-            case DapiSearchType.Konachan:
-                website = $"https://konachan.com/post.json?s=post&q=index&limit=100&tags={tag}";
-                break;
-            case DapiSearchType.Yandere:
-                website = $"https://yande.re/post.json?limit=100&tags={tag}";
-                break;
-            case DapiSearchType.Derpibooru:
-                tag = string.IsNullOrWhiteSpace(tag) ? "safe" : tag;
-                website =
-                    $"https://www.derpibooru.org/api/v1/json/search/images?q={tag.Replace('+', ',')}&per_page=49";
-                break;
-        }
-
-        try
-        {
-            using var http = httpFactory.CreateClient();
-            http.AddFakeHeaders();
-            switch (type)
+            case DapiSearchType.Konachan or DapiSearchType.Yandere or DapiSearchType.Danbooru:
             {
-                case DapiSearchType.Konachan or DapiSearchType.Yandere or DapiSearchType.Danbooru:
+                var data = await http.GetStringAsync(website).ConfigureAwait(false);
+                var options = new JsonSerializerOptions
                 {
-                    var data = await http.GetStringAsync(website).ConfigureAwait(false);
+                    PropertyNameCaseInsensitive = true
+                };
 
-
-                    return (JsonConvert.DeserializeObject<DapiImageObject[]>(data) ??
-                            [])
-                        .Where(x => x.FileUrl != null)
-                        .Select(x => new ImageCacherObject(x, type))
-                        .ToArray();
-                }
-                case DapiSearchType.E621:
-                {
-                    var data = await http.GetStringAsync(website).ConfigureAwait(false);
-                    return JsonConvert.DeserializeAnonymousType(data, new
-                        {
-                            posts = new List<E621Object>()
-                        })
-                        .posts
-                        .Where(x => !string.IsNullOrWhiteSpace(x.File.Url))
-                        .Select(x =>
-                            new ImageCacherObject(x.File.Url, type, string.Join(' ', x.Tags.General),
-                                x.Score.Total))
-                        .ToArray();
-                }
-                case DapiSearchType.Derpibooru:
-                {
-                    var data = await http.GetStringAsync(website).ConfigureAwait(false);
-                    return JsonConvert.DeserializeObject<DerpiContainer>(data)
-                        .Images
-                        .Where(x => !string.IsNullOrWhiteSpace(x.ViewUrl))
-                        .Select(x => new ImageCacherObject(x.ViewUrl, type, string.Join("\n", x.Tags), x.Score))
-                        .ToArray();
-                }
-                case DapiSearchType.Safebooru:
-                {
-                    var data = await http.GetStringAsync(website).ConfigureAwait(false);
-                    return JsonConvert.DeserializeObject<SafebooruElement[]>(data)
-                        .Select(x => new ImageCacherObject(x.FileUrl, type, x.Tags, x.Rating))
-                        .ToArray();
-                }
-                default:
-                    return (await LoadXmlAsync(website, type).ConfigureAwait(false)).ToArray();
+                return (JsonSerializer.Deserialize<DapiImageObject[]>(data, options) ?? [])
+                    .Where(x => x.FileUrl != null)
+                    .Select(x => new ImageCacherObject(x, type))
+                    .ToArray();
             }
-        }
-        catch (Exception ex)
-        {
-            Log.Warning(ex, "Error downloading an image: {Message}", ex.Message);
-            return [];
+            case DapiSearchType.E621:
+            {
+                var data = await http.GetStringAsync(website).ConfigureAwait(false);
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+
+                var response = JsonSerializer.Deserialize<E621Response>(data, options);
+                return response?.Posts
+                    .Where(x => !string.IsNullOrWhiteSpace(x.File.Url))
+                    .Select(x =>
+                        new ImageCacherObject(x.File.Url, type, string.Join(' ', x.Tags.General),
+                            x.Score.Total.ToString()))
+                    .ToArray() ?? [];
+            }
+            case DapiSearchType.Derpibooru:
+            {
+                var data = await http.GetStringAsync(website).ConfigureAwait(false);
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+
+                var container = JsonSerializer.Deserialize<DerpiContainer>(data, options);
+                return container?.Images
+                    .Where(x => !string.IsNullOrWhiteSpace(x.ViewUrl))
+                    .Select(x => new ImageCacherObject(x.ViewUrl, type, string.Join("\n", x.Tags), x.Score))
+                    .ToArray() ?? [];
+            }
+            case DapiSearchType.Safebooru:
+            {
+                var data = await http.GetStringAsync(website).ConfigureAwait(false);
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+
+                return JsonSerializer.Deserialize<SafebooruElement[]>(data, options)
+                    ?.Select(x => new ImageCacherObject(x.FileUrl, type, x.Tags, x.Rating))
+                    .ToArray() ?? [];
+            }
+            default:
+                return (await LoadXmlAsync(website, type).ConfigureAwait(false)).ToArray();
         }
     }
+    catch (Exception ex)
+    {
+        Log.Warning(ex, "Error downloading an image: {Message}", ex.Message);
+        return [];
+    }
+}
 
     private async Task<ImageCacherObject[]> LoadXmlAsync(string website, DapiSearchType type)
     {
@@ -263,7 +278,7 @@ public class DapiImageObject
     /// <summary>
     ///     Gets or sets the URL of the image file.
     /// </summary>
-    [JsonProperty("File_Url")]
+    [JsonPropertyName("File_Url")]
     public string? FileUrl { get; set; }
 
     /// <summary>
@@ -274,7 +289,7 @@ public class DapiImageObject
     /// <summary>
     ///     Gets or sets the tag string associated with the image.
     /// </summary>
-    [JsonProperty("Tag_String")]
+    [JsonPropertyName("Tag_String")]
     public string? TagString { get; set; }
 
     /// <summary>
@@ -302,7 +317,7 @@ public class DerpiImageObject
     /// <summary>
     ///     Gets or sets the URL of the image view.
     /// </summary>
-    [JsonProperty("view_url")]
+    [JsonPropertyName("view_url")]
     public string ViewUrl { get; set; }
 
     /// <summary>

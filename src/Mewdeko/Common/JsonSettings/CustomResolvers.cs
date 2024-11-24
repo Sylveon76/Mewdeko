@@ -1,39 +1,39 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
+﻿using System.Text.Json;
 
 namespace Mewdeko.Common.JsonSettings;
 
 /// <summary>
-///     Provides a contract resolver that orders properties alphabetically.
+///     Provides a naming policy that maintains property order.
 /// </summary>
-public class OrderedResolver : DefaultContractResolver
+public class OrderedResolver : JsonNamingPolicy
 {
     /// <summary>
-    ///     Creates properties for the specified <see cref="JsonContract" />.
+    ///     Converts the specified property name to its serialized form.
     /// </summary>
-    /// <param name="type">The type to create properties for.</param>
-    /// <param name="memberSerialization">The member serialization.</param>
-    /// <returns>A collection of properties for the specified contract.</returns>
-    protected override IList<JsonProperty> CreateProperties(Type type, MemberSerialization memberSerialization)
+    /// <param name="name">The property name to convert.</param>
+    /// <returns>The name to be used in serialized JSON.</returns>
+    /// <remarks>
+    ///     System.Text.Json automatically maintains property order based on source code,
+    ///     so this resolver simply returns the original name.
+    /// </remarks>
+    public override string ConvertName(string name)
     {
-        // Order properties alphabetically
-        return base.CreateProperties(type, memberSerialization).OrderBy(p => p.PropertyName).ToList();
+        return name;
     }
 }
 
 /// <summary>
-///     Provides a contract resolver that resolves property names to lowercase.
+///     Provides a naming policy that converts property names to lowercase.
 /// </summary>
-public class LowercaseContractResolver : DefaultContractResolver
+public class LowercaseNamingPolicy : JsonNamingPolicy
 {
     /// <summary>
-    ///     Resolves the property name to lowercase.
+    ///     Converts the specified property name to its lowercase form.
     /// </summary>
-    /// <param name="propertyName">The property name to resolve.</param>
-    /// <returns>The resolved property name.</returns>
-    protected override string ResolvePropertyName(string propertyName)
+    /// <param name="name">The property name to convert.</param>
+    /// <returns>The lowercase version of the property name.</returns>
+    public override string ConvertName(string name)
     {
-        // Convert property name to lowercase
-        return propertyName.ToLower();
+        return name.ToLower();
     }
 }

@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿
+
+using System.Text.Json.Serialization;
 
 namespace Mewdeko.Modules.Searches.Common;
 
@@ -41,7 +43,7 @@ public class WikiSearchResponse
     /// <summary>
     ///     Gets or sets the query results from the Wikipedia search.
     /// </summary>
-    [JsonProperty("query")]
+    [JsonPropertyName("query")]
     public WikiQuerySearch Query { get; set; }
 }
 
@@ -53,7 +55,7 @@ public class WikiQuerySearch
     /// <summary>
     ///     Gets or sets the list of search results.
     /// </summary>
-    [JsonProperty("search")]
+    [JsonPropertyName("search")]
     public List<WikiSearchResult> Search { get; set; }
 }
 
@@ -65,7 +67,7 @@ public class WikiSearchResult
     /// <summary>
     ///     Gets or sets the unique page ID of the Wikipedia article.
     /// </summary>
-    [JsonProperty("pageid")]
+    [JsonPropertyName("pageid")]
     public int PageId { get; set; }
 }
 
@@ -77,7 +79,7 @@ public class WikiContentResponse
     /// <summary>
     ///     Gets or sets the query results containing page content.
     /// </summary>
-    [JsonProperty("query")]
+    [JsonPropertyName("query")]
     public WikiQueryContent Query { get; set; }
 }
 
@@ -89,7 +91,7 @@ public class WikiQueryContent
     /// <summary>
     ///     Gets or sets the dictionary of page contents, keyed by page ID.
     /// </summary>
-    [JsonProperty("pages")]
+    [JsonPropertyName("pages")]
     public Dictionary<string, WikiPage> Pages { get; set; }
 }
 
@@ -101,25 +103,25 @@ public class WikiPage
     /// <summary>
     ///     Gets or sets the title of the Wikipedia page.
     /// </summary>
-    [JsonProperty("title")]
+    [JsonPropertyName("title")]
     public string Title { get; set; }
 
     /// <summary>
     ///     Gets or sets the main text content of the Wikipedia page.
     /// </summary>
-    [JsonProperty("extract")]
+    [JsonPropertyName("extract")]
     public string Extract { get; set; }
 
     /// <summary>
     ///     Gets or sets the full URL of the Wikipedia page.
     /// </summary>
-    [JsonProperty("fullurl")]
+    [JsonPropertyName("fullurl")]
     public string FullUrl { get; set; }
 
     /// <summary>
     ///     Gets or sets the thumbnail image information for the page.
     /// </summary>
-    [JsonProperty("thumbnail")]
+    [JsonPropertyName("thumbnail")]
     public WikiThumbnail Thumbnail { get; set; }
 }
 
@@ -131,6 +133,6 @@ public class WikiThumbnail
     /// <summary>
     ///     Gets or sets the URL of the thumbnail image.
     /// </summary>
-    [JsonProperty("source")]
+    [JsonPropertyName("source")]
     public string Source { get; set; }
 }

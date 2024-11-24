@@ -55,7 +55,7 @@ public partial class Permissions
             var channel = (ITextChannel)ctx.Channel;
             if (time.Time.TotalSeconds is < 0 or > 90000)
             {
-                await ReplyErrorLocalizedAsync("invalid_second_param_between", 0, 90000).ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.InvalidSecondParamBetween(ctx.Guild.Id, 0, 90000)).ConfigureAwait(false);
                 return;
             }
 
@@ -82,14 +82,14 @@ public partial class Permissions
             {
                 var activeCds = ActiveCooldowns.GetOrAdd(channel.Guild.Id, []);
                 activeCds.RemoveWhere(ac => ac.Command == name);
-                await ReplyConfirmLocalizedAsync("cmdcd_cleared",
-                    Format.Bold(name)).ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.CmdcdCleared(ctx.Guild.Id,
+                    Format.Bold(name))).ConfigureAwait(false);
             }
             else
             {
-                await ReplyConfirmLocalizedAsync("cmdcd_add",
+                await ReplyConfirmAsync(Strings.CmdcdAdd(ctx.Guild.Id,
                     Format.Bold(name),
-                    Format.Bold(time.Time.Humanize())).ConfigureAwait(false);
+                    Format.Bold(time.Time.Humanize()))).ConfigureAwait(false);
             }
         }
 
@@ -114,12 +114,12 @@ public partial class Permissions
 
             if (config.CommandCooldowns.Count == 0)
             {
-                await ReplyConfirmLocalizedAsync("cmdcd_none").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.CmdcdNone(ctx.Guild.Id)).ConfigureAwait(false);
             }
             else
             {
                 await channel.SendTableAsync("",
-                        config.CommandCooldowns.Select(c => $"{c.CommandName}: {c.Seconds}{GetText("sec")}"),
+                        config.CommandCooldowns.Select(c => $"{c.CommandName}: {c.Seconds}{Strings.Sec(ctx.Guild.Id)}"),
                         s => $"{s,-30}", 2)
                     .ConfigureAwait(false);
             }

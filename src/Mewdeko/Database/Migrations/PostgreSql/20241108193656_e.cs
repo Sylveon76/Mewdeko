@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Mewdeko.Database.Migrations.PostgreSql
 {
     /// <inheritdoc />
-    public partial class e : Migration
+    public partial class E : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

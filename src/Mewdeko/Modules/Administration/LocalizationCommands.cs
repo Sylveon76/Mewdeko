@@ -10,7 +10,7 @@ public partial class Administration
     ///     Module for managing the bot's language settings.
     /// </summary>
     [Group]
-    public class LocalizationCommands : MewdekoSubmodule
+    public class LocalizationCommands(ILocalization localization) : MewdekoSubmodule
     {
         private static readonly IReadOnlyDictionary<string, string> SupportedLocales =
             new Dictionary<string, string>
@@ -122,21 +122,21 @@ public partial class Administration
                 CultureInfo? ci;
                 if (string.Equals(name.Trim(), "default", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    Localization.RemoveGuildCulture(ctx.Guild);
-                    ci = Localization.DefaultCultureInfo;
+                    localization.RemoveGuildCulture(ctx.Guild);
+                    ci = localization.DefaultCultureInfo;
                 }
                 else
                 {
                     ci = new CultureInfo(name);
-                    Localization.SetGuildCulture(ctx.Guild, ci);
+                    localization.SetGuildCulture(ctx.Guild, ci);
                 }
 
-                await ReplyConfirmLocalizedAsync("lang_set", Format.Bold(ci.ToString()), Format.Bold(ci.NativeName))
+                await ReplyConfirmAsync(Strings.LangSet(ctx.Guild.Id, Format.Bold(ci.ToString()), Format.Bold(ci.NativeName)))
                     .ConfigureAwait(false);
             }
             catch (Exception)
             {
-                await ReplyErrorLocalizedAsync("lang_set_fail").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.LangSetFail(ctx.Guild.Id)).ConfigureAwait(false);
             }
         }
 
@@ -149,8 +149,8 @@ public partial class Administration
         [Aliases]
         public async Task LanguageSetDefault()
         {
-            var cul = Localization.DefaultCultureInfo;
-            await ReplyConfirmLocalizedAsync("lang_set_bot_show", cul, cul.NativeName).ConfigureAwait(false);
+            var cul = localization.DefaultCultureInfo;
+            await ReplyConfirmAsync(Strings.LangSetBotShow(ctx.Guild.Id, cul, cul.NativeName)).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -172,21 +172,21 @@ public partial class Administration
                 CultureInfo? ci;
                 if (string.Equals(name.Trim(), "default", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    Localization.ResetDefaultCulture();
-                    ci = Localization.DefaultCultureInfo;
+                    localization.ResetDefaultCulture();
+                    ci = localization.DefaultCultureInfo;
                 }
                 else
                 {
                     ci = new CultureInfo(name);
-                    Localization.SetDefaultCulture(ci);
+                    localization.SetDefaultCulture(ci);
                 }
 
-                await ReplyConfirmLocalizedAsync("lang_set_bot", Format.Bold(ci.ToString()),
-                    Format.Bold(ci.NativeName)).ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.LangSetBot(ctx.Guild.Id, Format.Bold(ci.ToString()),
+                    Format.Bold(ci.NativeName))).ConfigureAwait(false);
             }
             catch (Exception)
             {
-                await ReplyErrorLocalizedAsync("lang_set_fail").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.LangSetFail(ctx.Guild.Id)).ConfigureAwait(false);
             }
         }
 
@@ -200,7 +200,7 @@ public partial class Administration
         public async Task LanguagesList()
         {
             await ctx.Channel.EmbedAsync(new EmbedBuilder().WithOkColor()
-                .WithTitle(GetText("lang_list"))
+                .WithTitle(Strings.LangList(ctx.Guild.Id))
                 .WithDescription(string.Join("\n",
                     SupportedLocales.Select(x => $"{Format.Code(x.Key),-10} => {x.Value}")))).ConfigureAwait(false);
         }

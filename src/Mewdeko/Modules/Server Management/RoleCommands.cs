@@ -68,7 +68,7 @@ public partial class ServerManagement
             var perms = ch.GetPermissionOverwrite(role);
             if (perms is null)
             {
-                await ctx.Channel.SendErrorAsync("This role doesnt have perms setup in this channel!", Config)
+                await ctx.Channel.SendErrorAsync(Strings.RoleNoPermsInChannel(ctx.Guild.Id), Config)
                     .ConfigureAwait(false);
                 return;
             }
@@ -113,7 +113,7 @@ public partial class ServerManagement
             var perms = ch.GetPermissionOverwrite(role);
             if (perms is null)
             {
-                await ctx.Channel.SendErrorAsync("This role doesnt have perms setup in this channel!", Config)
+                await ctx.Channel.SendErrorAsync(Strings.RoleNoPermsInChannel(ctx.Guild.Id), Config)
                     .ConfigureAwait(false);
                 return;
             }
@@ -152,7 +152,7 @@ public partial class ServerManagement
             var perms = ch.GetPermissionOverwrite(role);
             if (perms is null)
             {
-                await ctx.Channel.SendErrorAsync("This role doesnt have perms setup in this channel!", Config)
+                await ctx.Channel.SendErrorAsync(Strings.RoleNoPermsInChannel(ctx.Guild.Id), Config)
                     .ConfigureAwait(false);
                 return;
             }
@@ -188,7 +188,8 @@ public partial class ServerManagement
         {
             if (roles.Count(x => !x.IsManaged) is 0)
             {
-                await ctx.Channel.SendErrorAsync("You cannot delete bot roles or boost roles!", Config)
+                await ctx.Channel.SendErrorAsync(Strings.CannotDeleteManagedRoles(ctx.Guild.Id), Config
+                    )
                     .ConfigureAwait(false);
                 return;
             }
@@ -263,7 +264,7 @@ public partial class ServerManagement
                 $"Started by {list.StartedBy.Mention}\nProgress: {list.AddedTo}/{list.TotalUsers}");
             if (!await PromptUserConfirmAsync(eb, ctx.User.Id).ConfigureAwait(false))
             {
-                var msg = await ctx.Channel.SendConfirmAsync("Job Stop Cancelled.").ConfigureAwait(false);
+                var msg = await ctx.Channel.SendConfirmAsync(Strings.JobStopCancelled(ctx.Guild.Id));
                 msg.DeleteAfter(5);
                 return;
             }
@@ -320,13 +321,14 @@ public partial class ServerManagement
             if (ctx.User.Id != ctx.Guild.OwnerId &&
                 ((IGuildUser)ctx.User).GetRoles().Max(x => x.Position) <= role.Position)
             {
-                await ctx.Channel.SendErrorAsync("You cannot manage this role!", Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.CannotManageRole(ctx.Guild.Id), Config).ConfigureAwait(false);
                 return;
             }
 
             if (((IGuildUser)ctx.User).GetRoles().Max(x => x.Position) <= role.Position)
             {
-                await ctx.Channel.SendErrorAsync("I cannot manage this role!", Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.BotCannotManageRole(ctx.Guild.Id), Config)
+                    .ConfigureAwait(false);
                 return;
             }
 
@@ -355,13 +357,15 @@ public partial class ServerManagement
             if (ctx.User.Id != ctx.Guild.OwnerId &&
                 ((IGuildUser)ctx.User).GetRoles().Max(x => x.Position) <= role.Position)
             {
-                await ctx.Channel.SendErrorAsync("You cannot manage this role!", Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.CannotManageRole(ctx.Guild.Id), Config).ConfigureAwait(false);
+
                 return;
             }
 
             if (((IGuildUser)ctx.User).GetRoles().Max(x => x.Position) <= role.Position)
             {
-                await ctx.Channel.SendErrorAsync("I cannot manage this role!", Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.BotCannotManageRole(ctx.Guild.Id), Config)
+                    .ConfigureAwait(false);
                 return;
             }
 
@@ -426,7 +430,7 @@ public partial class ServerManagement
             var list = Service.Jobslist;
             if (list.Count == 0)
             {
-                await ctx.Channel.SendErrorAsync("No Mass Role Operations running!", Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.NoMassOperations(ctx.Guild.Id), Config);
                 return;
             }
 
@@ -477,13 +481,15 @@ public partial class ServerManagement
             if (ctx.User.Id != runnerUser.Guild.OwnerId &&
                 runnerUser.GetRoles().Max(x => x.Position) <= role.Position)
             {
-                await ctx.Channel.SendErrorAsync("You cannot manage this role!", Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.CannotManageRole(ctx.Guild.Id), Config).ConfigureAwait(false);
+
                 return;
             }
 
             if (currentUser.GetRoles().Max(x => x.Position) <= role.Position)
             {
-                await ctx.Channel.SendErrorAsync("I cannot manage this role!", Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.BotCannotManageRole(ctx.Guild.Id), Config)
+                    .ConfigureAwait(false);
                 return;
             }
 
@@ -501,7 +507,7 @@ public partial class ServerManagement
             var count = users.Count();
             if (!users.Any())
             {
-                await ctx.Channel.SendErrorAsync("All users already have this role!", Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.AllUsersHaveRole(ctx.Guild.Id), Config).ConfigureAwait(false);
                 return;
             }
 
@@ -568,13 +574,15 @@ public partial class ServerManagement
             if (ctx.User.Id != runnerUser.Guild.OwnerId &&
                 runnerUser.GetRoles().Max(x => x.Position) <= role.Position)
             {
-                await ctx.Channel.SendErrorAsync("You cannot manage this role!", Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.CannotManageRole(ctx.Guild.Id), Config).ConfigureAwait(false);
+
                 return;
             }
 
             if (currentUser.GetRoles().Max(x => x.Position) <= role.Position)
             {
-                await ctx.Channel.SendErrorAsync("I cannot manage this role!", Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.BotCannotManageRole(ctx.Guild.Id), Config)
+                    .ConfigureAwait(false);
                 return;
             }
 
@@ -592,7 +600,7 @@ public partial class ServerManagement
             var count = users.Count();
             if (!users.Any())
             {
-                await ctx.Channel.SendErrorAsync("All bots already have this role!", Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.AllBotsHaveRole(ctx.Guild.Id), Config).ConfigureAwait(false);
                 return;
             }
 
@@ -659,13 +667,15 @@ public partial class ServerManagement
             if (ctx.User.Id != runnerUser.Guild.OwnerId &&
                 runnerUser.GetRoles().Max(x => x.Position) <= role.Position)
             {
-                await ctx.Channel.SendErrorAsync("You cannot manage this role!", Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.CannotManageRole(ctx.Guild.Id), Config).ConfigureAwait(false);
+
                 return;
             }
 
             if (currentUser.GetRoles().Max(x => x.Position) <= role.Position)
             {
-                await ctx.Channel.SendErrorAsync("I cannot manage this role!", Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.BotCannotManageRole(ctx.Guild.Id), Config)
+                    .ConfigureAwait(false);
                 return;
             }
 
@@ -688,7 +698,7 @@ public partial class ServerManagement
             var count = users.Count();
             if (!users.Any())
             {
-                await ctx.Channel.SendErrorAsync("All users already have this role!", Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.AllUsersHaveRole(ctx.Guild.Id), Config).ConfigureAwait(false);
                 return;
             }
 
@@ -787,7 +797,7 @@ public partial class ServerManagement
         {
             if (!ctx.Message.Attachments.Any())
             {
-                await ctx.Channel.SendErrorAsync("Please attach a file with a list of roles to add to users.", Config)
+                await ctx.Channel.SendErrorAsync(Strings.AttachRoleListFile(ctx.Guild.Id), Config)
                     .ConfigureAwait(false);
                 return;
             }
@@ -827,7 +837,7 @@ public partial class ServerManagement
 
             if (!toProcess.Any())
             {
-                await ctx.Channel.SendErrorAsync("No roles or users to process in the file.", Config)
+                await ctx.Channel.SendErrorAsync(Strings.NoRolesUsersInFile(ctx.Guild.Id), Config)
                     .ConfigureAwait(false);
                 return;
             }
@@ -851,7 +861,7 @@ public partial class ServerManagement
 
             if (!toProcess.Any())
             {
-                await ctx.Channel.SendErrorAsync("All roles are already applied to all users.", Config)
+                await ctx.Channel.SendErrorAsync(Strings.AllRolesAlreadyApplied(ctx.Guild.Id), Config)
                     .ConfigureAwait(false);
                 return;
             }
@@ -917,7 +927,7 @@ public partial class ServerManagement
             if (!ctx.Message.Attachments.Any())
             {
                 await ctx.Channel
-                    .SendErrorAsync("Please attach a file with a list of users to add the role to.", Config)
+                    .SendErrorAsync(Strings.AttachUserListFile(ctx.Guild.Id), Config)
                     .ConfigureAwait(false);
                 return;
             }
@@ -958,13 +968,15 @@ public partial class ServerManagement
             if (ctx.User.Id != runnerUser.Guild.OwnerId &&
                 runnerUser.GetRoles().Max(x => x.Position) <= role.Position)
             {
-                await ctx.Channel.SendErrorAsync("You cannot manage this role!", Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.CannotManageRole(ctx.Guild.Id), Config).ConfigureAwait(false);
+
                 return;
             }
 
             if (currentUser.GetRoles().Max(x => x.Position) <= role.Position)
             {
-                await ctx.Channel.SendErrorAsync("I cannot manage this role!", Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.BotCannotManageRole(ctx.Guild.Id), Config)
+                    .ConfigureAwait(false);
                 return;
             }
 
@@ -986,7 +998,7 @@ public partial class ServerManagement
             var count = actualUsers.Count;
             if (!actualUsers.Any())
             {
-                await ctx.Channel.SendErrorAsync("All users already have this role!", Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.AllUsersHaveRole(ctx.Guild.Id), Config).ConfigureAwait(false);
                 return;
             }
 
@@ -1050,13 +1062,15 @@ public partial class ServerManagement
             if (ctx.User.Id != runnerUser.Guild.OwnerId &&
                 runnerUser.GetRoles().Max(x => x.Position) <= role.Position)
             {
-                await ctx.Channel.SendErrorAsync("You cannot manage this role!", Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.CannotManageRole(ctx.Guild.Id), Config).ConfigureAwait(false);
+
                 return;
             }
 
             if (currentUser.GetRoles().Max(x => x.Position) <= role.Position)
             {
-                await ctx.Channel.SendErrorAsync("I cannot manage this role!", Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.BotCannotManageRole(ctx.Guild.Id), Config)
+                    .ConfigureAwait(false);
                 return;
             }
 
@@ -1076,7 +1090,7 @@ public partial class ServerManagement
             var count = users.Count();
             if (!users.Any())
             {
-                await ctx.Channel.SendErrorAsync("All users at this account age already have this role!", Config)
+                await ctx.Channel.SendErrorAsync(Strings.UsersAtAgeHaveRole(ctx.Guild.Id), Config)
                     .ConfigureAwait(false);
                 return;
             }
@@ -1147,13 +1161,15 @@ public partial class ServerManagement
             if (ctx.User.Id != runnerUser.Guild.OwnerId &&
                 runnerUser.GetRoles().Max(x => x.Position) <= role.Position)
             {
-                await ctx.Channel.SendErrorAsync("You cannot manage this role!", Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.CannotManageRole(ctx.Guild.Id), Config).ConfigureAwait(false);
+
                 return;
             }
 
             if (currentUser.GetRoles().Max(x => x.Position) <= role.Position)
             {
-                await ctx.Channel.SendErrorAsync("I cannot manage this role!", Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.BotCannotManageRole(ctx.Guild.Id), Config)
+                    .ConfigureAwait(false);
                 return;
             }
 
@@ -1173,7 +1189,7 @@ public partial class ServerManagement
             var count = users.Count();
             if (!users.Any())
             {
-                await ctx.Channel.SendErrorAsync("All users at this account age already have this role!", Config)
+                await ctx.Channel.SendErrorAsync(Strings.UsersAtAgeHaveRole(ctx.Guild.Id), Config)
                     .ConfigureAwait(false);
                 return;
             }
@@ -1241,13 +1257,15 @@ public partial class ServerManagement
             if (ctx.User.Id != runnerUser.Guild.OwnerId &&
                 runnerUser.GetRoles().Max(x => x.Position) <= role.Position)
             {
-                await ctx.Channel.SendErrorAsync("You cannot manage this role!", Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.CannotManageRole(ctx.Guild.Id), Config).ConfigureAwait(false);
+
                 return;
             }
 
             if (currentUser.GetRoles().Max(x => x.Position) <= role.Position)
             {
-                await ctx.Channel.SendErrorAsync("I cannot manage this role!", Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.BotCannotManageRole(ctx.Guild.Id), Config)
+                    .ConfigureAwait(false);
                 return;
             }
 
@@ -1265,7 +1283,7 @@ public partial class ServerManagement
             var count = users.Count();
             if (!users.Any())
             {
-                await ctx.Channel.SendErrorAsync("No users have this role!", Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.NoUsersHaveRole(ctx.Guild.Id), Config).ConfigureAwait(false);
                 return;
             }
 
@@ -1333,13 +1351,15 @@ public partial class ServerManagement
             if (ctx.User.Id != runnerUser.Guild.OwnerId &&
                 runnerUser.GetRoles().Max(x => x.Position) <= role.Position)
             {
-                await ctx.Channel.SendErrorAsync("You cannot manage this role!", Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.CannotManageRole(ctx.Guild.Id), Config).ConfigureAwait(false);
+
                 return;
             }
 
             if (currentUser.GetRoles().Max(x => x.Position) <= role.Position)
             {
-                await ctx.Channel.SendErrorAsync("I cannot manage this role!", Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.BotCannotManageRole(ctx.Guild.Id), Config)
+                    .ConfigureAwait(false);
                 return;
             }
 
@@ -1357,7 +1377,7 @@ public partial class ServerManagement
             var count = users.Count();
             if (!users.Any())
             {
-                await ctx.Channel.SendErrorAsync("No users have this role!", Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.NoUsersHaveRole(ctx.Guild.Id), Config).ConfigureAwait(false);
                 return;
             }
 
@@ -1425,13 +1445,15 @@ public partial class ServerManagement
             if (ctx.User.Id != runnerUser.Guild.OwnerId &&
                 runnerUser.GetRoles().Max(x => x.Position) <= role.Position)
             {
-                await ctx.Channel.SendErrorAsync("You cannot manage this role!", Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.CannotManageRole(ctx.Guild.Id), Config).ConfigureAwait(false);
+
                 return;
             }
 
             if (currentUser.GetRoles().Max(x => x.Position) <= role.Position)
             {
-                await ctx.Channel.SendErrorAsync("I cannot manage this role!", Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.BotCannotManageRole(ctx.Guild.Id), Config)
+                    .ConfigureAwait(false);
                 return;
             }
 
@@ -1449,7 +1471,7 @@ public partial class ServerManagement
             var count = users.Count();
             if (!users.Any())
             {
-                await ctx.Channel.SendErrorAsync("No bots have this role!", Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.NoBotsHaveRole(ctx.Guild.Id), Config).ConfigureAwait(false);
                 return;
             }
 
@@ -1519,14 +1541,15 @@ public partial class ServerManagement
                 runnerUser.GetRoles().Max(x => x.Position) <= role2.Position ||
                 runnerUser.GetRoles().Max(x => x.Position) <= role.Position)
             {
-                await ctx.Channel.SendErrorAsync("You cannot manage these roles!", Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.CannotManageRoles(ctx.Guild.Id), Config).ConfigureAwait(false);
                 return;
             }
 
             if (client.GetRoles().Max(x => x.Position) <= role2.Position ||
                 client.GetRoles().Max(x => x.Position) <= role.Position)
             {
-                await ctx.Channel.SendErrorAsync("I cannot manage these roles!", Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.BotCannotManageRoles(ctx.Guild.Id), Config)
+                    .ConfigureAwait(false);
                 return;
             }
 
@@ -1615,14 +1638,15 @@ public partial class ServerManagement
                 runnerUser.GetRoles().Max(x => x.Position) <= role2.Position ||
                 runnerUser.GetRoles().Max(x => x.Position) <= role.Position)
             {
-                await ctx.Channel.SendErrorAsync("You cannot manage these roles!", Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.CannotManageRoles(ctx.Guild.Id), Config).ConfigureAwait(false);
                 return;
             }
 
             if (client.GetRoles().Max(x => x.Position) <= role2.Position ||
                 client.GetRoles().Max(x => x.Position) <= role.Position)
             {
-                await ctx.Channel.SendErrorAsync("I cannot manage these roles!", Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.BotCannotManageRoles(ctx.Guild.Id), Config)
+                    .ConfigureAwait(false);
                 return;
             }
 
@@ -1704,14 +1728,15 @@ public partial class ServerManagement
                 runnerUser.GetRoles().Max(x => x.Position) <= role2.Position ||
                 runnerUser.GetRoles().Max(x => x.Position) <= role.Position)
             {
-                await ctx.Channel.SendErrorAsync("You cannot manage these roles!", Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.CannotManageRoles(ctx.Guild.Id), Config).ConfigureAwait(false);
                 return;
             }
 
             if (client.GetRoles().Max(x => x.Position) <= role2.Position ||
                 client.GetRoles().Max(x => x.Position) <= role.Position)
             {
-                await ctx.Channel.SendErrorAsync("I cannot manage these roles!", Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.BotCannotManageRoles(ctx.Guild.Id), Config)
+                    .ConfigureAwait(false);
                 return;
             }
 
@@ -1719,8 +1744,8 @@ public partial class ServerManagement
             var inrole = users.Where(x => x.GetRoles().Contains(role2));
             if (!inrole.Any())
             {
-                await ctx.Channel.SendErrorAsync("No users have the role you are trying to remove!", Config)
-                    .ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.NoUsersHaveRole(ctx.Guild.Id), Config).ConfigureAwait(false);
+
                 return;
             }
 

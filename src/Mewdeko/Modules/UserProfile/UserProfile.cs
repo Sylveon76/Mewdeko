@@ -23,7 +23,7 @@ public class UserProfile(DbContextProvider dbProvider) : MewdekoModuleBase<UserP
         user ??= ctx.User;
         var embed = await Service.GetProfileEmbed(user, ctx.User);
         if (embed is null)
-            await ctx.Channel.SendErrorAsync("This user has their profile set to private.", Config);
+            await ctx.Channel.SendErrorAsync(Strings.ProfilePrivate(ctx.Guild.Id), Config);
         else
             await ctx.Channel.SendMessageAsync(embed: embed);
     }
@@ -38,9 +38,9 @@ public class UserProfile(DbContextProvider dbProvider) : MewdekoModuleBase<UserP
         var optOut = await Service.ToggleDmGreetOptOutAsync(ctx.User);
 
         if (optOut)
-            await ReplyConfirmLocalizedAsync("greetdm_opt_out");
+            await ReplyConfirmAsync(Strings.GreetdmOptOut(ctx.Guild.Id));
         else
-            await ReplyConfirmLocalizedAsync("greetdm_opt_in");
+            await ReplyConfirmAsync(Strings.GreetdmOptIn(ctx.Guild.Id));
     }
 
     /// <summary>
@@ -53,7 +53,7 @@ public class UserProfile(DbContextProvider dbProvider) : MewdekoModuleBase<UserP
     {
         if (bio.Length > 2048)
         {
-            await ctx.Channel.SendErrorAsync("Keep it under 2048 characters please,", Config);
+            await ctx.Channel.SendErrorAsync(Strings.BioLengthLimit(ctx.Guild.Id), Config);
             return;
         }
 
@@ -71,7 +71,7 @@ public class UserProfile(DbContextProvider dbProvider) : MewdekoModuleBase<UserP
     {
         var result = await Service.SetZodiac(ctx.User, zodiac);
         if (!result)
-            await ctx.Channel.SendErrorAsync("That zodiac sign doesn't exist.", Config);
+            await ctx.Channel.SendErrorAsync(Strings.ZodiacInvalid(ctx.Guild.Id), Config);
         else
             await ctx.Channel.SendConfirmAsync($"Your Zodiac has been set to:\n`{zodiac}`");
     }
@@ -113,7 +113,7 @@ public class UserProfile(DbContextProvider dbProvider) : MewdekoModuleBase<UserP
             await ctx.Channel.SendConfirmAsync(
                 "Succesfully enabled command stats collection! (This does ***not*** collect message contents!)");
         else
-            await ctx.Channel.SendConfirmAsync("Succesfully disable command stats collection.");
+            await ctx.Channel.SendConfirmAsync(Strings.StatsCollectionDisabled(ctx.Guild.Id));
     }
 
     /// <summary>
@@ -128,9 +128,9 @@ public class UserProfile(DbContextProvider dbProvider) : MewdekoModuleBase<UserP
                 "Are you sure you want to delete your command stats? This action is irreversible!", ctx.User.Id))
         {
             if (await Service.DeleteStatsData(ctx.User))
-                await ctx.Channel.SendErrorAsync("Command Stats deleted.", Config);
+                await ctx.Channel.SendErrorAsync(Strings.StatsDeleted(ctx.Guild.Id), Config);
             else
-                await ctx.Channel.SendErrorAsync("There was no data to delete.", Config);
+                await ctx.Channel.SendErrorAsync(Strings.NoDataDelete(ctx.Guild.Id), Config);
         }
     }
 
@@ -199,7 +199,7 @@ public class UserProfile(DbContextProvider dbProvider) : MewdekoModuleBase<UserP
 
 
         if (switchFc.Length == 0)
-            await ctx.Channel.SendConfirmAsync("Your Switch Friend Code has been removed.");
+            await ctx.Channel.SendConfirmAsync(Strings.SwitchCodeRemoved(ctx.Guild.Id));
         else
             await ctx.Channel.SendConfirmAsync($"Your Switch Friend Code has been set to {switchFc}.");
     }
@@ -221,13 +221,14 @@ public class UserProfile(DbContextProvider dbProvider) : MewdekoModuleBase<UserP
         var pronouns = await Service.GetPronounsOrUnspecifiedAsync(user.Id).ConfigureAwait(false);
         var cb = new ComponentBuilder();
         if (!pronouns.PronounDb)
-            cb.WithButton(GetText("pronouns_report_button"), $"pronouns_report.{user.Id};", ButtonStyle.Danger);
+            cb.WithButton(Strings.PronounsReportButton(ctx.Guild.Id), $"pronouns_report.{user.Id};", ButtonStyle.Danger);
         await ctx.Channel.SendConfirmAsync(
-            GetText(
-                pronouns.PronounDb
-                    ? pronouns.Pronouns.Contains(' ') ? "pronouns_pndb_special" : "pronouns_pndb_get"
-                    : "pronouns_internal_get", user.ToString(),
-                pronouns.Pronouns), cb).ConfigureAwait(false);
+            pronouns.PronounDb
+                ? pronouns.Pronouns.Contains(' ')
+                    ? Strings.PronounsPndbSpecial(ctx.Guild.Id, user.ToString(), pronouns.Pronouns)
+                    : Strings.PronounsPndbGet(ctx.Guild.Id, user.ToString(), pronouns.Pronouns)
+                : Strings.PronounsInternalGet(ctx.Guild.Id, user.ToString(), pronouns.Pronouns),
+            cb).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -245,28 +246,28 @@ public class UserProfile(DbContextProvider dbProvider) : MewdekoModuleBase<UserP
         if (await PronounsDisabled(user).ConfigureAwait(false)) return;
         if (string.IsNullOrWhiteSpace(pronouns))
         {
-            var cb = new ComponentBuilder().WithButton(GetText("pronouns_overwrite_button"), "pronouns_overwrite");
+            var cb = new ComponentBuilder().WithButton(Strings.PronounsOverwriteButton(ctx.Guild.Id), "pronouns_overwrite");
             if (string.IsNullOrWhiteSpace(user.Pronouns))
             {
-                await ctx.Channel.SendConfirmAsync(GetText("pronouns_internal_no_override"), cb).ConfigureAwait(false);
+                await ctx.Channel.SendConfirmAsync(Strings.PronounsInternalNoOverride(ctx.Guild.Id), cb).ConfigureAwait(false);
                 return;
             }
 
-            cb.WithButton(GetText("pronouns_overwrite_clear_button"), "pronouns_overwrite_clear", ButtonStyle.Danger);
-            await ctx.Channel.SendConfirmAsync(GetText("pronouns_internal_self", user.Pronouns), cb)
+            cb.WithButton(Strings.PronounsOverwriteClearButton(ctx.Guild.Id), "pronouns_overwrite_clear", ButtonStyle.Danger);
+            await ctx.Channel.SendConfirmAsync(Strings.PronounsInternalSelf(ctx.Guild.Id, user.Pronouns), cb)
                 .ConfigureAwait(false);
             return;
         }
 
         user.Pronouns = pronouns;
         await dbContext.SaveChangesAsync().ConfigureAwait(false);
-        await ConfirmLocalizedAsync("pronouns_internal_update", user.Pronouns).ConfigureAwait(false);
+        await ConfirmAsync(Strings.PronounsInternalUpdate(ctx.Guild.Id, user.Pronouns)).ConfigureAwait(false);
     }
 
     private async Task<bool> PronounsDisabled(DiscordUser user)
     {
         if (!user.PronounsDisabled) return false;
-        await ReplyErrorLocalizedAsync("pronouns_disabled_user", user.PronounsClearedReason).ConfigureAwait(false);
+        await ReplyErrorAsync(Strings.PronounsDisabledUser(ctx.Guild.Id, user.PronounsClearedReason)).ConfigureAwait(false);
         return true;
     }
 
@@ -288,8 +289,11 @@ public class UserProfile(DbContextProvider dbProvider) : MewdekoModuleBase<UserP
         dbUser.PronounsDisabled = pronounsDisabledAbuse;
         dbUser.PronounsClearedReason = reason;
         await dbContext.SaveChangesAsync().ConfigureAwait(false);
-        await ConfirmLocalizedAsync(pronounsDisabledAbuse ? "pronouns_disabled_user" : "pronouns_cleared")
-            .ConfigureAwait(false);
+        await ctx.Channel.SendConfirmAsync(
+            pronounsDisabledAbuse
+                ? Strings.PronounsDisabledUser(ctx.Guild.Id, reason)
+                : Strings.PronounsCleared(ctx.Guild.Id)
+        ).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -310,7 +314,10 @@ public class UserProfile(DbContextProvider dbProvider) : MewdekoModuleBase<UserP
         dbUser.PronounsDisabled = pronounsDisabledAbuse;
         dbUser.PronounsClearedReason = reason;
         await dbContext.SaveChangesAsync().ConfigureAwait(false);
-        await ConfirmLocalizedAsync(pronounsDisabledAbuse ? "pronouns_disabled_user" : "pronouns_cleared")
-            .ConfigureAwait(false);
+        await ctx.Channel.SendConfirmAsync(
+            pronounsDisabledAbuse
+                ? Strings.PronounsDisabledUser(ctx.Guild.Id, reason)
+                : Strings.PronounsCleared(ctx.Guild.Id)
+        ).ConfigureAwait(false);
     }
 }

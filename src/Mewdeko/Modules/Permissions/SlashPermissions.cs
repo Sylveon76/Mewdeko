@@ -95,7 +95,7 @@ public class SlashPermissions : MewdekoSlashModuleBase<PermissionService>
     public async Task ResetPerms()
     {
         await Service.Reset(ctx.Guild.Id).ConfigureAwait(false);
-        await ReplyConfirmLocalizedAsync("perms_reset").ConfigureAwait(false);
+        await ReplyConfirmAsync(Strings.PermsReset(ctx.Guild.Id)).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -121,9 +121,9 @@ public class SlashPermissions : MewdekoSlashModuleBase<PermissionService>
         }
 
         if (action == PermissionSlash.Allow)
-            await ReplyConfirmLocalizedAsync("verbose_true").ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.VerboseTrue(ctx.Guild.Id)).ConfigureAwait(false);
         else
-            await ReplyConfirmLocalizedAsync("verbose_false").ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.VerboseFalse(ctx.Guild.Id)).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -155,7 +155,7 @@ public class SlashPermissions : MewdekoSlashModuleBase<PermissionService>
             config.PermissionRole = 0.ToString();
             await dbContext.SaveChangesAsync().ConfigureAwait(false);
             Service.UpdateCache(config);
-            await ReplyConfirmLocalizedAsync("permrole_reset").ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.PermroleReset(ctx.Guild.Id)).ConfigureAwait(false);
         }
         else
         {
@@ -164,7 +164,7 @@ public class SlashPermissions : MewdekoSlashModuleBase<PermissionService>
             await dbContext.SaveChangesAsync().ConfigureAwait(false);
             Service.UpdateCache(config);
 
-            await ReplyConfirmLocalizedAsync("permrole_changed", Format.Bold(role.Name)).ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.PermroleChanged(ctx.Guild.Id, Format.Bold(role.Name))).ConfigureAwait(false);
         }
     }
 
@@ -208,9 +208,9 @@ public class SlashPermissions : MewdekoSlashModuleBase<PermissionService>
                     var str =
                         $"`{p.Index + 1}.` {Format.Bold(p.GetCommand(guildSettings.GetPrefix(ctx.Guild).GetAwaiter().GetResult(), (SocketGuild)ctx.Guild))}";
                     if (p.Index == 0)
-                        str += $" [{GetText("uneditable")}]";
+                        str += $" [{Strings.Uneditable(ctx.Guild.Id)}]";
                     return str;
-                }))).WithTitle(Format.Bold(GetText("page", page + 1))).WithOkColor();
+                }))).WithTitle(Format.Bold(Strings.Page(ctx.Guild.Id, page + 1))).WithOkColor();
         }
     }
 
@@ -236,7 +236,7 @@ public class SlashPermissions : MewdekoSlashModuleBase<PermissionService>
         var index = int.Parse(perm);
         if (index == 0)
         {
-            await ctx.Interaction.SendErrorAsync("You cannot remove this permission!", Config).ConfigureAwait(false);
+            await ctx.Interaction.SendErrorAsync(Strings.CannotRemovePermission(ctx.Guild.Id), Config).ConfigureAwait(false);
             return;
         }
 
@@ -251,14 +251,14 @@ public class SlashPermissions : MewdekoSlashModuleBase<PermissionService>
             await dbContext.SaveChangesAsync().ConfigureAwait(false);
             Service.UpdateCache(config);
 
-            await ReplyConfirmLocalizedAsync("removed",
+            await ReplyConfirmAsync(Strings.Removed(ctx.Guild.Id,
                     index + 1,
-                    Format.Code(p.GetCommand(await guildSettings.GetPrefix(ctx.Guild), (SocketGuild)ctx.Guild)))
+                    Format.Code(p.GetCommand(await guildSettings.GetPrefix(ctx.Guild), (SocketGuild)ctx.Guild))))
                 .ConfigureAwait(false);
         }
         catch (IndexOutOfRangeException)
         {
-            await ReplyErrorLocalizedAsync("perm_out_of_range").ConfigureAwait(false);
+            await ReplyErrorAsync(Strings.PermOutOfRange(ctx.Guild.Id)).ConfigureAwait(false);
         }
     }
 
@@ -294,15 +294,15 @@ public class SlashPermissions : MewdekoSlashModuleBase<PermissionService>
 
         if (Convert.ToBoolean((int)action))
         {
-            await ReplyConfirmLocalizedAsync("sx_enable",
+            await ReplyConfirmAsync(Strings.SxEnable(ctx.Guild.Id,
                 Format.Code(command),
-                GetText("of_command")).ConfigureAwait(false);
+                Strings.OfCommand(ctx.Guild.Id))).ConfigureAwait(false);
         }
         else
         {
-            await ReplyConfirmLocalizedAsync("sx_disable",
+            await ReplyConfirmAsync(Strings.SxDisable(ctx.Guild.Id,
                 Format.Code(command),
-                GetText("of_command")).ConfigureAwait(false);
+                Strings.OfCommand(ctx.Guild.Id))).ConfigureAwait(false);
         }
     }
 
@@ -338,15 +338,15 @@ public class SlashPermissions : MewdekoSlashModuleBase<PermissionService>
 
         if (Convert.ToBoolean((int)action))
         {
-            await ReplyConfirmLocalizedAsync("sx_enable",
+            await ReplyConfirmAsync(Strings.SxEnable(ctx.Guild.Id,
                 Format.Code(module),
-                GetText("of_module")).ConfigureAwait(false);
+                Strings.OfModule(ctx.Guild.Id))).ConfigureAwait(false);
         }
         else
         {
-            await ReplyConfirmLocalizedAsync("sx_disable",
+            await ReplyConfirmAsync(Strings.SxDisable(ctx.Guild.Id,
                 Format.Code(module),
-                GetText("of_module")).ConfigureAwait(false);
+                Strings.OfModule(ctx.Guild.Id))).ConfigureAwait(false);
         }
     }
 
@@ -382,17 +382,17 @@ public class SlashPermissions : MewdekoSlashModuleBase<PermissionService>
 
         if (Convert.ToBoolean((int)action))
         {
-            await ReplyConfirmLocalizedAsync("ux_enable",
+            await ReplyConfirmAsync(Strings.UxEnable(ctx.Guild.Id,
                 Format.Code(command),
-                GetText("of_command"),
-                Format.Code(user.ToString())).ConfigureAwait(false);
+                Strings.OfCommand(ctx.Guild.Id),
+                Format.Code(user.ToString()))).ConfigureAwait(false);
         }
         else
         {
-            await ReplyConfirmLocalizedAsync("ux_disable",
+            await ReplyConfirmAsync(Strings.UxDisable(ctx.Guild.Id,
                 Format.Code(command),
-                GetText("of_command"),
-                Format.Code(user.ToString())).ConfigureAwait(false);
+                Strings.OfCommand(ctx.Guild.Id),
+                Format.Code(user.ToString()))).ConfigureAwait(false);
         }
     }
 
@@ -426,17 +426,17 @@ public class SlashPermissions : MewdekoSlashModuleBase<PermissionService>
 
         if (Convert.ToBoolean((int)action))
         {
-            await ReplyConfirmLocalizedAsync("ux_enable",
+            await ReplyConfirmAsync(Strings.UxEnable(ctx.Guild.Id,
                 Format.Code(module),
-                GetText("of_module"),
-                Format.Code(user.ToString())).ConfigureAwait(false);
+                Strings.OfModule(ctx.Guild.Id),
+                Format.Code(user.ToString()))).ConfigureAwait(false);
         }
         else
         {
-            await ReplyConfirmLocalizedAsync("ux_disable",
+            await ReplyConfirmAsync(Strings.UxDisable(ctx.Guild.Id,
                 Format.Code(module),
-                GetText("of_module"),
-                Format.Code(user.ToString())).ConfigureAwait(false);
+                Strings.OfModule(ctx.Guild.Id),
+                Format.Code(user.ToString()))).ConfigureAwait(false);
         }
     }
 
@@ -475,17 +475,17 @@ public class SlashPermissions : MewdekoSlashModuleBase<PermissionService>
 
         if (Convert.ToBoolean((int)action))
         {
-            await ReplyConfirmLocalizedAsync("rx_enable",
+            await ReplyConfirmAsync(Strings.RxEnable(ctx.Guild.Id,
                 Format.Code(command),
-                GetText("of_command"),
-                Format.Code(role.Name)).ConfigureAwait(false);
+                Strings.OfCommand(ctx.Guild.Id),
+                Format.Code(role.Name))).ConfigureAwait(false);
         }
         else
         {
-            await ReplyConfirmLocalizedAsync("rx_disable",
+            await ReplyConfirmAsync(Strings.RxDisable(ctx.Guild.Id,
                 Format.Code(command),
-                GetText("of_command"),
-                Format.Code(role.Name)).ConfigureAwait(false);
+                Strings.OfCommand(ctx.Guild.Id),
+                Format.Code(role.Name))).ConfigureAwait(false);
         }
     }
 
@@ -527,17 +527,17 @@ public class SlashPermissions : MewdekoSlashModuleBase<PermissionService>
 
         if (Convert.ToBoolean((int)action))
         {
-            await ReplyConfirmLocalizedAsync("rx_enable",
+            await ReplyConfirmAsync(Strings.RxEnable(ctx.Guild.Id,
                 Format.Code(module),
-                GetText("of_module"),
-                Format.Code(role.Name)).ConfigureAwait(false);
+                Strings.OfModule(ctx.Guild.Id),
+                Format.Code(role.Name))).ConfigureAwait(false);
         }
         else
         {
-            await ReplyConfirmLocalizedAsync("rx_disable",
+            await ReplyConfirmAsync(Strings.RxDisable(ctx.Guild.Id,
                 Format.Code(module),
-                GetText("of_module"),
-                Format.Code(role.Name)).ConfigureAwait(false);
+                Strings.OfModule(ctx.Guild.Id),
+                Format.Code(role.Name))).ConfigureAwait(false);
         }
     }
 
@@ -574,17 +574,17 @@ public class SlashPermissions : MewdekoSlashModuleBase<PermissionService>
 
         if (Convert.ToBoolean((int)action))
         {
-            await ReplyConfirmLocalizedAsync("cx_enable",
+            await ReplyConfirmAsync(Strings.CxEnable(ctx.Guild.Id,
                 Format.Code(command),
-                GetText("of_command"),
-                Format.Code(chnl.Name)).ConfigureAwait(false);
+                Strings.OfCommand(ctx.Guild.Id),
+                Format.Code(chnl.Name))).ConfigureAwait(false);
         }
         else
         {
-            await ReplyConfirmLocalizedAsync("cx_disable",
+            await ReplyConfirmAsync(Strings.CxDisable(ctx.Guild.Id,
                 Format.Code(command),
-                GetText("of_command"),
-                Format.Code(chnl.Name)).ConfigureAwait(false);
+                Strings.OfCommand(ctx.Guild.Id),
+                Format.Code(chnl.Name))).ConfigureAwait(false);
         }
     }
 
@@ -620,17 +620,17 @@ public class SlashPermissions : MewdekoSlashModuleBase<PermissionService>
 
         if (Convert.ToBoolean((int)action))
         {
-            await ReplyConfirmLocalizedAsync("cx_enable",
+            await ReplyConfirmAsync(Strings.CxEnable(ctx.Guild.Id,
                 Format.Code(module),
-                GetText("of_module"),
-                Format.Code(chnl.Name)).ConfigureAwait(false);
+                Strings.OfModule(ctx.Guild.Id),
+                Format.Code(chnl.Name))).ConfigureAwait(false);
         }
         else
         {
-            await ReplyConfirmLocalizedAsync("cx_disable",
+            await ReplyConfirmAsync(Strings.CxDisable(ctx.Guild.Id,
                 Format.Code(module),
-                GetText("of_module"),
-                Format.Code(chnl.Name)).ConfigureAwait(false);
+                Strings.OfModule(ctx.Guild.Id),
+                Format.Code(chnl.Name))).ConfigureAwait(false);
         }
     }
 
@@ -660,13 +660,13 @@ public class SlashPermissions : MewdekoSlashModuleBase<PermissionService>
 
         if (Convert.ToBoolean((int)action))
         {
-            await ReplyConfirmLocalizedAsync("acm_enable",
-                Format.Code(chnl.Name)).ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.AcmEnable(ctx.Guild.Id,
+                Format.Code(chnl.Name))).ConfigureAwait(false);
         }
         else
         {
-            await ReplyConfirmLocalizedAsync("acm_disable",
-                Format.Code(chnl.Name)).ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.AcmDisable(ctx.Guild.Id,
+                Format.Code(chnl.Name))).ConfigureAwait(false);
         }
     }
 
@@ -702,17 +702,17 @@ public class SlashPermissions : MewdekoSlashModuleBase<PermissionService>
 
         if (Convert.ToBoolean((int)action))
         {
-            await ReplyConfirmLocalizedAsync("cx_enable",
+            await ReplyConfirmAsync(Strings.CxEnable(ctx.Guild.Id,
                 Format.Code(command),
-                GetText("of_command"),
-                Format.Code(chnl.Name)).ConfigureAwait(false);
+                Strings.OfCommand(ctx.Guild.Id),
+                Format.Code(chnl.Name))).ConfigureAwait(false);
         }
         else
         {
-            await ReplyConfirmLocalizedAsync("cx_disable",
+            await ReplyConfirmAsync(Strings.CxDisable(ctx.Guild.Id,
                 Format.Code(command),
-                GetText("of_command"),
-                Format.Code(chnl.Name)).ConfigureAwait(false);
+                Strings.OfCommand(ctx.Guild.Id),
+                Format.Code(chnl.Name))).ConfigureAwait(false);
         }
     }
 
@@ -746,17 +746,17 @@ public class SlashPermissions : MewdekoSlashModuleBase<PermissionService>
 
         if (Convert.ToBoolean((int)action))
         {
-            await ReplyConfirmLocalizedAsync("cx_enable",
+            await ReplyConfirmAsync(Strings.CxEnable(ctx.Guild.Id,
                 Format.Code(module),
-                GetText("of_module"),
-                Format.Code(chnl.Name)).ConfigureAwait(false);
+                Strings.OfModule(ctx.Guild.Id),
+                Format.Code(chnl.Name))).ConfigureAwait(false);
         }
         else
         {
-            await ReplyConfirmLocalizedAsync("cx_disable",
+            await ReplyConfirmAsync(Strings.CxDisable(ctx.Guild.Id,
                 Format.Code(module),
-                GetText("of_module"),
-                Format.Code(chnl.Name)).ConfigureAwait(false);
+                Strings.OfModule(ctx.Guild.Id),
+                Format.Code(chnl.Name))).ConfigureAwait(false);
         }
     }
 
@@ -785,13 +785,13 @@ public class SlashPermissions : MewdekoSlashModuleBase<PermissionService>
 
         if (Convert.ToBoolean((int)action))
         {
-            await ReplyConfirmLocalizedAsync("acm_enable",
-                Format.Code(chnl.Name)).ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.AcmEnable(ctx.Guild.Id,
+                Format.Code(chnl.Name))).ConfigureAwait(false);
         }
         else
         {
-            await ReplyConfirmLocalizedAsync("acm_disable",
-                Format.Code(chnl.Name)).ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.AcmDisable(ctx.Guild.Id,
+                Format.Code(chnl.Name))).ConfigureAwait(false);
         }
     }
 
@@ -823,13 +823,13 @@ public class SlashPermissions : MewdekoSlashModuleBase<PermissionService>
 
         if (Convert.ToBoolean((int)action))
         {
-            await ReplyConfirmLocalizedAsync("arm_enable",
-                Format.Code(role.Name)).ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.ArmEnable(ctx.Guild.Id,
+                Format.Code(role.Name))).ConfigureAwait(false);
         }
         else
         {
-            await ReplyConfirmLocalizedAsync("arm_disable",
-                Format.Code(role.Name)).ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.ArmDisable(ctx.Guild.Id,
+                Format.Code(role.Name))).ConfigureAwait(false);
         }
     }
 
@@ -858,13 +858,13 @@ public class SlashPermissions : MewdekoSlashModuleBase<PermissionService>
 
         if (Convert.ToBoolean((int)action))
         {
-            await ReplyConfirmLocalizedAsync("aum_enable",
-                Format.Code(user.ToString())).ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.AumEnable(ctx.Guild.Id,
+                Format.Code(user.ToString()))).ConfigureAwait(false);
         }
         else
         {
-            await ReplyConfirmLocalizedAsync("aum_disable",
-                Format.Code(user.ToString())).ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.AumDisable(ctx.Guild.Id,
+                Format.Code(user.ToString()))).ConfigureAwait(false);
         }
     }
 
@@ -905,9 +905,9 @@ public class SlashPermissions : MewdekoSlashModuleBase<PermissionService>
             allowUser).ConfigureAwait(false);
 
         if (Convert.ToBoolean((int)action))
-            await ReplyConfirmLocalizedAsync("asm_enable").ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.AsmEnable(ctx.Guild.Id)).ConfigureAwait(false);
         else
-            await ReplyConfirmLocalizedAsync("asm_disable").ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.AsmDisable(ctx.Guild.Id)).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -932,11 +932,11 @@ public class SlashPermissions : MewdekoSlashModuleBase<PermissionService>
 
 
         var cb = new ComponentBuilder()
-            .WithButton(GetText("perm_quick_options"),
+            .WithButton(Strings.PermQuickOptions(ctx.Guild.Id),
                 "Often I am upset That I cannot fall in love but I guess This avoids the stress of falling out of it",
                 ButtonStyle.Secondary,
                 Emote.Parse("<:IconSettings:1290522076486041714>"), disabled: true)
-            .WithButton(GetText("back"), $"help_component_restore.{commandName}",
+            .WithButton(Strings.Back(ctx.Guild.Id), $"help_component_restore.{commandName}",
                 emote: "<:perms_back_arrow:1290522013861023848>".ToIEmote());
 
         var quickEmbeds = (Context.Interaction as SocketMessageComponent).Message.Embeds
@@ -956,13 +956,13 @@ public class SlashPermissions : MewdekoSlashModuleBase<PermissionService>
                 .ToList();
 
             var eb = new EmbedBuilder()
-                .WithTitle(GetText("perm_quick_options_redundant"))
+                .WithTitle(Strings.PermQuickOptionsRedundant(ctx.Guild.Id))
                 .WithColor(0xe52d00)
-                .WithDescription(GetText("perm_quick_options_redundant_explainer"))
-                .AddField(GetText("perm_quick_options_redundant_count"), redundant.Count)
+                .WithDescription(Strings.PermQuickOptionsRedundantExplainer(ctx.Guild.Id))
+                .AddField(Strings.PermQuickOptionsRedundantCount(ctx.Guild.Id), redundant.Count)
                 .WithFooter("$$mdk_redperm$$");
 
-            cb.WithButton(GetText("perm_quick_options_redundant_resolve"), $"credperms.{commandName}",
+            cb.WithButton(Strings.PermQuickOptionsRedundantResolve(ctx.Guild.Id), $"credperms.{commandName}",
                 ButtonStyle.Success);
 
             await (Context.Interaction as SocketMessageComponent).UpdateAsync(x =>
@@ -974,39 +974,39 @@ public class SlashPermissions : MewdekoSlashModuleBase<PermissionService>
         }
 
         if (effecting.Any(x => x.PrimaryTarget == PrimaryPermissionType.Server && !x.State))
-            cb.WithButton(GetText("perm_quick_options_disable_disabled"), $"command_toggle_disable.{commandName}",
+            cb.WithButton(Strings.PermQuickOptionsDisableDisabled(ctx.Guild.Id), $"command_toggle_disable.{commandName}",
                 ButtonStyle.Success,
                 "<:perms_check:1290520193839140884>".ToIEmote());
         else
-            cb.WithButton(GetText("perm_quick_options_disable_enabled"), $"command_toggle_disable.{commandName}",
+            cb.WithButton(Strings.PermQuickOptionsDisableEnabled(ctx.Guild.Id), $"command_toggle_disable.{commandName}",
                 ButtonStyle.Danger,
                 "<:perms_disabled:1290520276479643698>".ToIEmote());
 
         if (effecting.Any() || dpoUsed)
-            cb.WithButton(GetText("local_perms_reset"), $"local_perms_reset.{commandName}", ButtonStyle.Danger,
+            cb.WithButton(Strings.LocalPermsReset(ctx.Guild.Id), $"local_perms_reset.{commandName}", ButtonStyle.Danger,
                 "<:perms_warning:1290520381303820372>".ToIEmote());
 
         cb.WithSelectMenu($"cmd_perm_spawner.{commandName}", [
-            new SelectMenuOptionBuilder(GetText("cmd_perm_spawner_required_perms"), "dpo",
-                GetText("cmd_perm_spawner_required_perms_desc"),
+            new SelectMenuOptionBuilder(Strings.CmdPermSpawnerRequiredPerms(ctx.Guild.Id), "dpo",
+                Strings.CmdPermSpawnerRequiredPermsDesc(ctx.Guild.Id),
                 "<:perms_dpo:1290520438706802698>".ToIEmote()),
 
-            new SelectMenuOptionBuilder(GetText("cmd_perm_spawner_user_perms"), "usr",
-                GetText("cmd_perm_spawner_user_perms_desc"),
+            new SelectMenuOptionBuilder(Strings.CmdPermSpawnerUserPerms(ctx.Guild.Id), "usr",
+                Strings.CmdPermSpawnerUserPermsDesc(ctx.Guild.Id),
                 "<:perms_user_perms:1290520494747029600>".ToIEmote()),
 
-            new SelectMenuOptionBuilder(GetText("cmd_perm_spawner_role_perms"), "rol",
-                GetText("cmd_perm_spawner_role_perms_desc"),
+            new SelectMenuOptionBuilder(Strings.CmdPermSpawnerRolePerms(ctx.Guild.Id), "rol",
+                Strings.CmdPermSpawnerRolePermsDesc(ctx.Guild.Id),
                 "<:role:1290520559163019304>".ToIEmote()),
 
-            new SelectMenuOptionBuilder(GetText("cmd_perm_spawner_channel_perms"), "chn",
-                GetText("cmd_perm_spawner_channel_perms_desc"),
+            new SelectMenuOptionBuilder(Strings.CmdPermSpawnerChannelPerms(ctx.Guild.Id), "chn",
+                Strings.CmdPermSpawnerChannelPermsDesc(ctx.Guild.Id),
                 "<:ChannelText:1290520630109798420>".ToIEmote()),
 
-            new SelectMenuOptionBuilder(GetText("cmd_perm_spawner_category_perms"), "cat",
-                GetText("cmd_perm_spawner_category_perms_desc"),
-                GetText("not_an_easter_egg").ToIEmote())
-        ], GetText("advanced_options"));
+            new SelectMenuOptionBuilder(Strings.CmdPermSpawnerCategoryPerms(ctx.Guild.Id), "cat",
+                Strings.CmdPermSpawnerCategoryPermsDesc(ctx.Guild.Id),
+                Strings.NotAnEasterEgg(ctx.Guild.Id).ToIEmote())
+        ], Strings.AdvancedOptions(ctx.Guild.Id));
 
         await RespondAsync(components: cb.Build(), embeds: quickEmbeds, ephemeral: true);
     }
@@ -1059,29 +1059,29 @@ public class SlashPermissions : MewdekoSlashModuleBase<PermissionService>
             .WithSelectMenu(
                 $"credperms_m.{(int)perm.PrimaryTarget}.{perm.PrimaryTargetId}.{(int)perm.SecondaryTarget}.{perm.SecondaryTargetName}",
                 [
-                    new SelectMenuOptionBuilder(GetText("perm_quick_options_redundant_tool_enable"), "enabled",
-                        GetText("perm_quick_options_redundant_tool_enabled_description")),
+                    new SelectMenuOptionBuilder(Strings.PermQuickOptionsRedundantToolEnable(ctx.Guild.Id), "enabled",
+                        Strings.PermQuickOptionsRedundantToolEnabledDescription(ctx.Guild.Id)),
 
-                    new SelectMenuOptionBuilder(GetText("perm_quick_options_redundant_tool_disable"), "disabled",
-                        GetText("perm_quick_options_redundant_tool_disable_description")),
+                    new SelectMenuOptionBuilder(Strings.PermQuickOptionsRedundantToolDisable(ctx.Guild.Id), "disabled",
+                        Strings.PermQuickOptionsRedundantToolDisableDescription(ctx.Guild.Id)),
 
-                    new SelectMenuOptionBuilder(GetText("perm_quick_options_redundant_tool_clear"), "clear",
-                        GetText("perm_quick_options_redundant_tool_clear_description")),
+                    new SelectMenuOptionBuilder(Strings.PermQuickOptionsRedundantToolClear(ctx.Guild.Id), "clear",
+                        Strings.PermQuickOptionsRedundantToolClearDescription(ctx.Guild.Id)),
 
-                    new SelectMenuOptionBuilder(GetText("perm_quick_options_redundant_tool_current"), "current",
-                        GetText("perm_quick_options_redundant_tool_current_description"))
+                    new SelectMenuOptionBuilder(Strings.PermQuickOptionsRedundantToolCurrent(ctx.Guild.Id), "current",
+                        Strings.PermQuickOptionsRedundantToolCurrentDescription(ctx.Guild.Id))
                 ], "Action");
 
         var eb = new EmbedBuilder()
-            .WithTitle(GetText("perm_quick_options_redundant"))
-            .WithDescription(GetText("perm_quick_options_redundant_tool_priority_disclaimer"))
-            .AddField(GetText("perm_quick_options_redundant_tool_ptar"), perm.PrimaryTarget.ToString(), true)
-            .AddField(GetText("perm_quick_options_redundant_tool_ptarid"),
+            .WithTitle(Strings.PermQuickOptionsRedundant(ctx.Guild.Id))
+            .WithDescription(Strings.PermQuickOptionsRedundantToolPriorityDisclaimer(ctx.Guild.Id))
+            .AddField(Strings.PermQuickOptionsRedundantToolPtar(ctx.Guild.Id), perm.PrimaryTarget.ToString(), true)
+            .AddField(Strings.PermQuickOptionsRedundantToolPtarid(ctx.Guild.Id),
                 $"{perm.PrimaryTargetId} ({PermissionService.MentionPerm(perm.PrimaryTarget, perm.PrimaryTargetId)})",
                 true)
-            .AddField(GetText("perm_quick_options_redundant_tool_custom"), perm.IsCustomCommand)
-            .AddField(GetText("perm_quick_options_redundant_tool_star"), perm.SecondaryTarget.ToString(), true)
-            .AddField(GetText("perm_quick_options_redundant_tool_starid"), $"{perm.SecondaryTargetName}", true)
+            .AddField(Strings.PermQuickOptionsRedundantToolCustom(ctx.Guild.Id), perm.IsCustomCommand)
+            .AddField(Strings.PermQuickOptionsRedundantToolStar(ctx.Guild.Id), perm.SecondaryTarget.ToString(), true)
+            .AddField(Strings.PermQuickOptionsRedundantToolStarid(ctx.Guild.Id), $"{perm.SecondaryTargetName}", true)
             .WithFooter("$$mdk_redperm$$")
             .WithColor(0xe52d00);
 
@@ -1319,7 +1319,7 @@ public class SlashPermissions : MewdekoSlashModuleBase<PermissionService>
             selects.Add(new SelectMenuBuilder()
                 .WithCustomId($"update_cmd_dpo.{commandName}${i}")
                 .WithMinValues(0)
-                .WithPlaceholder(GetText("cmd_perm_spawner_dpo_page", selects.Count + 1)));
+                .WithPlaceholder(Strings.CmdPermSpawnerDpoPage(ctx.Guild.Id, selects.Count + 1)));
             var current = selects.Last();
             for (var j = 0; j < 25 && (selects.Count - 1) * 25 + j < perms.Length; j++)
             {
@@ -1332,7 +1332,7 @@ public class SlashPermissions : MewdekoSlashModuleBase<PermissionService>
 
         var cb = new ComponentBuilder()
             .WithRows(selects.Where(x => x.Options.Count > 0).Select(x => new ActionRowBuilder().WithSelectMenu(x)))
-            .WithButton(GetText("back"), $"permenu_update.{commandName}",
+            .WithButton(Strings.Back(ctx.Guild.Id), $"permenu_update.{commandName}",
                 emote: "<:perms_back_arrow:1290522013861023848>".ToIEmote());
 
         return (ctx.Interaction as SocketMessageComponent).UpdateAsync(x => x.Components = cb.Build());
@@ -1435,21 +1435,21 @@ public class SlashPermissions : MewdekoSlashModuleBase<PermissionService>
             .ToList();
         // make component builders, slack fill with blank user selects
         var cb = new ComponentBuilder()
-            .WithButton(GetText("back"), $"permenu_update.{commandName}",
+            .WithButton(Strings.Back(ctx.Guild.Id), $"permenu_update.{commandName}",
                 emote: "<:perms_back_arrow:1085352564943491102>".ToIEmote())
-            .WithButton(GetText("perm_quick_options_overwrite"),
+            .WithButton(Strings.PermQuickOptionsOverwright(ctx.Guild.Id),
                 $"command_perm_spawner_usr.{commandName}.{true}.{allow}$1",
                 overwrite ? ButtonStyle.Primary : ButtonStyle.Secondary,
                 "<:perms_overwrite:1085421377798029393>".ToIEmote(), disabled: overwrite)
-            .WithButton(GetText("perm_quick_options_fallback"),
+            .WithButton(Strings.PermQuickOptionsFallback(ctx.Guild.Id),
                 $"command_perm_spawner_usr.{commandName}.{false}.{allow}$2",
                 !overwrite ? ButtonStyle.Primary : ButtonStyle.Secondary,
                 "<:perms_fallback:1085421376032231444>".ToIEmote(), disabled: !overwrite)
-            .WithButton(GetText("perm_quick_options_allow"),
+            .WithButton(Strings.PermQuickOptionsAllow(ctx.Guild.Id),
                 $"command_perm_spawner_usr.{commandName}.{overwrite}.{true}$3",
                 allow ? ButtonStyle.Success : ButtonStyle.Secondary,
                 "<:perms_check:1085356998247317514>".ToIEmote(), disabled: allow)
-            .WithButton(GetText("perm_quick_options_deny"),
+            .WithButton(Strings.PermQuickOptionsDeny(ctx.Guild.Id),
                 $"command_perm_spawner_usr.{commandName}.{overwrite}.{false}$4",
                 !allow ? ButtonStyle.Danger : ButtonStyle.Secondary,
                 "<:perms_disabled:1085358511900327956>".ToIEmote(), disabled: !allow);
@@ -1461,17 +1461,18 @@ public class SlashPermissions : MewdekoSlashModuleBase<PermissionService>
                 .Select(async x => (x, user: await TryGetUser(x.PrimaryTargetId)))
                 .Select(x => x.Result)
                 .Select(x => new SelectMenuOptionBuilder(x.user?.ToString() ?? "Unknown#0000", x.x.Id.ToString(),
-                    GetText($"perms_quick_options_user_remove_{(allow ? "allow" : "deny")}", x.x.PrimaryTargetId),
+                    allow ? Strings.PermsQuickOptionsUserRemoveAllow(ctx.Guild.Id, x.x.PrimaryTargetId)
+                        : Strings.PermsQuickOptionsUserRemoveDeny(ctx.Guild.Id, x.x.PrimaryTargetId),
                     "<:perms_user_perms:1085426466818359367>".ToIEmote(), true));
             var sb = new SelectMenuBuilder($"perm_quick_options_user_remove.{commandName}.{overwrite}.{allow}${i}",
-                options.ToList(), GetText("perms_quick_options_user_remove"),
+                options.ToList(), Strings.PermsQuickOptionsUserRemove(ctx.Guild.Id),
                 options.Count(), 0);
             cb.WithSelectMenu(sb);
         }
 
         cb.WithSelectMenu(
             $"perm_quick_options_user_add.{commandName}.{overwrite}.{allow}${Random.Shared.NextInt64(i, long.MaxValue)}",
-            placeholder: GetText("perm_quick_options_add_users"), minValues: 1, maxValues: 10,
+            placeholder: Strings.PermQuickOptionsAddUsers(ctx.Guild.Id), minValues: 1, maxValues: 10,
             type: ComponentType.UserSelect, options: null);
 
         return (Context.Interaction as SocketMessageComponent).UpdateAsync(x => x.Components = cb.Build());
@@ -1599,8 +1600,8 @@ public class SlashPermissions : MewdekoSlashModuleBase<PermissionService>
     public Task HelpComponentRestore(string commandName)
     {
         var cb = new ComponentBuilder()
-            .WithButton(GetText("help_run_cmd"), $"runcmd.{commandName}", ButtonStyle.Success)
-            .WithButton(GetText("help_permenu_link"), $"permenu_update.{commandName}", ButtonStyle.Primary,
+            .WithButton(Strings.HelpRunCmd(ctx.Guild.Id), $"runcmd.{commandName}", ButtonStyle.Success)
+            .WithButton(Strings.HelpPermenuLink(ctx.Guild.Id), $"permenu_update.{commandName}", ButtonStyle.Primary,
                 Emote.Parse("<:IconPrivacySettings:845090111976636446>"));
         return (ctx.Interaction as SocketMessageComponent).UpdateAsync(x => x.Components = cb.Build());
     }
@@ -1661,21 +1662,21 @@ public class SlashPermissions : MewdekoSlashModuleBase<PermissionService>
             .ToList();
         // make component builders, slack fill with blank role selects
         var cb = new ComponentBuilder()
-            .WithButton(GetText("back"), $"permenu_update.{commandName}",
+            .WithButton(Strings.Back(ctx.Guild.Id), $"permenu_update.{commandName}",
                 emote: "<:perms_back_arrow:1085352564943491102>".ToIEmote())
-            .WithButton(GetText("perm_quick_options_overwrite"),
+            .WithButton(Strings.PermQuickOptionsOverwright(ctx.Guild.Id),
                 $"command_perm_spawner_rol.{commandName}.{true}.{allow}$1",
                 overwrite ? ButtonStyle.Primary : ButtonStyle.Secondary,
                 "<:perms_overwrite:1085421377798029393>".ToIEmote(), disabled: overwrite)
-            .WithButton(GetText("perm_quick_options_fallback"),
+            .WithButton(Strings.PermQuickOptionsFallback(ctx.Guild.Id),
                 $"command_perm_spawner_rol.{commandName}.{false}.{allow}$2",
                 !overwrite ? ButtonStyle.Primary : ButtonStyle.Secondary,
                 "<:perms_fallback:1085421376032231444>".ToIEmote(), disabled: !overwrite)
-            .WithButton(GetText("perm_quick_options_allow"),
+            .WithButton(Strings.PermQuickOptionsAllow(ctx.Guild.Id),
                 $"command_perm_spawner_rol.{commandName}.{overwrite}.{true}$3",
                 allow ? ButtonStyle.Success : ButtonStyle.Secondary,
                 "<:perms_check:1085356998247317514>".ToIEmote(), disabled: allow)
-            .WithButton(GetText("perm_quick_options_deny"),
+            .WithButton(Strings.PermQuickOptionsDeny(ctx.Guild.Id),
                 $"command_perm_spawner_rol.{commandName}.{overwrite}.{false}$4",
                 !allow ? ButtonStyle.Danger : ButtonStyle.Secondary,
                 "<:perms_disabled:1085358511900327956>".ToIEmote(), disabled: !allow);
@@ -1686,17 +1687,18 @@ public class SlashPermissions : MewdekoSlashModuleBase<PermissionService>
             var options = splitGroups[i]
                 .Select(x => (x, role: TryGetRole(x.PrimaryTargetId)))
                 .Select(x => new SelectMenuOptionBuilder(x.role?.ToString() ?? "Deleted Role", x.x.Id.ToString(),
-                    GetText($"perms_quick_options_role_remove_{(allow ? "allow" : "deny")}", x.x.PrimaryTargetId),
+                    allow ? Strings.PermsQuickOptionsRoleRemoveAllow(ctx.Guild.Id, x.x.PrimaryTargetId)
+                        : Strings.PermsQuickOptionsRoleRemoveDeny(ctx.Guild.Id, x.x.PrimaryTargetId),
                     "<:role:808826577785716756>".ToIEmote(), true));
             var sb = new SelectMenuBuilder($"perm_quick_options_role_remove.{commandName}.{overwrite}.{allow}${i}",
-                options.ToList(), GetText("perms_quick_options_role_remove"),
+                options.ToList(), Strings.PermsQuickOptionsRoleRemove(ctx.Guild.Id),
                 options.Count(), 0);
             cb.WithSelectMenu(sb);
         }
 
         cb.WithSelectMenu(
             $"perm_quick_options_role_add.{commandName}.{overwrite}.{allow}${Random.Shared.NextInt64(i, long.MaxValue)}",
-            placeholder: GetText("perm_quick_options_add_roles"), minValues: 1, maxValues: 10,
+            placeholder: Strings.PermQuickOptionsAddRoles(ctx.Guild.Id), minValues: 1, maxValues: 10,
             type: ComponentType.RoleSelect, options: null);
 
         return (Context.Interaction as SocketMessageComponent).UpdateAsync(x => x.Components = cb.Build());
@@ -1863,21 +1865,21 @@ public class SlashPermissions : MewdekoSlashModuleBase<PermissionService>
             .ToList();
         // make component builders, slack fill with blank user selects
         var cb = new ComponentBuilder()
-            .WithButton(GetText("back"), $"permenu_update.{commandName}",
+            .WithButton(Strings.Back(ctx.Guild.Id), $"permenu_update.{commandName}",
                 emote: "<:perms_back_arrow:1085352564943491102>".ToIEmote())
-            .WithButton(GetText("perm_quick_options_overwrite"),
+            .WithButton(Strings.PermQuickOptionsOverwright(ctx.Guild.Id),
                 $"command_perm_spawner_chn.{commandName}.{true}.{allow}$1",
                 overwrite ? ButtonStyle.Primary : ButtonStyle.Secondary,
                 "<:perms_overwrite:1085421377798029393>".ToIEmote(), disabled: overwrite)
-            .WithButton(GetText("perm_quick_options_fallback"),
+            .WithButton(Strings.PermQuickOptionsFallback(ctx.Guild.Id),
                 $"command_perm_spawner_chn.{commandName}.{false}.{allow}$2",
                 !overwrite ? ButtonStyle.Primary : ButtonStyle.Secondary,
                 "<:perms_fallback:1085421376032231444>".ToIEmote(), disabled: !overwrite)
-            .WithButton(GetText("perm_quick_options_allow"),
+            .WithButton(Strings.PermQuickOptionsAllow(ctx.Guild.Id),
                 $"command_perm_spawner_chn.{commandName}.{overwrite}.{true}$3",
                 allow ? ButtonStyle.Success : ButtonStyle.Secondary,
                 "<:perms_check:1085356998247317514>".ToIEmote(), disabled: allow)
-            .WithButton(GetText("perm_quick_options_deny"),
+            .WithButton(Strings.PermQuickOptionsDeny(ctx.Guild.Id),
                 $"command_perm_spawner_chn.{commandName}.{overwrite}.{false}$4",
                 !allow ? ButtonStyle.Danger : ButtonStyle.Secondary,
                 "<:perms_disabled:1085358511900327956>".ToIEmote(), disabled: !allow);
@@ -1889,17 +1891,18 @@ public class SlashPermissions : MewdekoSlashModuleBase<PermissionService>
                 .Select(async x => (x, channel: await TryGetChannel(x.PrimaryTargetId)))
                 .Select(x => x.Result)
                 .Select(x => new SelectMenuOptionBuilder(x.channel?.ToString() ?? "Deleted Channel", x.x.Id.ToString(),
-                    GetText($"perms_quick_options_channel_remove_{(allow ? "allow" : "deny")}", x.x.PrimaryTargetId),
+                    allow ? Strings.PermsQuickOptionsChannelRemoveAllow(ctx.Guild.Id, x.x.PrimaryTargetId)
+                        : Strings.PermsQuickOptionsChannelRemoveDeny(ctx.Guild.Id, x.x.PrimaryTargetId),
                     GetChannelEmote(x.channel), true));
             var sb = new SelectMenuBuilder($"perm_quick_options_channel_remove.{commandName}.{overwrite}.{allow}${i}",
                 options.ToList(),
-                GetText("perms_quick_options_channel_remove"), options.Count(), 0);
+                Strings.PermsQuickOptionsChannelRemove(ctx.Guild.Id), options.Count(), 0);
             cb.WithSelectMenu(sb);
         }
 
         cb.WithSelectMenu(
             $"perm_quick_options_channel_add.{commandName}.{overwrite}.{allow}${Random.Shared.NextInt64(i, long.MaxValue)}",
-            placeholder: GetText("perm_quick_options_add_channels"), minValues: 1, maxValues: 10,
+            placeholder: Strings.PermQuickOptionsAddChannels(ctx.Guild.Id), minValues: 1, maxValues: 10,
             type: ComponentType.ChannelSelect, options: null,
             channelTypes: Enum.GetValues<ChannelType>().Where(x => x != ChannelType.Category).ToArray());
 
@@ -2083,21 +2086,21 @@ public class SlashPermissions : MewdekoSlashModuleBase<PermissionService>
             .ToList();
         // make component builders, slack fill with blank user selects
         var cb = new ComponentBuilder()
-            .WithButton(GetText("back"), $"permenu_update.{commandName}",
+            .WithButton(Strings.Back(ctx.Guild.Id), $"permenu_update.{commandName}",
                 emote: "<:perms_back_arrow:1085352564943491102>".ToIEmote())
-            .WithButton(GetText("perm_quick_options_overwrite"),
+            .WithButton(Strings.PermQuickOptionsOverwright(ctx.Guild.Id),
                 $"command_perm_spawner_cat.{commandName}.{true}.{allow}$1",
                 overwrite ? ButtonStyle.Primary : ButtonStyle.Secondary,
                 "<:perms_overwrite:1085421377798029393>".ToIEmote(), disabled: overwrite)
-            .WithButton(GetText("perm_quick_options_fallback"),
+            .WithButton(Strings.PermQuickOptionsFallback(ctx.Guild.Id),
                 $"command_perm_spawner_cat.{commandName}.{false}.{allow}$2",
                 !overwrite ? ButtonStyle.Primary : ButtonStyle.Secondary,
                 "<:perms_fallback:1085421376032231444>".ToIEmote(), disabled: !overwrite)
-            .WithButton(GetText("perm_quick_options_allow"),
+            .WithButton(Strings.PermQuickOptionsAllow(ctx.Guild.Id),
                 $"command_perm_spawner_cat.{commandName}.{overwrite}.{true}$3",
                 allow ? ButtonStyle.Success : ButtonStyle.Secondary,
                 "<:perms_check:1085356998247317514>".ToIEmote(), disabled: allow)
-            .WithButton(GetText("perm_quick_options_deny"),
+            .WithButton(Strings.PermQuickOptionsDeny(ctx.Guild.Id),
                 $"command_perm_spawner_cat.{commandName}.{overwrite}.{false}$4",
                 !allow ? ButtonStyle.Danger : ButtonStyle.Secondary,
                 "<:perms_disabled:1085358511900327956>".ToIEmote(), disabled: !allow);
@@ -2109,17 +2112,18 @@ public class SlashPermissions : MewdekoSlashModuleBase<PermissionService>
                 .Select(async x => (x, channel: await TryGetChannel(x.PrimaryTargetId)))
                 .Select(x => x.Result)
                 .Select(x => new SelectMenuOptionBuilder(x.channel?.ToString() ?? "Deleted Channel", x.x.Id.ToString(),
-                    GetText($"perms_quick_options_category_remove_{(allow ? "allow" : "deny")}", x.x.PrimaryTargetId),
+                    allow ? Strings.PermsQuickOptionsCategoryRemoveAllow(ctx.Guild.Id, x.x.PrimaryTargetId)
+                        : Strings.PermsQuickOptionsCategoryRemoveDeny(ctx.Guild.Id, x.x.PrimaryTargetId),
                     GetChannelEmote(x.channel), true));
             var sb = new SelectMenuBuilder($"perm_quick_options_category_remove.{commandName}.{overwrite}.{allow}${i}",
                 options.ToList(),
-                GetText("perms_quick_options_category_remove"), options.Count(), 0);
+                Strings.PermsQuickOptionsCategoryRemove(ctx.Guild.Id), options.Count(), 0);
             cb.WithSelectMenu(sb);
         }
 
         cb.WithSelectMenu(
             $"perm_quick_options_category_add.{commandName}.{overwrite}.{allow}${Random.Shared.NextInt64(i, long.MaxValue)}",
-            placeholder: GetText("perm_quick_options_add_categories"), minValues: 1, maxValues: 10,
+            placeholder: Strings.PermQuickOptionsAddCategorys(ctx.Guild.Id), minValues: 1, maxValues: 10,
             type: ComponentType.ChannelSelect, options: null, channelTypes:
             [
                 ChannelType.Category
@@ -2305,7 +2309,7 @@ public class SlashPermissions : MewdekoSlashModuleBase<PermissionService>
     {
         return channel switch
         {
-            ICategoryChannel => GetText("not_an_easter_egg").ToIEmote(),
+            ICategoryChannel => Strings.NotAnEasterEgg(ctx.Guild.Id).ToIEmote(),
             IForumChannel => "<:ForumChannelIcon:1086869270312517632>".ToIEmote(),
             INewsChannel => "<:ChannelAnnouncements:779042577114202122>".ToIEmote(),
             IThreadChannel => "<:threadchannel:824240882697633812>".ToIEmote(),

@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
+using System.Text.Json;
 using Discord.Commands;
 using Discord.Interactions;
 using Discord.Net;
@@ -13,7 +14,7 @@ using Mewdeko.Common.TypeReaders.Interactions;
 using Mewdeko.Database.DbContextStuff;
 using Mewdeko.Services.Impl;
 using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
+
 using Serilog;
 using Serilog.Events;
 using StackExchange.Redis;
@@ -342,16 +343,19 @@ public class Mewdeko
     private void HandleStatusChanges()
     {
         var sub = Services.GetService<IDataCache>().Redis.GetSubscriber();
+
         sub.Subscribe($"{Client.CurrentUser.Id}_status.game_set", async (_, game) =>
         {
             try
             {
-                var obj = new
+                var options = new JsonSerializerOptions
                 {
-                    Name = default(string), Activity = ActivityType.Playing
+                    PropertyNameCaseInsensitive = true
                 };
-                obj = JsonConvert.DeserializeAnonymousType(game, obj);
-                await Client.SetGameAsync(obj.Name, type: obj.Activity).ConfigureAwait(false);
+
+                var status = JsonSerializer.Deserialize<GameStatus>(game, options);
+                await Client.SetGameAsync(status?.Name, type: status?.Activity ?? ActivityType.Playing)
+                    .ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -363,12 +367,14 @@ public class Mewdeko
         {
             try
             {
-                var obj = new
+                var options = new JsonSerializerOptions
                 {
-                    Name = "", Url = ""
+                    PropertyNameCaseInsensitive = true
                 };
-                obj = JsonConvert.DeserializeAnonymousType(streamData, obj);
-                await Client.SetGameAsync(obj?.Name, obj!.Url, ActivityType.Streaming).ConfigureAwait(false);
+
+                var stream = JsonSerializer.Deserialize<StreamStatus>(streamData, options);
+                await Client.SetGameAsync(stream?.Name, stream?.Url, ActivityType.Streaming)
+                    .ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -390,7 +396,7 @@ public class Mewdeko
             Name = game, Activity = type
         };
         var sub = Services.GetService<IDataCache>().Redis.GetSubscriber();
-        await sub.PublishAsync($"{Client.CurrentUser.Id}_status.game_set", JsonConvert.SerializeObject(obj))
+        await sub.PublishAsync($"{Client.CurrentUser.Id}_status.game_set", JsonSerializer.Serialize(obj))
             .ConfigureAwait(false);
     }
 

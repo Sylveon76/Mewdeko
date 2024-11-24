@@ -36,16 +36,16 @@ public partial class Administration
             if (perms is null || perms.Length == 0)
             {
                 await Service.RemoveOverride(ctx.Guild.Id, cmd.Name).ConfigureAwait(false);
-                await ReplyConfirmLocalizedAsync("perm_override_reset").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.PermOverrideReset(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
             var aggregatePerms = perms.Aggregate((acc, seed) => seed | acc);
             await Service.AddOverride(Context.Guild.Id, cmd.Name, aggregatePerms).ConfigureAwait(false);
 
-            await ReplyConfirmLocalizedAsync("perm_override",
+            await ReplyConfirmAsync(Strings.PermOverride(ctx.Guild.Id,
                 Format.Bold(aggregatePerms.ToString()),
-                Format.Code(cmd.Name)).ConfigureAwait(false);
+                Format.Code(cmd.Name))).ConfigureAwait(false);
         }
 
 
@@ -64,13 +64,13 @@ public partial class Administration
         {
             var result = await PromptUserConfirmAsync(new EmbedBuilder()
                 .WithOkColor()
-                .WithDescription(GetText("perm_override_all_confirm")), ctx.User.Id).ConfigureAwait(false);
+                .WithDescription(Strings.PermOverrideAllConfirm(ctx.Guild.Id)), ctx.User.Id).ConfigureAwait(false);
 
             if (!result)
                 return;
             await Service.ClearAllOverrides(Context.Guild.Id).ConfigureAwait(false);
 
-            await ReplyConfirmLocalizedAsync("perm_override_all").ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.PermOverrideAll(ctx.Guild.Id)).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -107,7 +107,7 @@ public partial class Administration
                     .ToList();
                 if (thisPageOverrides.Count == 0)
                 {
-                    return new PageBuilder().WithDescription(GetText("perm_override_page_none"))
+                    return new PageBuilder().WithDescription(Strings.PermOverridePageNone(ctx.Guild.Id))
                         .WithColor(Mewdeko.ErrorColor);
                 }
 

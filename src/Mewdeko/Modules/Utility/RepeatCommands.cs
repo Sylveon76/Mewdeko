@@ -40,7 +40,7 @@ public partial class Utility
             index--;
             if (!Service.Repeaters.TryGetValue(ctx.Guild.Id, out var rep))
             {
-                await ReplyErrorLocalizedAsync("repeat_invoke_none").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.RepeatInvokeNone(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
@@ -48,7 +48,7 @@ public partial class Utility
 
             if (index >= repList.Count)
             {
-                await ReplyErrorLocalizedAsync("index_out_of_range").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.IndexOutOfRange(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
@@ -91,7 +91,7 @@ public partial class Utility
 
             if (index >= repeaterList.Count)
             {
-                await ReplyErrorLocalizedAsync("index_out_of_range").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.IndexOutOfRange(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
@@ -120,7 +120,7 @@ public partial class Utility
 
             await ctx.Channel.EmbedAsync(new EmbedBuilder()
                 .WithOkColor()
-                .WithTitle(GetText("repeater_removed", index + 1))
+                .WithTitle(Strings.RepeaterRemoved(ctx.Guild.Id, index + 1))
                 .WithDescription(description)).ConfigureAwait(false);
         }
 
@@ -152,7 +152,7 @@ public partial class Utility
 
             if (--index < 0 || index >= repeaterList.Count)
             {
-                await ReplyErrorLocalizedAsync("index_out_of_range").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.IndexOutOfRange(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
@@ -173,11 +173,11 @@ public partial class Utility
 
             if (repeater.NoRedundant)
             {
-                await ReplyConfirmLocalizedAsync("repeater_redundant_no", index + 1).ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.RepeaterRedundantNo(ctx.Guild.Id, index + 1)).ConfigureAwait(false);
             }
             else
             {
-                await ReplyConfirmLocalizedAsync("repeater_redundant_yes", index + 1).ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.RepeaterRedundantYes(ctx.Guild.Id, index + 1)).ConfigureAwait(false);
             }
         }
 
@@ -308,7 +308,7 @@ public partial class Utility
                 var description = GetRepeaterInfoString(runner);
                 await ctx.Channel.EmbedAsync(new EmbedBuilder()
                     .WithOkColor()
-                    .WithTitle(GetText("repeater_created"))
+                    .WithTitle(Strings.RepeaterCreated(ctx.Guild.Id))
                     .WithDescription(description)).ConfigureAwait(false);
             }
             catch (Exception e)
@@ -335,17 +335,17 @@ public partial class Utility
                 return;
             if (!Service.Repeaters.TryGetValue(ctx.Guild.Id, out var repRunners))
             {
-                await ReplyConfirmLocalizedAsync("repeaters_none").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.RepeatersNone(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
             var replist = repRunners.ToList();
 
             var embed = new EmbedBuilder()
-                .WithTitle(GetText("list_of_repeaters"))
+                .WithTitle(Strings.ListOfRepeaters(ctx.Guild.Id))
                 .WithOkColor();
 
-            if (replist.Count == 0) embed.WithDescription(GetText("no_active_repeaters"));
+            if (replist.Count == 0) embed.WithDescription(Strings.NoActiveRepeaters(ctx.Guild.Id));
 
             for (var i = 0; i < replist.Count; i++)
             {
@@ -386,7 +386,7 @@ public partial class Utility
 
             if (--index < 0 || index >= repeaterList.Count)
             {
-                await ReplyErrorLocalizedAsync("index_out_of_range").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.IndexOutOfRange(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
@@ -411,7 +411,7 @@ public partial class Utility
 
             await dbContext.SaveChangesAsync().ConfigureAwait(false);
 
-            await ReplyConfirmLocalizedAsync("repeater_msg_update", text).ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.RepeaterMsgUpdate(ctx.Guild.Id, text)).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -438,7 +438,7 @@ public partial class Utility
 
             if (--index < 0 || index >= repeaterList.Count)
             {
-                await ReplyErrorLocalizedAsync("index_out_of_range").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.IndexOutOfRange(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
@@ -452,7 +452,7 @@ public partial class Utility
             if (item != null) item.ChannelId = textChannel.Id;
             await dbContext.SaveChangesAsync().ConfigureAwait(false);
 
-            await ReplyConfirmLocalizedAsync("repeater_channel_update", textChannel.Mention).ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.RepeaterChannelUpdate(ctx.Guild.Id, textChannel.Mention)).ConfigureAwait(false);
         }
 
         private string GetRepeaterInfoString(RepeatRunner runner)
@@ -464,10 +464,10 @@ public partial class Utility
 
             var description = "";
             if (runner.Repeater.NoRedundant)
-                description = $"{Format.Underline(Format.Bold(GetText("no_redundant:")))}\n\n";
+                description = $"{Format.Underline(Format.Bold(Strings.NoRedundant(ctx.Guild.Id)))}\n\n";
 
             description +=
-                $"<#{runner.Repeater.ChannelId}>\n`{GetText("interval:")}` {intervalString}\n`{GetText("executes_in:")}` {executesInString}\n`{GetText("message:")}` {message}";
+                $"<#{runner.Repeater.ChannelId}>\n`{Strings.Interval:(ctx.Guild.Id)}` {intervalString}\n`{Strings.ExecutesIn:(ctx.Guild.Id)}` {executesInString}\n`{Strings.Message:(ctx.Guild.Id)}` {message}";
 
             return description;
         }

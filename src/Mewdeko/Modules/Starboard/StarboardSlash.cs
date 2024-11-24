@@ -23,7 +23,7 @@ public class StarboardSlash(GuildSettingsService guildSettings) : MewdekoSlashSu
         if (chn is null)
         {
             await Service.SetStarboardChannel(ctx.Guild, 0).ConfigureAwait(false);
-            await ctx.Interaction.SendConfirmAsync("Starboard has been disabled.").ConfigureAwait(false);
+            await ctx.Interaction.SendConfirmAsync(Strings.StarboardDisabled(ctx.Guild.Id));
             return;
         }
 
@@ -43,7 +43,7 @@ public class StarboardSlash(GuildSettingsService guildSettings) : MewdekoSlashSu
     {
         if (num == 0)
         {
-            await ctx.Interaction.SendConfirmAsync("Reposting disabled!").ConfigureAwait(false);
+            await ctx.Interaction.SendErrorAsync(Strings.RepostingDisabled(ctx.Guild.Id), Config);
             await Service.SetRepostThreshold(ctx.Guild, 0).ConfigureAwait(false);
             return;
         }
@@ -156,12 +156,12 @@ public class StarboardSlash(GuildSettingsService guildSettings) : MewdekoSlashSu
         if (mode > 0)
         {
             await Service.SetCheckMode(ctx.Guild, true).ConfigureAwait(false);
-            await ctx.Interaction.SendConfirmAsync("Starboard Blacklist has been enabled").ConfigureAwait(false);
+            await ctx.Interaction.SendConfirmAsync(Strings.StarboardBlacklistEnabled(ctx.Guild.Id));
         }
         else
         {
             await Service.SetCheckMode(ctx.Guild, false).ConfigureAwait(false);
-            await ctx.Interaction.SendConfirmAsync("Starboard Whitelist mode has been enabled").ConfigureAwait(false);
+            await ctx.Interaction.SendConfirmAsync(Strings.StarboardWhitelistEnabled(ctx.Guild.Id));
         }
     }
 
@@ -177,12 +177,9 @@ public class StarboardSlash(GuildSettingsService guildSettings) : MewdekoSlashSu
     {
         await Service.SetRemoveOnClear(ctx.Guild, enabled).ConfigureAwait(false);
         if (enabled)
-            await ctx.Interaction
-                .SendConfirmAsync("Starboard posts will now be removed when the message's reactions are cleared.")
-                .ConfigureAwait(false);
+            await ctx.Interaction.SendConfirmAsync(Strings.StarboardReactionsClearRemoveEnabled(ctx.Guild.Id));
         else
-            await ctx.Interaction.SendConfirmAsync("Starboard posts will no longer be removed upon clearing reactions.")
-                .ConfigureAwait(false);
+            await ctx.Interaction.SendConfirmAsync(Strings.StarboardReactionsClearRemoveDisabled(ctx.Guild.Id));
     }
 
     /// <summary>
@@ -197,13 +194,9 @@ public class StarboardSlash(GuildSettingsService guildSettings) : MewdekoSlashSu
     {
         await Service.SetRemoveOnDelete(ctx.Guild, enabled).ConfigureAwait(false);
         if (enabled)
-            await ctx.Interaction
-                .SendConfirmAsync("Starboard posts will now be removed when the original message is deleted.")
-                .ConfigureAwait(false);
+            await ctx.Interaction.SendConfirmAsync(Strings.StarboardDeleteRemoveEnabled(ctx.Guild.Id));
         else
-            await ctx.Interaction
-                .SendConfirmAsync("Starboard posts will no longer be removed upon original message deletion.")
-                .ConfigureAwait(false);
+            await ctx.Interaction.SendConfirmAsync(Strings.StarboardDeleteRemoveDisabled(ctx.Guild.Id));
     }
 
     /// <summary>
@@ -241,8 +234,8 @@ public class StarboardSlash(GuildSettingsService guildSettings) : MewdekoSlashSu
     {
         await Service.SetStarboardAllowBots(ctx.Guild, enabled).ConfigureAwait(false);
         if (enabled)
-            await ctx.Interaction.SendConfirmAsync("Starboard will no longer ignore bots.").ConfigureAwait(false);
+            await ctx.Interaction.SendConfirmAsync(Strings.StarboardBotsEnabled(ctx.Guild.Id));
         else
-            await ctx.Interaction.SendConfirmAsync("Starboard will now ignore bots.").ConfigureAwait(false);
+            await ctx.Interaction.SendConfirmAsync(Strings.StarboardBotsDisabled(ctx.Guild.Id));
     }
 }

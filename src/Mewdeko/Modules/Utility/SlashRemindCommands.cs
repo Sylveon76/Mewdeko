@@ -92,7 +92,7 @@ public class SlashRemindCommands(DbContextProvider dbProvider, GuildTimezoneServ
         var perms = ((IGuildUser)ctx.User).GetPermissions(channel);
         if (!perms.SendMessages || !perms.ViewChannel)
         {
-            await ReplyErrorLocalizedAsync("cant_read_or_send").ConfigureAwait(false);
+            await ReplyErrorAsync(Strings.CantReadOrSend(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
@@ -105,7 +105,7 @@ public class SlashRemindCommands(DbContextProvider dbProvider, GuildTimezoneServ
         if (!await RemindInternal(channel.Id, false, time, reminder)
                 .ConfigureAwait(false))
         {
-            await ReplyErrorLocalizedAsync("remind_too_long").ConfigureAwait(false);
+            await ReplyErrorAsync(Strings.RemindTooLong(ctx.Guild.Id)).ConfigureAwait(false);
         }
     }
 
@@ -165,7 +165,7 @@ public class SlashRemindCommands(DbContextProvider dbProvider, GuildTimezoneServ
         {
             var unixTime = time.ToUnixEpochDate();
             await RespondAsync(
-                $"⏰ {GetText("remind", Format.Bold(!isPrivate ? $"<#{targetId}>" : ctx.User.Username), Format.Bold(message), $"<t:{unixTime}:R>", gTime, gTime)}",
+                $"⏰ {Strings.Remind(ctx.Guild.Id, Format.Bold(!isPrivate ? $"<#{targetId}>" : ctx.User.Username), Format.Bold(message), ($"<t:{unixTime}:R>", gTime, gTime))}",
                 ephemeral: isPrivate).ConfigureAwait(false);
         }
         catch
@@ -191,7 +191,7 @@ public class SlashRemindCommands(DbContextProvider dbProvider, GuildTimezoneServ
 
         var embed = new EmbedBuilder()
             .WithOkColor()
-            .WithTitle(GetText("reminder_list"));
+            .WithTitle(Strings.ReminderList(ctx.Guild.Id));
 
         List<Reminder> rems;
 
@@ -219,7 +219,7 @@ public class SlashRemindCommands(DbContextProvider dbProvider, GuildTimezoneServ
         }
         else
         {
-            embed.WithDescription(GetText("reminders_none"));
+            embed.WithDescription(Strings.RemindersNone(ctx.Guild.Id));
         }
 
         embed.AddPaginatedFooter(page + 1, null);
@@ -253,8 +253,8 @@ public class SlashRemindCommands(DbContextProvider dbProvider, GuildTimezoneServ
         }
 
         if (rem == null)
-            await ReplyErrorLocalizedAsync("reminder_not_exist").ConfigureAwait(false);
+            await ReplyErrorAsync(Strings.ReminderNotExist(ctx.Guild.Id)).ConfigureAwait(false);
         else
-            await ReplyErrorLocalizedAsync("reminder_deleted", index + 1).ConfigureAwait(false);
+            await ReplyErrorAsync(Strings.ReminderDeleted(ctx.Guild.Id, index + 1)).ConfigureAwait(false);
     }
 }

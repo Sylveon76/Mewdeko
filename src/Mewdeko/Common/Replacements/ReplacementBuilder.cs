@@ -56,7 +56,7 @@ public partial class ReplacementBuilder
     /// <param name="g">The guild.</param>
     /// <param name="socketClient">The client.</param>
     /// <returns>The ReplacementBuilder instance.</returns>
-    public ReplacementBuilder WithDefault(IUser usr, IMessageChannel ch, SocketGuild g,
+    public ReplacementBuilder WithDefault(IUser usr, IMessageChannel ch, SocketGuild? g,
         DiscordShardedClient socketClient)
     {
         return WithUser(usr)

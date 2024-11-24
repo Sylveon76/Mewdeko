@@ -29,8 +29,8 @@ public partial class Utility
         {
             await Service.SetStreamRole(fromRole, addRole).ConfigureAwait(false);
 
-            await ReplyConfirmLocalizedAsync("stream_role_enabled", Format.Bold(fromRole.ToString()),
-                Format.Bold(addRole.ToString())).ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.StreamRoleEnabled(ctx.Guild.Id, Format.Bold(fromRole.ToString()),
+                Format.Bold(addRole.ToString()))).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -45,7 +45,7 @@ public partial class Utility
         public async Task StreamRole()
         {
             await Service.StopStreamRole(ctx.Guild).ConfigureAwait(false);
-            await ReplyConfirmLocalizedAsync("stream_role_disabled").ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.StreamRoleDisabled(ctx.Guild.Id)).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -64,9 +64,9 @@ public partial class Utility
             var kw = await Service.SetKeyword(ctx.Guild, keyword).ConfigureAwait(false);
 
             if (string.IsNullOrWhiteSpace(keyword))
-                await ReplyConfirmLocalizedAsync("stream_role_kw_reset").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.StreamRoleKwReset(ctx.Guild.Id)).ConfigureAwait(false);
             else
-                await ReplyConfirmLocalizedAsync("stream_role_kw_set", Format.Bold(kw)).ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.StreamRoleKwSet(ctx.Guild.Id, Format.Bold(kw))).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -90,23 +90,23 @@ public partial class Utility
             {
                 if (success)
                 {
-                    await ReplyConfirmLocalizedAsync("stream_role_bl_add", Format.Bold(user.ToString()))
+                    await ReplyConfirmAsync(Strings.StreamRoleBlAdd(ctx.Guild.Id, Format.Bold(user.ToString())))
                         .ConfigureAwait(false);
                 }
                 else
                 {
-                    await ReplyConfirmLocalizedAsync("stream_role_bl_add_fail", Format.Bold(user.ToString()))
+                    await ReplyConfirmAsync(Strings.StreamRoleBlAddFail(ctx.Guild.Id, Format.Bold(user.ToString())))
                         .ConfigureAwait(false);
                 }
             }
             else if (success)
             {
-                await ReplyConfirmLocalizedAsync("stream_role_bl_rem", Format.Bold(user.ToString()))
+                await ReplyConfirmAsync(Strings.StreamRoleBlRem(ctx.Guild.Id, Format.Bold(user.ToString())))
                     .ConfigureAwait(false);
             }
             else
             {
-                await ReplyErrorLocalizedAsync("stream_role_bl_rem_fail", Format.Bold(user.ToString()))
+                await ReplyErrorAsync(Strings.StreamRoleBlRemFail(ctx.Guild.Id, Format.Bold(user.ToString())))
                     .ConfigureAwait(false);
             }
         }
@@ -132,23 +132,23 @@ public partial class Utility
             {
                 if (success)
                 {
-                    await ReplyConfirmLocalizedAsync("stream_role_wl_add", Format.Bold(user.ToString()))
+                    await ReplyConfirmAsync(Strings.StreamRoleWlAdd(ctx.Guild.Id, Format.Bold(user.ToString())))
                         .ConfigureAwait(false);
                 }
                 else
                 {
-                    await ReplyConfirmLocalizedAsync("stream_role_wl_add_fail", Format.Bold(user.ToString()))
+                    await ReplyConfirmAsync(Strings.StreamRoleWlAddFail(ctx.Guild.Id, Format.Bold(user.ToString())))
                         .ConfigureAwait(false);
                 }
             }
             else if (success)
             {
-                await ReplyConfirmLocalizedAsync("stream_role_wl_rem", Format.Bold(user.ToString()))
+                await ReplyConfirmAsync(Strings.StreamRoleWlRem(ctx.Guild.Id, Format.Bold(user.ToString())))
                     .ConfigureAwait(false);
             }
             else
             {
-                await ReplyErrorLocalizedAsync("stream_role_wl_rem_fail", Format.Bold(user.ToString()))
+                await ReplyErrorAsync(Strings.StreamRoleWlRemFail(ctx.Guild.Id, Format.Bold(user.ToString())))
                     .ConfigureAwait(false);
             }
         }

@@ -47,15 +47,15 @@ public partial class Xp
         public async Task XpReset(ulong userId)
         {
             var embed = new EmbedBuilder()
-                .WithTitle(GetText("reset"))
-                .WithDescription(GetText("reset_user_confirm"));
+                .WithTitle(Strings.Reset(ctx.Guild.Id))
+                .WithDescription(Strings.ResetUserConfirm(ctx.Guild.Id));
 
             if (!await PromptUserConfirmAsync(embed, ctx.User.Id).ConfigureAwait(false))
                 return;
 
-            Service.XpReset(ctx.Guild.Id, userId);
+            await Service.XpReset(ctx.Guild.Id, userId);
 
-            await ReplyConfirmLocalizedAsync("reset_user", userId).ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.ResetUser(ctx.Guild.Id, userId)).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -74,15 +74,15 @@ public partial class Xp
         public async Task XpReset()
         {
             var embed = new EmbedBuilder()
-                .WithTitle(GetText("reset"))
-                .WithDescription(GetText("reset_server_confirm"));
+                .WithTitle(Strings.Reset(ctx.Guild.Id))
+                .WithDescription(Strings.ResetServerConfirm(ctx.Guild.Id));
 
             if (!await PromptUserConfirmAsync(embed, ctx.User.Id).ConfigureAwait(false))
                 return;
 
-            Service.XpReset(ctx.Guild.Id);
+            await Service.XpReset(ctx.Guild.Id);
 
-            await ReplyConfirmLocalizedAsync("reset_server").ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.ResetServer(ctx.Guild.Id)).ConfigureAwait(false);
         }
     }
 }

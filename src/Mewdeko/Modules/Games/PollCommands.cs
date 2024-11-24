@@ -57,14 +57,14 @@ public partial class Games
             if (poll == null)
             {
                 // Replies with an error message indicating invalid input
-                await ReplyErrorLocalizedAsync("poll_invalid_input").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.PollInvalidInput(ctx.Guild.Id)).ConfigureAwait(false);
                 return;
             }
 
             // Checks if the number of poll answers exceeds the limit
             if (poll.Answers.Count > 25)
             {
-                await ctx.Channel.SendErrorAsync("You can only have up to 25 options!", Config);
+                await ctx.Channel.SendErrorAsync(Strings.PollOptionLimit(ctx.Guild.Id), Config);
                 return;
             }
 
@@ -72,7 +72,7 @@ public partial class Games
             if (await Service.StartPoll(poll))
             {
                 // Constructs an embed for the poll
-                var eb = new EmbedBuilder().WithOkColor().WithTitle(GetText("poll_created", ctx.User.ToString()))
+                var eb = new EmbedBuilder().WithOkColor().WithTitle(Strings.PollCreated(ctx.Guild.Id, ctx.User.ToString()))
                     .WithDescription(
                         $"{Format.Bold(poll.Question)}\n\n{string.Join("\n", poll.Answers.Select(x => $"`{x.Index + 1}.` {Format.Bold(x.Text)}"))}");
 
@@ -109,7 +109,7 @@ public partial class Games
             else
             {
                 // Replies with an error message indicating that a poll is already running
-                await ReplyErrorLocalizedAsync("poll_already_running").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.PollAlreadyRunning(ctx.Guild.Id)).ConfigureAwait(false);
             }
         }
 
@@ -129,7 +129,7 @@ public partial class Games
                 return;
 
             // Sends an embed with the current poll statistics to the channel
-            await ctx.Channel.EmbedAsync(GetStats(pr.Polls, GetText("current_poll_results"))).ConfigureAwait(false);
+            await ctx.Channel.EmbedAsync(GetStats(pr.Polls, Strings.CurrentPollResults(ctx.Guild.Id))).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -149,7 +149,7 @@ public partial class Games
                 return;
 
             // Constructs an embed with the final poll statistics
-            var embed = GetStats(p, GetText("poll_closed"));
+            var embed = GetStats(p, Strings.PollClosed(ctx.Guild.Id));
             // Sends the embed to the channel
             await ctx.Channel.EmbedAsync(embed).ConfigureAwait(false);
         }
@@ -190,7 +190,7 @@ public partial class Games
             foreach (var t in stats)
             {
                 var (index, votes, text) = t;
-                sb.AppendLine(GetText("poll_result",
+                sb.AppendLine(Strings.PollResult(ctx.Guild.Id,
                     index + 1,
                     Format.Bold(text),
                     Format.Bold(votes.ToString())));
@@ -198,7 +198,7 @@ public partial class Games
 
             // Configure the embed with the description, footer, and color
             return eb.WithDescription(sb.ToString())
-                .WithFooter(efb => efb.WithText(GetText("x_votes_cast", totalVotesCast)))
+                .WithFooter(efb => efb.WithText(Strings.XVotesCast(ctx.Guild.Id, totalVotesCast)))
                 .WithOkColor();
         }
     }

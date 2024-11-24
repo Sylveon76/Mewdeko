@@ -88,7 +88,6 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.0-preview.5.24306.7"/>
     <PackageReference Include="morelinq" Version="4.3.0" />
     <PackageReference Include="NekosBestApiNet" Version="1.0.7"/>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3"/>
     <PackageReference Include="NHentaiAPI" Version="1.8.0"/>
     <PackageReference Include="NonBlocking" Version="2.1.2"/>
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.8"/>
@@ -106,6 +105,7 @@
     <PackageReference Include="SpotifyAPI.Web" Version="7.2.1" />
     <PackageReference Include="SpotifyAPI.Web.Auth" Version="7.2.1" />
     <PackageReference Include="StackExchange.Redis" Version="2.8.16" />
+    <PackageReference Include="System.Text.Json" Version="9.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.8.1" />
     <PackageReference Include="System.Drawing.Common" Version="9.0.0-preview.5.24306.5"/>
     <PackageReference Include="System.IO.FileSystem.Watcher" Version="4.3.0"/>
@@ -148,6 +148,14 @@
     <None Remove="data\http.txt"/>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\MewdekoSourceGen\MewdekoSourceGen.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false" />
+
+    <AdditionalFiles Include="data\strings\responses\responses.en-US.json" />
+  </ItemGroup>
+
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <DebugType>full</DebugType>
@@ -163,21 +171,5 @@
 <!--      <HintPath>..\..\..\NHentaiAPI\NHentaiAPI\bin\Release\net8.0\NHentaiAPI.dll</HintPath>-->
 <!--    </Reference>-->
 <!--  </ItemGroup>-->
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>DEBUG;TRACE;DNETLABS</DefineConstants>
-    <NoWarn>
-      $(NoWarn);CS8625;CS8609;CS8767;CS8603;CS8618;CS8600;CS8602;CS8605;CS8601;CS8619;CS8604;CS8619;CS8607;CS9627;CS8629;CS8620;CS8620;CS8622;CS9714;CS8621;CS8714;CS8634
-    </NoWarn>
-    <Optimize>false</Optimize>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DefineConstants>TRACE;DNETLABS</DefineConstants>
-    <NoWarn>
-      $(NoWarn);CS8625;CS8609;CS8767;CS8603;CS8618;CS8600;CS8602;CS8605;CS8601;CS8619;CS8604;CS8619;CS8607;CS9627;CS8629;CS8620;CS8620;CS8622;CS9714;CS8621;CS8714;CS8634
-    </NoWarn>
-    <WarningLevel>0</WarningLevel>
-  </PropertyGroup>
 
 </Project>

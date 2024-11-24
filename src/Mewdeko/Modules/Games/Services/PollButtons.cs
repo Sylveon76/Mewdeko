@@ -19,25 +19,26 @@ public class PollButtons(PollService pollService, BotConfig config) : MewdekoSla
         switch (type)
         {
             case PollType.PollEnded:
-                await ctx.Interaction.SendEphemeralErrorAsync("That poll has already ended!", config);
+                await ctx.Interaction.SendEphemeralErrorAsync(Strings.PollEnded(ctx.Guild.Id), config);
                 break;
             case PollType.SingleAnswer:
                 if (!allowed)
-                    await ctx.Interaction.SendEphemeralErrorAsync("You can't change your vote!", config);
+                    await ctx.Interaction.SendEphemeralErrorAsync(Strings.PollVoteNoChange(ctx.Guild.Id), config
+                    );
                 else
-                    await ctx.Interaction.SendEphemeralConfirmAsync("Voted!");
+                    await ctx.Interaction.SendEphemeralConfirmAsync(Strings.PollVoted(ctx.Guild.Id));
                 break;
             case PollType.AllowChange:
                 if (!allowed)
-                    await ctx.Interaction.SendEphemeralErrorAsync("That's already your vote!", config);
+                    await ctx.Interaction.SendEphemeralErrorAsync(Strings.PollVoteExists(ctx.Guild.Id), config);
                 else
-                    await ctx.Interaction.SendEphemeralConfirmAsync("Vote changed.");
+                    await ctx.Interaction.SendEphemeralConfirmAsync(Strings.PollVoteChanged(ctx.Guild.Id));
                 break;
             case PollType.MultiAnswer:
                 if (!allowed)
-                    await ctx.Interaction.SendEphemeralErrorAsync("Removed that vote!", config);
+                    await ctx.Interaction.SendEphemeralErrorAsync(Strings.PollVoteRemoved(ctx.Guild.Id), config);
                 else
-                    await ctx.Interaction.SendEphemeralConfirmAsync("Vote added!");
+                    await ctx.Interaction.SendEphemeralConfirmAsync(Strings.PollVoteAdded(ctx.Guild.Id));
                 break;
         }
     }

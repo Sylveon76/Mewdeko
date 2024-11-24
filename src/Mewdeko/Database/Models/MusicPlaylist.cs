@@ -1,32 +1,74 @@
 ﻿namespace Mewdeko.Database.Models;
 
 /// <summary>
-///     Represents a music playlist.
+/// Represents a saved music playlist in the database.
 /// </summary>
 public class MusicPlaylist : DbEntity
 {
-    /// <summary>
-    ///     Gets or sets the name of the playlist.
-    /// </summary>
-    public string? Name { get; set; }
 
     /// <summary>
-    ///     Gets or sets the author of the playlist.
+    /// The name of the playlist.
     /// </summary>
-    public string? Author { get; set; }
+    public string Name { get; set; }
 
     /// <summary>
-    ///     Gets or sets the author ID of the playlist.
+    /// The ID of the guild this playlist belongs to.
+    /// </summary>
+    public ulong GuildId { get; set; }
+
+    /// <summary>
+    /// The ID of the user who created this playlist.
     /// </summary>
     public ulong AuthorId { get; set; }
 
     /// <summary>
-    ///     Gets or sets a value indicating whether the playlist is default.
+    /// The tracks in this playlist.
     /// </summary>
-    public bool IsDefault { get; set; } = false;
+    public List<MusicPlaylistTrack> Tracks { get; set; } = new();
+}
+
+/// <summary>
+/// Represents a track within a saved playlist.
+/// </summary>
+public class MusicPlaylistTrack
+{
+    /// <summary>
+    /// The unique identifier for the playlist track.
+    /// </summary>
+    public int Id { get; set; }
 
     /// <summary>
-    ///     Gets or sets the songs in the playlist.
+    /// The playlist this track belongs to.
     /// </summary>
-    public IEnumerable<PlaylistSong> Songs { get; set; } = new List<PlaylistSong>();
+    public int PlaylistId { get; set; }
+
+    /// <summary>
+    /// Navigation property for the playlist.
+    /// </summary>
+    public MusicPlaylist Playlist { get; set; }
+
+    /// <summary>
+    /// The title of the track.
+    /// </summary>
+    public string Title { get; set; }
+
+    /// <summary>
+    /// The URI of the track.
+    /// </summary>
+    public string Uri { get; set; }
+
+    /// <summary>
+    /// The duration of the track.
+    /// </summary>
+    public TimeSpan Duration { get; set; }
+
+    /// <summary>
+    /// The position of this track in the playlist.
+    /// </summary>
+    public int Index { get; set; }
+
+    /// <summary>
+    /// When the track was added to the playlist.
+    /// </summary>
+    public DateTime DateAdded { get; set; }
 }

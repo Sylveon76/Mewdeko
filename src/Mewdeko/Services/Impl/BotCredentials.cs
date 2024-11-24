@@ -1,7 +1,9 @@
 ﻿using System.Collections.Immutable;
 using System.IO;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json;
+
 using Npgsql;
 using Serilog;
 using StackExchange.Redis;
@@ -26,7 +28,7 @@ public class BotCredentials : IBotCredentials
             if (!File.Exists(exampleCredentialsPath))
             {
                 File.WriteAllText(exampleCredentialsPath,
-                    JsonConvert.SerializeObject(new CredentialsModel(), Formatting.Indented));
+                    JsonSerializer.Serialize(new CredentialsModel()));
             }
         }
         catch (Exception ex)
@@ -347,7 +349,7 @@ public class BotCredentials : IBotCredentials
 
         try
         {
-            File.WriteAllText(credsFileName, JsonConvert.SerializeObject(model, Formatting.Indented));
+            File.WriteAllText(credsFileName, JsonSerializer.Serialize(model));
             Log.Information("credentials.json has been created successfully.");
         }
         catch (Exception ex)
@@ -571,7 +573,7 @@ public class BotCredentials : IBotCredentials
         {
             get
             {
-                return OwnerIds.ToImmutableArray();
+                return [..OwnerIds];
             }
         }
 

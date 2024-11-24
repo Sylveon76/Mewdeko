@@ -27,15 +27,14 @@ public class SuggestButtonService : MewdekoSlashSubmodule<SuggestionsService>
         var pickedEmote = await Service.GetPickedEmote(componentInteraction.Message.Id, ctx.User.Id);
         if (pickedEmote == emoteNum)
         {
-            if (await PromptUserConfirmAsync("Do you want to remove your vote?", ctx.User.Id, true, false)
-                    .ConfigureAwait(false))
+            if (await PromptUserConfirmAsync(Strings.RemoveVoteConfirm(ctx.Guild.Id), ctx.User.Id, true, false))
             {
                 changed = true;
-                await ctx.Interaction.SendEphemeralFollowupConfirmAsync("Vote removed.").ConfigureAwait(false);
+                await ctx.Interaction.SendEphemeralFollowupConfirmAsync(Strings.VoteRemoved(ctx.Guild.Id));
             }
             else
             {
-                await ctx.Interaction.SendEphemeralFollowupErrorAsync("Vote not removed.", Config)
+                await ctx.Interaction.SendEphemeralFollowupErrorAsync(Strings.VoteNotRemoved(ctx.Guild.Id), Config)
                     .ConfigureAwait(false);
                 return;
             }
@@ -43,15 +42,14 @@ public class SuggestButtonService : MewdekoSlashSubmodule<SuggestionsService>
 
         if (pickedEmote != 0 && pickedEmote != emoteNum)
         {
-            if (!await PromptUserConfirmAsync("Are you sure you wanna change your vote?", ctx.User.Id, true, false)
-                    .ConfigureAwait(false))
+            if (!await PromptUserConfirmAsync(Strings.ChangeVoteConfirm(ctx.Guild.Id), ctx.User.Id, true, false))
             {
-                await ctx.Interaction.SendEphemeralFollowupErrorAsync("Vote not changed.", Config)
+                await ctx.Interaction.SendEphemeralFollowupErrorAsync(Strings.VoteNotChanged(ctx.Guild.Id), Config)
                     .ConfigureAwait(false);
                 return;
             }
 
-            await ctx.Interaction.SendEphemeralFollowupConfirmAsync("Vote changed!").ConfigureAwait(false);
+            await ctx.Interaction.SendEphemeralFollowupConfirmAsync(Strings.VoteChanged(ctx.Guild.Id));
         }
 
         await Service.UpdatePickedEmote(componentInteraction.Message.Id, ctx.User.Id, changed ? 0 : emoteNum)

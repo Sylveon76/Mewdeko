@@ -1,10 +1,11 @@
 ﻿using System.Net.Http;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using Mewdeko.Database.DbContextStuff;
 using Mewdeko.Modules.UserProfile.Common;
 using Mewdeko.Modules.Utility.Common;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
+
 using Embed = Discord.Embed;
 
 namespace Mewdeko.Modules.UserProfile.Services;
@@ -81,7 +82,7 @@ public partial class UserProfileService : INService
         if (!string.IsNullOrWhiteSpace(user?.Pronouns)) return new PronounSearchResult(user.Pronouns, false);
         var result = await http.GetStringAsync($"https://pronoundb.org/api/v1/lookup?platform=discord&id={user.UserId}")
             .ConfigureAwait(false);
-        var pronouns = JsonConvert.DeserializeObject<PronounDbResult>(result);
+        var pronouns = JsonSerializer.Deserialize<PronounDbResult>(result);
         // if (pronouns.Pronouns != "unspecified")
         // {
         //     user.PndbCache = pronouns.Pronouns;
@@ -135,7 +136,7 @@ public partial class UserProfileService : INService
         var response =
             await client.PostAsync($"https://aztro.sameerkumar.website/?sign={user.ZodiacSign.ToLower()}&day=today",
                 null);
-        return (true, JsonConvert.DeserializeObject<ZodiacResult>(await response.Content.ReadAsStringAsync()));
+        return (true, JsonSerializer.Deserialize<ZodiacResult>(await response.Content.ReadAsStringAsync()));
     }
 
     /// <summary>

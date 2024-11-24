@@ -90,7 +90,7 @@ public partial class Administration
                 }
                 catch (HttpException ex) when (ex.HttpCode == HttpStatusCode.BadRequest)
                 {
-                    await ReplyErrorLocalizedAsync("reaction_cant_access", Format.Code(x.emote.ToString()))
+                    await ReplyErrorAsync(Strings.ReactionCantAccess(ctx.Guild.Id, Format.Code(x.emote.ToString())))
                         .ConfigureAwait(false);
                     return;
                 }
@@ -113,7 +113,7 @@ public partial class Administration
             }
             else
             {
-                await ReplyErrorLocalizedAsync("reaction_roles_full").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.ReactionRolesFull(ctx.Guild.Id)).ConfigureAwait(false);
             }
         }
 
@@ -239,7 +239,7 @@ public partial class Administration
             var (success, rrs) = await Service.Get(ctx.Guild.Id).ConfigureAwait(false);
             if (!success || rrs.Count == 0)
             {
-                await ctx.Channel.SendErrorAsync(GetText("no_reaction_roles"), Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.NoReactionRoles(ctx.Guild.Id), Config).ConfigureAwait(false);
             }
             else
             {
@@ -266,15 +266,15 @@ public partial class Administration
                     var eb = new PageBuilder().WithOkColor();
                     return
                         eb.AddField("ID", rr.Index + 1)
-                            .AddField(GetText("rero_roles_count", rr.ReactionRoles.Count),
+                            .AddField(Strings.ReroRolesCount(ctx.Guild.Id, rr.ReactionRoles.Count),
                                 string.Join(",",
                                     rr.ReactionRoles.Select(x => $"{x.EmoteName} {g.GetRole(x.RoleId).Mention}")))
-                            .AddField(GetText("users_can_select_morethan_one"), rr.Exclusive)
-                            .AddField(GetText("wasdeleted"), msg == null ? GetText("yes") : GetText("no"))
-                            .AddField(GetText("messagelink"),
+                            .AddField(Strings.UsersCanSelectMorethanOne(ctx.Guild.Id), rr.Exclusive)
+                            .AddField(Strings.Wasdeleted(ctx.Guild.Id), msg == null ? Strings.Yes(ctx.Guild.Id) : Strings.No(ctx.Guild.Id))
+                            .AddField(Strings.Messagelink(ctx.Guild.Id),
                                 (msg == null
-                                    ? GetText("messagewasdeleted")
-                                    : $"[{GetText("HYATT")}]({msg.GetJumpUrl()})")!);
+                                    ? Strings.Messagewasdeleted(ctx.Guild.Id)
+                                    : $"[{Strings.Hyatt(ctx.Guild.Id)}]({msg.GetJumpUrl()})")!);
                 }
             }
         }
@@ -304,7 +304,7 @@ public partial class Administration
 
             index--;
             await Service.Remove(ctx.Guild.Id, index);
-            await ReplyConfirmLocalizedAsync("reaction_role_removed", index + 1).ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.ReactionRoleRemoved(ctx.Guild.Id, index + 1)).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -332,14 +332,14 @@ public partial class Administration
             {
                 await targetUser.AddRoleAsync(roleToAdd).ConfigureAwait(false);
 
-                await ReplyConfirmLocalizedAsync("setrole", Format.Bold(roleToAdd.Name),
-                        Format.Bold(targetUser.ToString()))
+                await ReplyConfirmAsync(Strings.Setrole(ctx.Guild.Id, Format.Bold(roleToAdd.Name),
+                        Format.Bold(targetUser.ToString())))
                     .ConfigureAwait(false);
             }
             catch (Exception ex)
             {
                 Log.Warning(ex, "Error in setrole command");
-                await ReplyErrorLocalizedAsync("setrole_err").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.SetroleErr(ctx.Guild.Id)).ConfigureAwait(false);
             }
         }
 
@@ -368,14 +368,14 @@ public partial class Administration
             {
                 await targetUser.AddRoleAsync(roleToAdd).ConfigureAwait(false);
 
-                await ReplyConfirmLocalizedAsync("setrole", Format.Bold(roleToAdd.Name),
-                        Format.Bold(targetUser.ToString()))
+                await ReplyConfirmAsync(Strings.Setrole(ctx.Guild.Id, Format.Bold(roleToAdd.Name),
+                        Format.Bold(targetUser.ToString())))
                     .ConfigureAwait(false);
             }
             catch (Exception ex)
             {
                 Log.Warning(ex, "Error in setrole command");
-                await ReplyErrorLocalizedAsync("setrole_err").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.SetroleErr(ctx.Guild.Id)).ConfigureAwait(false);
             }
         }
 
@@ -406,12 +406,12 @@ public partial class Administration
             try
             {
                 await targetUser.RemoveRoleAsync(roleToRemove).ConfigureAwait(false);
-                await ReplyConfirmLocalizedAsync("remrole", Format.Bold(roleToRemove.Name),
-                    Format.Bold(targetUser.ToString())).ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.Remrole(ctx.Guild.Id, Format.Bold(roleToRemove.Name),
+                    Format.Bold(targetUser.ToString()))).ConfigureAwait(false);
             }
             catch
             {
-                await ReplyErrorLocalizedAsync("remrole_err").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.RemroleErr(ctx.Guild.Id)).ConfigureAwait(false);
             }
         }
 
@@ -443,12 +443,12 @@ public partial class Administration
             try
             {
                 await targetUser.RemoveRoleAsync(roleToRemove).ConfigureAwait(false);
-                await ReplyConfirmLocalizedAsync("remrole", Format.Bold(roleToRemove.Name),
-                    Format.Bold(targetUser.ToString())).ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.Remrole(ctx.Guild.Id, Format.Bold(roleToRemove.Name),
+                    Format.Bold(targetUser.ToString()))).ConfigureAwait(false);
             }
             catch
             {
-                await ReplyErrorLocalizedAsync("remrole_err").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.RemroleErr(ctx.Guild.Id)).ConfigureAwait(false);
             }
         }
 
@@ -477,16 +477,16 @@ public partial class Administration
                 if (roleToEdit.Position > (await ctx.Guild.GetCurrentUserAsync().ConfigureAwait(false)).GetRoles()
                     .Max(r => r.Position))
                 {
-                    await ReplyErrorLocalizedAsync("renrole_perms").ConfigureAwait(false);
+                    await ReplyErrorAsync(Strings.RenrolePerms(ctx.Guild.Id)).ConfigureAwait(false);
                     return;
                 }
 
                 await roleToEdit.ModifyAsync(g => g.Name = newname).ConfigureAwait(false);
-                await ReplyConfirmLocalizedAsync("renrole").ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.Renrole(ctx.Guild.Id)).ConfigureAwait(false);
             }
             catch (Exception)
             {
-                await ReplyErrorLocalizedAsync("renrole_err").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.RenroleErr(ctx.Guild.Id)).ConfigureAwait(false);
             }
         }
 
@@ -524,11 +524,11 @@ public partial class Administration
             try
             {
                 await user.RemoveRolesAsync(userRoles).ConfigureAwait(false);
-                await ReplyConfirmLocalizedAsync("rar", Format.Bold(user.ToString())).ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.Rar(ctx.Guild.Id, Format.Bold(user.ToString()))).ConfigureAwait(false);
             }
             catch (Exception)
             {
-                await ReplyErrorLocalizedAsync("rar_err").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.RarErr(ctx.Guild.Id)).ConfigureAwait(false);
             }
         }
 
@@ -552,7 +552,7 @@ public partial class Administration
                 return;
 
             var r = await ctx.Guild.CreateRoleAsync(roleName, isMentionable: false).ConfigureAwait(false);
-            await ReplyConfirmLocalizedAsync("cr", Format.Bold(r.Name)).ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.Cr(ctx.Guild.Id, Format.Bold(r.Name))).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -579,7 +579,7 @@ public partial class Administration
             }
 
             await role.DeleteAsync().ConfigureAwait(false);
-            await ReplyConfirmLocalizedAsync("dr", Format.Bold(role.Name)).ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.Dr(ctx.Guild.Id, Format.Bold(role.Name))).ConfigureAwait(false);
         }
 
 
@@ -603,11 +603,11 @@ public partial class Administration
             await role.ModifyAsync(r => r.Hoist = newHoisted).ConfigureAwait(false);
             if (newHoisted)
             {
-                await ReplyConfirmLocalizedAsync("rolehoist_enabled", Format.Bold(role.Name)).ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.RolehoistEnabled(ctx.Guild.Id, Format.Bold(role.Name))).ConfigureAwait(false);
             }
             else
             {
-                await ReplyConfirmLocalizedAsync("rolehoist_disabled", Format.Bold(role.Name))
+                await ReplyConfirmAsync(Strings.RolehoistDisabled(ctx.Guild.Id, Format.Bold(role.Name)))
                     .ConfigureAwait(false);
             }
         }
@@ -626,7 +626,7 @@ public partial class Administration
         [Priority(1)]
         public async Task RoleColor([Remainder] IRole role)
         {
-            await ctx.Channel.SendConfirmAsync(GetText("rolecolor"), role.Color.RawValue.ToString("x6"))
+            await ctx.Channel.SendConfirmAsync(Strings.Rolecolor(ctx.Guild.Id), role.Color.RawValue.ToString("x6"))
                 .ConfigureAwait(false);
         }
 
@@ -652,11 +652,11 @@ public partial class Administration
             {
                 await role.ModifyAsync(r => r.Color = new Color(color.Red, color.Green, color.Blue))
                     .ConfigureAwait(false);
-                await ReplyConfirmLocalizedAsync("rc", Format.Bold(role.Name)).ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.Rc(ctx.Guild.Id, Format.Bold(role.Name))).ConfigureAwait(false);
             }
             catch (Exception)
             {
-                await ReplyErrorLocalizedAsync("rc_perms").ConfigureAwait(false);
+                await ReplyErrorAsync(Strings.RcPerms(ctx.Guild.Id)).ConfigureAwait(false);
             }
         }
     }

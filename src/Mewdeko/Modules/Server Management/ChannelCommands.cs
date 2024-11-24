@@ -60,7 +60,7 @@ public partial class ServerManagement
             bool overrideCheck = false)
         {
             var embed = new EmbedBuilder()
-                .WithDescription(GetText("lockdown_in_progress", config.Data.LoadingEmote))
+                .WithDescription(Strings.LockdownInProgress(ctx.Guild.Id, config.Data.LoadingEmote))
                 .WithColor(Mewdeko.OkColor);
 
             var loadingMessage = await ctx.Channel.SendMessageAsync(embed: embed.Build()).ConfigureAwait(false);
@@ -72,7 +72,7 @@ public partial class ServerManagement
                 if (missingPermissions.Count != 0)
                 {
                     var missingPermsText = string.Join(", ", missingPermissions);
-                    embed.WithDescription(GetText("lockdown_perm_check_fail",
+                    embed.WithDescription(Strings.LockdownPermCheckFail(ctx.Guild.Id,
                             missingPermsText))
                         .WithErrorColor();
                     await loadingMessage.ModifyAsync(x => x.Embed = embed.Build()).ConfigureAwait(false);
@@ -87,7 +87,7 @@ public partial class ServerManagement
             var check = await Service.LockdownGuild(ctx.Guild, lockdownType, action);
             if (check.Item1)
             {
-                embed.WithDescription(GetText("lockdown_already_enabled", check.Item2))
+                embed.WithDescription(Strings.LockdownAlreadyEnabled(ctx.Guild.Id, check.Item2))
                     .WithErrorColor();
                 await loadingMessage.ModifyAsync(x => x.Embed = embed.Build()).ConfigureAwait(false);
                 return;
@@ -97,7 +97,7 @@ public partial class ServerManagement
             switch (lockdownType)
             {
                 case LockdownType.Joins:
-                    embed.WithDescription(GetText("lockdown_joins_enabled", ctx.Guild.Name,
+                    embed.WithDescription(Strings.LockdownJoinsEnabled(ctx.Guild.Id, ctx.Guild.Name,
                             action.ToString()))
                         .WithColor(Mewdeko.OkColor);
                     await loadingMessage.ModifyAsync(x => x.Embed = embed.Build()).ConfigureAwait(false);
@@ -106,14 +106,14 @@ public partial class ServerManagement
                 case LockdownType.Readonly:
                     await Service.ApplyLockdown(ctx.Guild).ConfigureAwait(false);
                     embed.WithDescription(
-                            GetText("lockdown_readonly_enabled", ctx.Guild.Name))
+                            Strings.LockdownReadonlyEnabled(ctx.Guild.Id, ctx.Guild.Name))
                         .WithColor(Mewdeko.OkColor);
                     await loadingMessage.ModifyAsync(x => x.Embed = embed.Build()).ConfigureAwait(false);
                     break;
 
                 case LockdownType.Full:
                     await Service.ApplyLockdown(ctx.Guild).ConfigureAwait(false);
-                    embed.WithDescription(GetText("lockdown_full_enabled", ctx.Guild.Name,
+                    embed.WithDescription(Strings.LockdownFullEnabled(ctx.Guild.Id, ctx.Guild.Name,
                             action.ToString()))
                         .WithColor(Mewdeko.OkColor);
                     await loadingMessage.ModifyAsync(x => x.Embed = embed.Build()).ConfigureAwait(false);
@@ -136,7 +136,7 @@ public partial class ServerManagement
         public async Task LiftLockdown(LockdownType lockdownType = LockdownType.Readonly)
         {
             var embed = new EmbedBuilder()
-                .WithDescription(GetText("lockdown_lift_in_progress", config.Data.LoadingEmote))
+                .WithDescription(Strings.LockdownLiftInProgress(ctx.Guild.Id, config.Data.LoadingEmote))
                 .WithColor(Mewdeko.OkColor);
 
             var loadingMessage = await ctx.Channel.SendMessageAsync(embed: embed.Build()).ConfigureAwait(false);
@@ -147,14 +147,14 @@ public partial class ServerManagement
                     if (Service.IsGuildInLockdown(ctx.Guild))
                     {
                         await Service.LiftLockdown(ctx.Guild);
-                        embed.WithDescription(GetText("lockdown_joins_disabled",
+                        embed.WithDescription(Strings.LockdownJoinsDisabled(ctx.Guild.Id,
                                 ctx.Guild.Name))
                             .WithColor(Mewdeko.OkColor);
                         await loadingMessage.ModifyAsync(x => x.Embed = embed.Build()).ConfigureAwait(false);
                     }
                     else
                     {
-                        embed.WithDescription(GetText("no_lockdown_joins"))
+                        embed.WithDescription(Strings.NoLockdownJoins(ctx.Guild.Id))
                             .WithErrorColor();
                         await loadingMessage.ModifyAsync(x => x.Embed = embed.Build()).ConfigureAwait(false);
                     }
@@ -164,7 +164,7 @@ public partial class ServerManagement
                 case LockdownType.Readonly:
                     await Service.LiftLockdown(ctx.Guild);
                     await Service.RestoreOriginalPermissions(ctx.Guild).ConfigureAwait(false);
-                    embed.WithDescription(GetText("lockdown_readonly_disabled",
+                    embed.WithDescription(Strings.LockdownReadonlyDisabled(ctx.Guild.Id,
                             ctx.Guild.Name))
                         .WithColor(Mewdeko.OkColor);
                     await loadingMessage.ModifyAsync(x => x.Embed = embed.Build()).ConfigureAwait(false);
@@ -173,7 +173,7 @@ public partial class ServerManagement
                 case LockdownType.Full:
                     await Service.LiftLockdown(ctx.Guild);
                     await Service.RestoreOriginalPermissions(ctx.Guild).ConfigureAwait(false);
-                    embed.WithDescription(GetText("lockdown_full_disabled", ctx.Guild.Name))
+                    embed.WithDescription(Strings.LockdownFullDisabled(ctx.Guild.Id, ctx.Guild.Name))
                         .WithColor(Mewdeko.OkColor);
                     await loadingMessage.ModifyAsync(x => x.Embed = embed.Build()).ConfigureAwait(false);
                     await Service.LiftLockdown(ctx.Guild);
@@ -194,14 +194,12 @@ public partial class ServerManagement
             var use = ctx.User as IGuildUser;
             if (use.VoiceChannel == null)
             {
-                await ctx.Channel.SendErrorAsync(
-                        $"{config.Data.SuccessEmote} You need to be in a voice channel for this!", Config)
-                    .ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.MovetoNoVoice(ctx.Guild.Id), Config);
                 return;
             }
 
             await use.ModifyAsync(x => x.Channel = new Optional<IVoiceChannel>(channel)).ConfigureAwait(false);
-            await ctx.Channel.SendConfirmAsync($"Succesfully moved you to {Format.Bold(channel.Name)}")
+            await ctx.Channel.SendConfirmAsync(Strings.MovetoSuccess(ctx.Guild.Id, Format.Bold(channel.Name)))
                 .ConfigureAwait(false);
         }
 
@@ -218,13 +216,13 @@ public partial class ServerManagement
         {
             if (user.VoiceChannel == null)
             {
-                await ctx.Channel.SendErrorAsync("The user must be in a voice channel for this!", Config)
+                await ctx.Channel.SendErrorAsync(Strings.MoveuserNotInVoice(ctx.Guild.Id), Config)
                     .ConfigureAwait(false);
                 return;
             }
 
             await user.ModifyAsync(x => x.Channel = new Optional<IVoiceChannel>(channel)).ConfigureAwait(false);
-            await ctx.Channel.SendConfirmAsync($"Succesfully moved {user.Mention} to {Format.Bold(channel.Name)}")
+            await ctx.Channel.SendConfirmAsync(Strings.MoveuserSuccess(ctx.Guild.Id, user.Mention, Format.Bold(channel.Name)))
                 .ConfigureAwait(false);
         }
 
@@ -240,20 +238,19 @@ public partial class ServerManagement
             var vc = ((IGuildUser)ctx.User).VoiceChannel;
             if (vc == null)
             {
-                await ctx.Channel.SendErrorAsync("You need to be in a voice channel to use this!", Config)
+                await ctx.Channel.SendErrorAsync(Strings.GrabNotInVoice(ctx.Guild.Id), Config)
                     .ConfigureAwait(false);
                 return;
             }
 
             if (user.VoiceChannel == null)
             {
-                await ctx.Channel.SendErrorAsync(
-                    $"{user.Mention} needs to be in a voice channel for this to work!", Config).ConfigureAwait(false);
+                await ctx.Channel.SendErrorAsync(Strings.GrabUserNotInVoice(ctx.Guild.Id, user.Mention), Config);
                 return;
             }
 
             await user.ModifyAsync(x => x.Channel = new Optional<IVoiceChannel>(vc)).ConfigureAwait(false);
-            await ctx.Channel.SendConfirmAsync($"Grabbed {user.Mention} from {user.VoiceChannel.Name} to your VC!")
+await ctx.Channel.SendConfirmAsync(Strings.GrabSuccess(ctx.Guild.Id, user.Mention, user.VoiceChannel.Name))
                 .ConfigureAwait(false);
         }
 
@@ -268,7 +265,7 @@ public partial class ServerManagement
         {
             if (ctx.Guild.EveryoneRole.Permissions.SendMessages)
             {
-                await ctx.Channel.SendErrorAsync($"{config.Data.ErrorEmote} Server is not locked down!", Config)
+                await ctx.Channel.SendErrorAsync(Strings.UnlockdownNotLocked(ctx.Guild.Id), Config)
                     .ConfigureAwait(false);
                 return;
             }
@@ -276,7 +273,7 @@ public partial class ServerManagement
             var everyonerole = ctx.Guild.EveryoneRole;
             var newperms = everyonerole.Permissions.Modify(sendMessages: true);
             await everyonerole.ModifyAsync(x => x.Permissions = newperms).ConfigureAwait(false);
-            await ctx.Channel.SendConfirmAsync("Server has been unlocked!").ConfigureAwait(false);
+            await ctx.Channel.SendConfirmAsync(Strings.UnlockdownSuccess(ctx.Guild.Id));
         }
 
         /// <summary>
@@ -292,8 +289,7 @@ public partial class ServerManagement
             var embed = new EmbedBuilder
             {
                 Color = Mewdeko.ErrorColor,
-                Description =
-                    "Are you sure you want to nuke this channel? This will delete the entire channel and remake it."
+                Description = Strings.NukeConfirm(ctx.Guild.Id)
             };
             if (!await PromptUserConfirmAsync(embed, ctx.User.Id).ConfigureAwait(false)) return;
             ITextChannel chan;
@@ -348,7 +344,7 @@ public partial class ServerManagement
                                    new OverwritePermissions();
                 await tch.AddPermissionOverwriteAsync(ctx.Guild.EveryoneRole,
                     currentPerms.Modify(sendMessages: PermValue.Deny)).ConfigureAwait(false);
-                await ctx.Channel.SendMessageAsync($"{config.Data.SuccessEmote} Locked down {tch.Mention}")
+                await ctx.Channel.SendMessageAsync(Strings.LockSuccess(ctx.Guild.Id, config.Data.SuccessEmote, tch.Mention))
                     .ConfigureAwait(false);
             }
             else
@@ -357,8 +353,9 @@ public partial class ServerManagement
                                    new OverwritePermissions();
                 await channel.AddPermissionOverwriteAsync(ctx.Guild.EveryoneRole,
                     currentPerms.Modify(sendMessages: PermValue.Deny)).ConfigureAwait(false);
-                await ctx.Channel.SendMessageAsync(
-                    $"{config.Data.SuccessEmote} Locked down {channel.Mention}").ConfigureAwait(false);
+                await ctx.Channel.SendMessageAsync(Strings.LockSuccess(ctx.Guild.Id, config.Data.SuccessEmote,
+                    channel.Mention));
+
             }
         }
 
@@ -373,17 +370,16 @@ public partial class ServerManagement
         public async Task CreateCatAndTxtChannels(string catName, params string[] channels)
         {
             var eb = new EmbedBuilder();
-            eb.WithOkColor();
-            eb.WithDescription(
-                $"{config.Data.LoadingEmote} Creating the Category {catName} with {channels.Length} Text Channels!");
+            eb.WithOkColor()
+                .WithDescription(Strings.CreatingCategory(ctx.Guild.Id, config.Data.LoadingEmote, catName,
+                    channels.Length, "Text"));
             var msg = await ctx.Channel.SendMessageAsync(embed: eb.Build()).ConfigureAwait(false);
             var cat = await ctx.Guild.CreateCategoryAsync(catName).ConfigureAwait(false);
             foreach (var i in channels)
                 await ctx.Guild.CreateTextChannelAsync(i, x => x.CategoryId = cat.Id).ConfigureAwait(false);
 
             var eb2 = new EmbedBuilder();
-            eb2.WithDescription(
-                $"{config.Data.SuccessEmote} Created the category {catName} with {channels.Length} Text Channels!");
+            eb2.WithDescription(Strings.CreatedCategory(ctx.Guild.Id, catName, channels.Length, "Text"));
             eb2.WithOkColor();
             await msg.ModifyAsync(x => x.Embed = eb2.Build()).ConfigureAwait(false);
         }
@@ -399,16 +395,15 @@ public partial class ServerManagement
         public async Task CreateCatAndVcChannels(string catName, params string[] channels)
         {
             var eb = new EmbedBuilder();
-            eb.WithOkColor();
-            eb.WithDescription(
-                $"{config.Data.LoadingEmote} Creating the Category {catName} with {channels.Length} Voice Channels");
-            var msg = await ctx.Channel.SendMessageAsync(embed: eb.Build()).ConfigureAwait(false);
+            eb.WithOkColor()
+                .WithDescription(Strings.CreatingCategory(ctx.Guild.Id, config.Data.LoadingEmote, catName,
+                    channels.Length, "Voice"));            var msg = await ctx.Channel.SendMessageAsync(embed: eb.Build()).ConfigureAwait(false);
             var cat = await ctx.Guild.CreateCategoryAsync(catName).ConfigureAwait(false);
             foreach (var i in channels)
                 await ctx.Guild.CreateVoiceChannelAsync(i, x => x.CategoryId = cat.Id).ConfigureAwait(false);
 
             var eb2 = new EmbedBuilder();
-            eb2.WithDescription($"Created the category {catName} with {channels.Length} Voice Channels!");
+            eb2.WithDescription(Strings.CreatedCategory(ctx.Guild.Id, catName, channels.Length, "Voice"));
             eb2.WithOkColor();
             await msg.ModifyAsync(x => x.Embed = eb2.Build()).ConfigureAwait(false);
         }

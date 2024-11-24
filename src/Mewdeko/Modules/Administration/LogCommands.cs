@@ -33,11 +33,11 @@ public partial class Administration
             await Service.LogSetByType(ctx.Guild.Id, channel?.Id ?? 0, type);
             if (channel is null)
             {
-                await ctx.Channel.SendConfirmAsync(GetText("logging_category_disabled", type));
+                await ctx.Channel.SendConfirmAsync(Strings.LoggingCategoryDisabled(ctx.Guild.Id, type));
                 return;
             }
 
-            await ctx.Channel.SendConfirmAsync(GetText("logging_category_enabled", type, channel.Mention));
+            await ctx.Channel.SendConfirmAsync(Strings.LoggingCategoryEnabled(ctx.Guild.Id, type, channel.Mention));
         }
 
 
@@ -49,9 +49,9 @@ public partial class Administration
         //     var removed = await Service.LogIgnore(ctx.Guild.Id, ctx.Channel.Id);
         //
         //     if (!removed)
-        //         await ReplyConfirmLocalizedAsync("log_ignore", Format.Bold($"{channel.Mention}({channel.Id})")).ConfigureAwait(false);
+        //         await ReplyConfirmAsync(Strings.LogIgnore(ctx.Guild.Id, Format.Bold($"{channel.Mention}({channel.Id}))")).ConfigureAwait(false);
         //     else
-        //         await ReplyConfirmLocalizedAsync("log_not_ignore", Format.Bold($"{channel.Mention}({channel.Id})")).ConfigureAwait(false);
+        //         await ReplyConfirmAsync(Strings.LogNotIgnore(ctx.Guild.Id, Format.Bold($"{channel.Mention}({channel.Id}))")).ConfigureAwait(false);
         // }
         //
         // [Cmd, Aliases, RequireContext(ContextType.Guild), UserPerm(GuildPermission.Administrator), Priority(1)]
@@ -60,9 +60,9 @@ public partial class Administration
         //     var removed = await Service.LogIgnore(ctx.Guild.Id, channel.Id);
         //
         //     if (!removed)
-        //         await ReplyConfirmLocalizedAsync("log_ignore", Format.Bold($"{channel.Mention}({channel.Id})")).ConfigureAwait(false);
+        //         await ReplyConfirmAsync(Strings.LogIgnore(ctx.Guild.Id, Format.Bold($"{channel.Mention}({channel.Id}))")).ConfigureAwait(false);
         //     else
-        //         await ReplyConfirmLocalizedAsync("log_not_ignore", Format.Bold($"{channel.Mention}({channel.Id})")).ConfigureAwait(false);
+        //         await ReplyConfirmAsync(Strings.LogNotIgnore(ctx.Guild.Id, Format.Bold($"{channel.Mention}({channel.Id}))")).ConfigureAwait(false);
         // }
         //
         // [Cmd, Aliases, RequireContext(ContextType.Guild), UserPerm(GuildPermission.Administrator), Priority(2)]
@@ -71,9 +71,9 @@ public partial class Administration
         //     var removed = await Service.LogIgnore(ctx.Guild.Id, channel.Id);
         //
         //     if (!removed)
-        //         await ReplyConfirmLocalizedAsync("log_ignore", Format.Bold($"{channel.Name}({channel.Id})")).ConfigureAwait(false);
+        //         await ReplyConfirmAsync(Strings.LogIgnore(ctx.Guild.Id, Format.Bold($"{channel.Name}({channel.Id}))")).ConfigureAwait(false);
         //     else
-        //         await ReplyConfirmLocalizedAsync("log_not_ignore", Format.Bold($"{channel.Name}({channel.Id})")).ConfigureAwait(false);
+        //         await ReplyConfirmAsync(Strings.LogNotIgnore(ctx.Guild.Id, Format.Bold($"{channel.Name}({channel.Id}))")).ConfigureAwait(false);
         // }
 
         /// <summary>
@@ -96,7 +96,7 @@ public partial class Administration
                 return val != null && val != 0 ? $"{Format.Bold(x)} <#{val}>" : Format.Bold(x);
             }));
 
-            await ctx.Channel.SendConfirmAsync($"{Format.Bold(GetText("log_events"))}\n{str}").ConfigureAwait(false);
+            await ctx.Channel.SendConfirmAsync($"{Format.Bold(Strings.LogEvents(ctx.Guild.Id))}\n{str}").ConfigureAwait(false);
         }
 
 
@@ -163,16 +163,16 @@ public partial class Administration
                 await Service.SetLogChannel(ctx.Guild.Id, channel?.Id ?? 0, type).ConfigureAwait(false);
                 if (channel is not null)
                 {
-                    await ConfirmLocalizedAsync("logging_event_enabled", type, channel.Id).ConfigureAwait(false);
+                    await ConfirmAsync(Strings.LoggingEventEnabled(ctx.Guild.Id, type, channel.Id)).ConfigureAwait(false);
                     return;
                 }
 
-                await ConfirmLocalizedAsync("logging_event_disabled", type);
+                await ConfirmAsync(Strings.LoggingEventDisabled(ctx.Guild.Id, type));
             }
             catch (Exception e)
             {
                 Serilog.Log.Error(e, "There was an issue setting logs");
-                await ctx.Channel.SendErrorAsync(GetText("command_fatal_error"), Config);
+                await ErrorAsync(Strings.CommandFatalError(ctx.Guild.Id));
             }
         }
 
@@ -189,14 +189,14 @@ public partial class Administration
         {
             if (channel is null)
             {
-                await ConfirmLocalizedAsync("command_logging_disabled");
+                await ConfirmAsync(Strings.CommandLoggingDisabled(ctx.Guild.Id));
                 var gc = await gss.GetGuildConfig(ctx.Guild.Id);
                 gc.CommandLogChannel = 0;
                 await gss.UpdateGuildConfig(ctx.Guild.Id, gc);
             }
             else
             {
-                await ConfirmLocalizedAsync("command_logging_enabled");
+                await ConfirmAsync(Strings.CommandLoggingEnabled(ctx.Guild.Id));
                 var gc = await gss.GetGuildConfig(ctx.Guild.Id);
                 gc.CommandLogChannel = channel.Id;
                 await gss.UpdateGuildConfig(ctx.Guild.Id, gc);

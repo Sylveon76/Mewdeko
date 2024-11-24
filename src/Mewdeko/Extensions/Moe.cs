@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿
+
+using System.Text.Json.Serialization;
 
 namespace Mewdeko.Extensions;
 
@@ -10,49 +12,49 @@ public class Result
     /// <summary>
     ///     The Anilist ID.
     /// </summary>
-    [JsonProperty("anilist")]
+    [JsonPropertyName("anilist")]
     public int Anilist { get; set; }
 
     /// <summary>
     ///     The filename of the image.
     /// </summary>
-    [JsonProperty("filename")]
+    [JsonPropertyName("filename")]
     public string Filename { get; set; }
 
     /// <summary>
     ///     The episode number.
     /// </summary>
-    [JsonProperty("episode")]
+    [JsonPropertyName("episode")]
     public double Episode { get; set; }
 
     /// <summary>
     ///     The time the scene starts.
     /// </summary>
-    [JsonProperty("from")]
+    [JsonPropertyName("from")]
     public double From { get; set; }
 
     /// <summary>
     ///     The time the scene ends.
     /// </summary>
-    [JsonProperty("to")]
+    [JsonPropertyName("to")]
     public double To { get; set; }
 
     /// <summary>
     ///     The similarity of the scene in percentage.
     /// </summary>
-    [JsonProperty("similarity")]
+    [JsonPropertyName("similarity")]
     public double Similarity { get; set; }
 
     /// <summary>
     ///     The video URL.
     /// </summary>
-    [JsonProperty("video")]
+    [JsonPropertyName("video")]
     public string Video { get; set; }
 
     /// <summary>
     ///     The image URL.
     /// </summary>
-    [JsonProperty("image")]
+    [JsonPropertyName("image")]
     public string Image { get; set; }
 }
 
@@ -64,18 +66,18 @@ public class MoeResponse
     /// <summary>
     ///     The total number of frames.
     /// </summary>
-    [JsonProperty("frameCount")]
+    [JsonPropertyName("frameCount")]
     public int FrameCount { get; set; }
 
     /// <summary>
     ///     The error message.
     /// </summary>
-    [JsonProperty("error")]
+    [JsonPropertyName("error")]
     public string Error { get; set; }
 
     /// <summary>
     ///     The results from the API.
     /// </summary>
-    [JsonProperty("result")]
+    [JsonPropertyName("result")]
     public List<Result> Result { get; set; }
 }
