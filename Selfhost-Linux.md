@@ -46,3 +46,5 @@ sudo apt update && sudo apt install postgres postgres-contrib dotnet-sdk-8.0 git
    ```
 **6. Set up the PostgreSQL connection string in `credentials.json`:**
    Format: `"PsqlConnectionString": "Server=ServerIp;Database=DatabaseName;Port=PsqlPort;UID=PsqlUser;Password=UserPassword"`
+# Setup `credentials.json`.
+Follow the [credentials guide](https://mewdeko.tech/credguide)
