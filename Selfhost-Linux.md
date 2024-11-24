@@ -1,17 +1,17 @@
 # Creating the Bot
-**1. Go to [Discord Developer Portal](https://discord.dev) and login.**
-**2. Click on `new application`.**
-**3. Name the application and click create.**
-**4. Navigate to the `Bot` tab on the siderbar.**
-**5. Click reset token input 2FA code and copy the token for later.**
+**\1. Go to [Discord Developer Portal](https://discord.dev) and login.**
+**\2. Click on `new application`.**
+**\3. Name the application and click create.**
+**\4. Navigate to the `Bot` tab on the siderbar.**
+**\5. Click reset token input 2FA code and copy the token for later.**
 # Download
-**1. Run this following command in a terminal (Debian/Ubuntu)**
+**\1. Run this following command in a terminal (Debian/Ubuntu)**
 ```
 sudo apt update && sudo apt install postgres postgres-contrib dotnet-sdk-8.0 git
 ```
-**2. Download Mewdeko from the [releases page](https://github.com/SylveonDeko/Mewdeko/releases) and download the source code zip/tar.gz (not the win64 binary).**
-**3. Unzip the file with either the `tar` command or `unzip` command.**
-**4. Move the folder you just unzipped to a different directory such as say /srv.**
+**\2. Download Mewdeko from the [releases page](https://github.com/SylveonDeko/Mewdeko/releases) and download the source code zip/tar.gz (not the win64 binary).**
+**\3. Unzip the file with either the `tar` command or `unzip` command.**
+**\4. Move the folder you just unzipped to a different directory such as say /srv.**
 # Database setup
 **1. Switch to the postgres user**
    ```
