@@ -68,6 +68,12 @@ sudo apt update && sudo apt install postgres postgres-contrib dotnet-sdk-8.0 git
 
 **5. Copy the URL and paste it into the browser and invite the bot to your server.**
 
+**6. To allow the update command to work run the following commands in the directory where Mewdeko, is stored.**
+```
+cd /path/to/mewdeko
+git init
+git remote add origin https://github.com/SylveonDeko/Mewdeko.git
+```
 Optional systemd service example:
 ```
 [Unit]
