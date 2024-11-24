@@ -91,7 +91,6 @@ User=<yourUsername>
 Group=<sameAsUsername>
 Environment=ASPNETCORE_ENVIRONMENT=Production
 
-# Optionally start on boot
 [Install]
 WantedBy=multi-user.target
 ```
