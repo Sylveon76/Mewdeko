@@ -1,8 +1,12 @@
 # Creating the Bot
 **1. Go to [Discord Developer Portal](https://discord.dev) and login.**
+
 **2. Click on `new application`.**
+
 **3. Name the application and click create.**
+
 **4. Navigate to the `Bot` tab on the siderbar.**
+
 **5. Click reset token input 2FA code and copy the token for later.**
 # Download
 **1. Run this following command in a terminal (Debian/Ubuntu)**
@@ -52,12 +56,18 @@ sudo apt update && sudo apt install postgres postgres-contrib dotnet-sdk-8.0 git
 # Setup `credentials.json`.
 **Follow the [credentials guide](https://mewdeko.tech/credguide)**
 # Final Setup
-**1. To run the bot do the command `dotnet run -c release` in terminal while inside the directory where the .csproj file (e.g., `/srv/Mewdeko/src/Mewdeko`) to shutdown the bot do .die or Ctrl+C in the terminal window optionally you can make it into a systemd service.**
+**1. To run the bot do the command `dotnet run -c release` in terminal while inside the directory where the .csproj file (e.g., `/srv/Mewdeko/src/Mewdeko`) to shutdown the bot do .die or Ctrl+C in the terminal window optionally you can make it into a systemd service (example shown below).**
+
 **2. Go to [Discord Developer Portal](https://discord.dev) and login.**
+
 **3. Find the application you just created.**
+
 **4. Navigate to the `OAuth2` tab.**
+
 **5. Go to the `OAuth2 URL Generator` and select the scopes `bot` and `application.commands`. The URL should look like this: `https://discord.com/oauth2/authorize?client_id=<clientID>&permissions=0&integration_type=0&scope=applications.commands+bot`.**
+
 **5. Copy the URL and paste it into the browser and invite the bot to your server.**
+
 Optional systemd service example:
 ```
 [Unit]
