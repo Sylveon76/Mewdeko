@@ -1,10 +1,28 @@
+using System.ComponentModel.DataAnnotations;
+using LinqToDB.Mapping;
+
 namespace Mewdeko.Database.Models;
 
 /// <summary>
 ///     Count of messages per user, channel, etc
 /// </summary>
-public class MessageCount : DbEntity
+public class MessageCount
 {
+
+    /// <summary>
+    ///     Gets or sets the unique identifier for the entity.
+    /// </summary>
+    [Key]
+    [Identity]
+    public long Id { get; set; }
+
+    /// <summary>
+    ///     Gets or sets the date and time when the entity was added.
+    ///     Defaults to the current UTC date and time.
+    /// </summary>
+    [System.ComponentModel.DataAnnotations.Schema.Column(TypeName = "timestamp without time zone")]
+    public DateTime? DateAdded { get; set; } = DateTime.Now;
+
     /// <summary>
     ///     The guild to be able to look up count
     /// </summary>
