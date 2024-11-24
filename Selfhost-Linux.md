@@ -1,12 +1,8 @@
 # Creating the Bot
 **1. Go to [Discord Developer Portal](https://discord.dev) and login.**
-
 **2. Click on `new application`.**
-
 **3. Name the application and click create.**
-
 **4. Navigate to the `Bot` tab on the siderbar.**
-
 **5. Click reset token input 2FA code and copy the token for later.**
 # Download
 **1. Run this following command in a terminal (Debian/Ubuntu)**
