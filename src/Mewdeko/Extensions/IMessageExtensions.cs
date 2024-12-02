@@ -110,7 +110,7 @@ public static class MessageExtensions
 
                 if (i.Color.HasValue)
                 {
-                    e.Color = i.Color.Value.RawValue.ToString();
+                    e.Color = i.Color;
                 }
 
                 embedList.Add(e);
