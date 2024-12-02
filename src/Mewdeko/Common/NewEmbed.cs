@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 using Mewdeko.Common.JsonConverters;
-
+using SkiaSharp;
 using static Mewdeko.Extensions.StringExtensions;
 
 // ReSharper disable NotNullOrRequiredMemberIsNotInitialized
@@ -118,8 +118,8 @@ public class Embed
     ///     Gets or sets the color of the embed.
     /// </summary>
     [JsonPropertyName("color")]
-    [JsonConverter(typeof(StringToIntConverter))]
-    public string Color { get; set; }
+    [JsonConverter(typeof(DiscordColorConverter))]
+    public Color? Color { get; set; }
 
     /// <summary>
     ///     Gets or sets the timestamp of the embed.
@@ -373,15 +373,7 @@ public class NewEmbed
             if (i.Url != null && Uri.IsWellFormedUriString(i.Url, UriKind.Absolute))
                 embed.WithUrl(i.Url);
             if (i.Color is not null)
-            {
-                if (i.Color.StartsWith("#"))
-                    embed.WithColor(new Color(Convert.ToUInt32(i.Color.Replace("#", ""), 16)));
-                if (i.Color.StartsWith("0x") && i.Color.Length == 8)
-                    embed.WithColor(new Color(Convert.ToUInt32(i.Color.Replace("0x", ""), 16)));
-                if (uint.TryParse(i.Color, out var colorNumber))
-                    embed.WithColor(new Color(colorNumber));
-            }
-
+                embed.WithColor(i.Color.Value);
             if (i.Footer != null)
             {
                 embed.WithFooter(efb =>

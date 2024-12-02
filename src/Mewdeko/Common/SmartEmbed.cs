@@ -1,4 +1,3 @@
-
 using System.Text.Json;
 using Serilog;
 
@@ -39,13 +38,46 @@ public static class SmartEmbed
             components = null;
             plainText = null;
             embeds = null;
+
+            // Extract the first complete JSON object from the input
+            var startIndex = input.IndexOf('{');
+            if (startIndex == -1)
+                return false;
+
+            var jsonDepth = 0;
+            var endIndex = -1;
+
+            for (var i = startIndex; i < input.Length; i++)
+            {
+                switch (input[i])
+                {
+                    case '{':
+                        jsonDepth++;
+                        break;
+                    case '}':
+                        jsonDepth--;
+                        if (jsonDepth == 0)
+                        {
+                            endIndex = i;
+                            i = input.Length; // Break the loop
+                        }
+                        break;
+                }
+            }
+
+            if (endIndex == -1 || jsonDepth != 0)
+                return false;
+
+            var jsonString = input.Substring(startIndex, endIndex - startIndex + 1);
+
             NewEmbed newEmbed;
             try
             {
-                newEmbed = JsonSerializer.Deserialize<NewEmbed>(input);
+                newEmbed = JsonSerializer.Deserialize<NewEmbed>(jsonString, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
             }
-            catch
+            catch(Exception ex)
             {
+                Log.Information(ex, "Failed to parse JSON");
                 return false;
             }
 
