@@ -528,7 +528,7 @@ public class GiveawayService : INService
             return;
         }
 
-        var prefix = await guildSettings1.GetPrefix(guild.Id).ConfigureAwait(false);
+        var prefix = await guildSettings1.GetPrefix(guild).ConfigureAwait(false);
 
 
         var emote = r.Emote.ToIEmote();

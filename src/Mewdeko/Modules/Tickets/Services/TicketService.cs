@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Serilog;
 using SelectMenuOption = Mewdeko.Database.Models.SelectMenuOption;
 
-namespace Mewdeko.Services;
+namespace Mewdeko.Modules.Tickets.Services;
 
 /// <summary>
 ///     Service for managing ticket panels, tickets, and cases.

@@ -15,7 +15,6 @@ public static class DiscordUserExtensions
     /// <param name="ctx">The database context.</param>
     /// <param name="userId">The ID of the Discord user.</param>
     /// <param name="username">The username of the Discord user.</param>
-    /// <param name="discrim">The discriminator of the Discord user.</param>
     /// <param name="avatarId">The avatar ID of the Discord user.</param>
     public static async Task EnsureUserCreated(
         this MewdekoContext ctx,
@@ -44,7 +43,6 @@ public static class DiscordUserExtensions
     /// <param name="ctx">The database context.</param>
     /// <param name="userId">The ID of the Discord user.</param>
     /// <param name="username">The username of the Discord user.</param>
-    /// <param name="discrim">The discriminator of the Discord user.</param>
     /// <param name="avatarId">The avatar ID of the Discord user.</param>
     /// <returns>The Discord user entity.</returns>
     public static async Task<DiscordUser> GetOrCreateUser(

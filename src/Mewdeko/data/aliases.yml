@@ -29,6 +29,27 @@ toggleremoveinviteonleave:
 setminaccountage:
   - setminaccountage
   - inviteminage
+aichannel:
+  - aichannel
+  - aic
+aiwebhook:
+  - aiwebhook
+  - aiw
+aimodel:
+  - aimodel
+  - aim
+aikey:
+  - aikey
+  - ak
+aiprompt:
+  - aiprompt
+  - aip
+aiconfig:
+  - aiconfig
+  - ac
+aicustomembed:
+  - aicustomembed
+  - aice
 inviteleaderboard:
   - inviteleaderboard
   - inviteslb

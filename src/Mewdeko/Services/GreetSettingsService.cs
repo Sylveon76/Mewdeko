@@ -358,18 +358,6 @@ public class GreetSettingsService : INService
         return (await dbContext.ForGuildId(id, set => set)).DmGreetMessageText;
     }
 
-    /// <summary>
-    ///     Retrieves the channel greeting message text for a guild.
-    /// </summary>
-    /// <param name="gid">The guild's unique identifier.</param>
-    /// <returns>The channel greeting message text.</returns>
-    public async Task<string> GetGreetMsg(ulong gid)
-    {
-        await using var dbContext = await dbProvider.GetContextAsync();
-
-        return (await dbContext.ForGuildId(gid, set => set)).ChannelGreetMessageText;
-    }
-
     private async Task<bool> GreetDmUserInternal(GreetSettings conf, IGuildUser user)
     {
         if (!conf.SendDmGreetMessage)

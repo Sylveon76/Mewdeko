@@ -85,7 +85,7 @@ public class VerboseErrorsService : INService, IUnloadableService
                 .AddField("Usages",
                     string.Join("\n",
                         cmd.RealRemarksArr(strings, channel.Guild.Id, await guildSettings.GetPrefix(channel.Guild))))
-                .WithFooter($"Run {await guildSettings.GetPrefix(channel.Guild.Id)}ve to disable these prompts.")
+                .WithFooter($"Run {await guildSettings.GetPrefix(channel.Guild)}ve to disable these prompts.")
                 .WithErrorColor();
 
             if (!botConfigService.Data.ShowInviteButton)

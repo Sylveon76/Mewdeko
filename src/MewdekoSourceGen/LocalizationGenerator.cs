@@ -27,7 +27,7 @@ namespace MewdekoSourceGen;
 ///     5. Provide comprehensive documentation about locale support
 /// </remarks>
 [Generator]
-public class LocalizationGenerator : IIncrementalGenerator
+public partial class LocalizationGenerator : IIncrementalGenerator
 {
     /// <summary>
     ///     Regular expression pattern to match locale files and extract the culture code.
@@ -269,7 +269,7 @@ foreach (var key in allKeys)
             return string.Empty;
 
         return System.Security.SecurityElement.Escape(input)
-            ?.Replace("\r\n", "\\n")
+            .Replace("\r\n", "\\n")
             .Replace("\n", "\\n")
             .Replace("\r", "\\n")
             .Replace("{", "{{")
@@ -301,22 +301,22 @@ foreach (var key in allKeys)
         };
 
         // Replace leading numbers with words
-        var result = Regex.Replace(input, @"^\d+", match =>
+        var result = MyRegex1().Replace(input, match =>
         {
             var numbers = match.Value.ToCharArray();
             return string.Concat(numbers.Select(n => numberWords[n.ToString()]));
         });
 
         // Replace remaining numbers and special characters
-        result = Regex.Replace(result, @"\d", match => numberWords[match.Value]);
+        result = MyRegex2().Replace(result, match => numberWords[match.Value]);
 
         // Remove invalid characters and split into words
-        var words = Regex.Replace(result, @"[^A-Za-z0-9_]", "_")
-            .Split(['_', '-'], StringSplitOptions.RemoveEmptyEntries);
+        var words = MyRegex().Replace(result, "_")
+            .Split(new[] { '_', '-' }, StringSplitOptions.RemoveEmptyEntries);
 
         // Convert to PascalCase
         var identifier = string.Join("", words.Select(word =>
-            char.ToUpperInvariant(word[0]) + word.Substring(1).ToLowerInvariant()));
+            char.ToUpperInvariant(word[0]) + word[1..].ToLowerInvariant()));
 
         // Handle empty or invalid starting character
         if (string.IsNullOrEmpty(identifier) || (!char.IsLetter(identifier[0]) && identifier[0] != '_'))
@@ -341,15 +341,10 @@ foreach (var key in allKeys)
         return finalIdentifier;
     }
 
-    /// <summary>
-    ///     Escapes special characters in a string for use in documentation.
-    /// </summary>
-    /// <param name="input">The string to escape.</param>
-    /// <returns>The escaped string safe for use in documentation.</returns>
-    private static string EscapeString(string input)
-    {
-        return input.Replace("\"", "\"\"")
-            .Replace("\r", "\\r")
-            .Replace("\n", "\\n");
-    }
+    [GeneratedRegex(@"[^A-Za-z0-9_]")]
+    private static partial Regex MyRegex();
+    [GeneratedRegex(@"^\d+")]
+    private static partial Regex MyRegex1();
+    [GeneratedRegex(@"\d")]
+    private static partial Regex MyRegex2();
 }

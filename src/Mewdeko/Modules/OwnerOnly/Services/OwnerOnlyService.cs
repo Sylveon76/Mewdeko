@@ -10,7 +10,6 @@ using Mewdeko.Common.Configs;
 using Mewdeko.Common.ModuleBehaviors;
 using Mewdeko.Database.DbContextStuff;
 using Mewdeko.Services.Settings;
-using Mewdeko.Services.strings;
 using Mewdeko.Services.Strings;
 using Microsoft.EntityFrameworkCore;
 
@@ -428,7 +427,7 @@ public class OwnerOnlyService : ILateExecutor, IReadyExecutor, INService
     {
         if (args.Channel is not IGuildChannel guildChannel)
             return;
-        var prefix = await guildSettings.GetPrefix(guildChannel.GuildId);
+        var prefix = await guildSettings.GetPrefix(guildChannel.Guild);
         if (args.Content.StartsWith(prefix))
             return;
         if (bss.Data.ChatGptKey is null or "" || bss.Data.ChatGptChannel is 0)
@@ -745,7 +744,8 @@ public class OwnerOnlyService : ILateExecutor, IReadyExecutor, INService
             if (cmd.GuildId is null)
                 return;
             var guildShard = (int)((cmd.GuildId.Value >> 22) % (ulong)creds.TotalShards);
-            var prefix = await guildSettings.GetPrefix(cmd.GuildId.Value);
+            var guild = client.GetGuild(cmd.GuildId.Value);
+            var prefix = await guildSettings.GetPrefix(guild);
             //if someone already has .die as their startup command, ignore it
             if (cmd.CommandText.StartsWith($"{prefix}die", StringComparison.InvariantCulture))
                 return;

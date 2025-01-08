@@ -29,6 +29,6 @@ public class RequireDragonAttribute : PreconditionAttribute
             : PreconditionResult.FromError("Your meek human arms could never push the 10,000 pound rock blocking the " +
                                            "path out of the cave of stable features. You must call upon the dragon in " +
                                            "your soul to open a passage into the abyss of new features. (enable beta " +
-                                           $"mode by running `{await guildConfigService.GetPrefix(context.Guild?.Id)}dragon` to use this command)");
+                                           $"mode by running `{await guildConfigService.GetPrefix(context.Guild)}dragon` to use this command)");
     }
 }

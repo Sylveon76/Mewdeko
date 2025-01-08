@@ -1,6 +1,5 @@
 ﻿using System.Text.Json.Serialization;
 using Mewdeko.Common.JsonConverters;
-using SkiaSharp;
 using static Mewdeko.Extensions.StringExtensions;
 
 // ReSharper disable NotNullOrRequiredMemberIsNotInitialized

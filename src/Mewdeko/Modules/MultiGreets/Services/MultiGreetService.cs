@@ -1,7 +1,6 @@
 ﻿using Discord.Net;
 using Mewdeko.Database.DbContextStuff;
 using Mewdeko.Modules.Utility.Services;
-using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 namespace Mewdeko.Modules.MultiGreets.Services;

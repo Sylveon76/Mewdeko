@@ -14,7 +14,7 @@ namespace Mewdeko.Database.Migrations.PostgreSql
 {
     [DbContext(typeof(MewdekoPostgresContext))]
     [Migration("20241111044022_AAAAAAAAAAAAAA")]
-    partial class AAAAAAAAAAAAAA
+    partial class Aaaaaaaaaaaaaa
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

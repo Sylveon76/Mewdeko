@@ -577,7 +577,7 @@ public class CommandHandler : INService
             if (messageContent != usrMsg.Content) break;
         }
 
-        var prefix = await gss.GetPrefix(guild?.Id);
+        var prefix = await gss.GetPrefix(guild);
         if (prefix == null) return;
 
         var prefixLength = GetPrefixLength(messageContent, prefix);

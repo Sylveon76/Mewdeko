@@ -3,7 +3,7 @@
 /// <summary>
 ///     Represents a key for stream data, combining a stream type and name.
 /// </summary>
-public readonly struct StreamDataKey
+public readonly record struct StreamDataKey
 {
     /// <summary>
     ///     Gets the type of the followed stream.

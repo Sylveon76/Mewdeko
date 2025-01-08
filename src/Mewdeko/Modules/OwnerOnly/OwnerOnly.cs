@@ -611,12 +611,12 @@ public class OwnerOnly(
     {
         if (string.IsNullOrWhiteSpace(prefix))
         {
-            await ReplyConfirmAsync(Strings.DefprefixCurrent(ctx.Guild.Id, await guildSettings.GetPrefix()))
+            await ReplyConfirmAsync(Strings.DefprefixCurrent(ctx.Guild.Id, await guildSettings.GetPrefix(null)))
                 .ConfigureAwait(false);
             return;
         }
 
-        var oldPrefix = await guildSettings.GetPrefix();
+        var oldPrefix = await guildSettings.GetPrefix(null);
         var newPrefix = Service.SetDefaultPrefix(prefix);
 
         await ReplyConfirmAsync(Strings.DefprefixNew(ctx.Guild.Id, Format.Code(oldPrefix), Format.Code(newPrefix)))

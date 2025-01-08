@@ -2,7 +2,6 @@ using System.IO;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Mewdeko.Services.Settings;
-using Mewdeko.Services.strings;
 using Mewdeko.Services.Strings;
 
 namespace Mewdeko.Modules.Searches.Services;

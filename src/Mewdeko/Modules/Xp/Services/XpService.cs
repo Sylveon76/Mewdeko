@@ -5,7 +5,6 @@ using Humanizer;
 using Mewdeko.Database.DbContextStuff;
 using Mewdeko.Modules.Xp.Common;
 using Mewdeko.Services.Impl;
-using Mewdeko.Services.strings;
 using Mewdeko.Services.Strings;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;

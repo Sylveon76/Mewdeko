@@ -23,7 +23,7 @@ namespace Mewdeko.Database;
 /// </summary>
 public class MigrationService
 {
-    private readonly DbContextProvider provider;
+    private readonly DbContextProvider? provider;
     private readonly string token;
 
     /// <summary>
@@ -39,12 +39,6 @@ public class MigrationService
         {
             throw new ArgumentException("PostgreSQL connection string must be provided.");
         }
-
-
-        var builder = new DbContextOptionsBuilder()
-            .UseNpgsql(psqlConnection)
-            .EnableDetailedErrors()
-            .EnableSensitiveDataLogging();
 
         if (migrate)
         {
@@ -252,7 +246,7 @@ public class MigrationService
     /// <param name="context">The database context.</param>
     public async Task ApplyMigrations(DbContext? context = null)
     {
-        context ??= await provider.GetContextAsync();
+        context ??= await provider!.GetContextAsync();
         var toApply = (await context.Database.GetPendingMigrationsAsync().ConfigureAwait(false)).ToList();
         if (toApply.Count != 0)
         {

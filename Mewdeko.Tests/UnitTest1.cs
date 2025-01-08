@@ -1,5 +1,4 @@
 using System.Text.RegularExpressions;
-using NUnit.Framework;
 
 namespace Mewdeko.Tests
 {
@@ -8,21 +7,13 @@ namespace Mewdeko.Tests
     {
         private readonly string[] discordSendMethods = new[]
         {
-            "SendMessageAsync",
-            "SendFileAsync",
-            "SendFilesAsync",
-            "ReplyAsync",
-            "RespondAsync",
-            "SendErrorAsync",
-            "SendConfirmAsync",
-            "FollowupAsync",
-            "ModifyOriginalResponseAsync",
-            "DeferAsync",
-            "ReplyErrorLocalizedAsync",
-            "ReplyConfirmLocalizedAsync",
-            "ErrorLocalizedAsync",
-            "ConfirmLocalizedAsync"
+            "SendMessageAsync", "SendFileAsync", "SendFilesAsync", "ReplyAsync",
+            "RespondAsync", "SendErrorAsync", "SendConfirmAsync", "FollowupAsync",
+            "ModifyOriginalResponseAsync", "DeferAsync", "ReplyErrorLocalizedAsync",
+            "ReplyConfirmLocalizedAsync", "ErrorLocalizedAsync", "ConfirmLocalizedAsync",
+            "WithTitle", "WithDescription", "WithFooter", "WithAuthor", "WithFields"
         };
+
 
         private readonly Regex methodCallRegex;
         private readonly Regex stringLiteralRegex = new(@"""[^""]*""");
@@ -41,51 +32,56 @@ namespace Mewdeko.Tests
                 var methodName = match.Groups[1].Value;
                 var parameters = match.Groups[2].Value;
 
-                // Get the context of the line for better error reporting
                 var lineStart = code.LastIndexOf('\n', match.Index) + 1;
                 var lineEnd = code.IndexOf('\n', match.Index);
                 if (lineEnd == -1) lineEnd = code.Length;
                 var lineContext = code[lineStart..lineEnd].Trim();
 
+                // Also check for new EmbedBuilder() patterns
+                if (lineContext.Contains("new EmbedBuilder()") || lineContext.Contains("new DiscordEmbedBuilder()"))
+                {
+                    var embedEnd = code.IndexOf(';', match.Index);
+                    if (embedEnd != -1)
+                        lineContext = code[lineStart..embedEnd].Trim();
+                }
+
                 var stringMatches = stringLiteralRegex.Matches(parameters);
                 foreach (Match strMatch in stringMatches)
                 {
                     var str = strMatch.Value;
-                    if (str != "\"\""
-                        && !parameters.Contains("Strings.")
-                        && !IsExemptString(str))
-                    {
+                    if (str != "\"\"" && !parameters.Contains("Strings.") && !IsExemptString(str))
                         return (true, methodName, str, lineContext);
-                    }
                 }
             }
 
             return (false, string.Empty, string.Empty, string.Empty);
         }
 
-        private bool IsExemptString(string str)
+        private bool IsExemptString(string str) => new[]
         {
-            var exemptPatterns = new[]
-            {
-                @"""http[s]?://""",     // URLs
-                @"""\.[\w]+""",         // File extensions
-                @"""\s+""",             // Whitespace strings
-                @"""\\n""",             // Newlines
-                @"""[\\\/]""",          // Path separators
-                @"""\{\d+\}""",         // Format string placeholders
-                @"""\$""",              // String interpolation
-                @"""<[^>]+>""",         // XML/HTML tags
-                @"""[0-9]+""",          // Number strings
-                @"""#.*?#""",           // Channel mentions
-                @"""@.*?@""",           // User mentions
-                @"""```.*?```""",       // Code blocks
-                @"""[\[\]\(\)]""",      // Brackets and parentheses
-                @"""[-_\.,!?]""",       // Common punctuation
-                @"""(?i)(true|false|null|undefined)""", // Common literals
-            };
-
-            return exemptPatterns.Any(pattern => Regex.IsMatch(str, pattern));
-        }
+            @"""http[s]?://[^""]*""",     // URLs
+            @"""\.[\w]+""",         // File extensions
+            @"""\s+""",             // Whitespace
+            @"""\\n""",             // Newlines
+            @"""[\\\/]""",          // Path separators
+            @"""\{\d+\}""",         // Format placeholders
+            @"""\$""",              // String interpolation
+            @"""<[^>]+>""",         // XML/HTML tags
+            @"""[0-9]+""",          // Numbers
+            @"""#.*?#""",           // Channel mentions
+            @"""@.*?@""",           // User mentions
+            @"""```.*?```""",       // Code blocks
+            @"""[\[\]\(\)]""",      // Brackets
+            @"""[-_\.,!?]""",       // Punctuation
+            @"""(?i)(true|false|null|undefined)""", // Literals
+            @"""\.[a-zA-Z0-9]+$""", // Filenames
+            @"""[a-zA-Z0-9_-]+\.(png|jpg|gif|mp4|mp3|wav|txt|json|yml|yaml|csv|xml)""", // File patterns
+            @"""http[s]?://[^""]*""",          // Full URLs
+            @"""[\u2600-\u26FF\u2700-\u27BF\u1F300-\u1F9FF]""",      // Unicode emojis
+            @"""[✅❌⚙️⭐️✨]""",                 // Common Discord emotes
+            @"""[\r\n|\n\n|\s]+""",            // Multiline whitespace
+            @"""\\[rn]\\[rn]""",           // Escaped newlines
+        }.Any(pattern => Regex.IsMatch(str, pattern));
 
         [Test]
         public void ModulesShouldNotUseRawStrings()
@@ -104,9 +100,9 @@ namespace Mewdeko.Tests
                 if (hasRawString)
                 {
                     failures.Add($"File: {Path.GetRelativePath(projectRoot, file)}\n" +
-                               $"Method: {methodName}\n" +
-                               $"Raw string found: {rawString}\n" +
-                               $"Context: {lineContext}\n");
+                                 $"Method: {methodName}\n" +
+                                 $"Raw string found: {rawString}\n" +
+                                 $"Context: {lineContext}\n");
                 }
             }
 
@@ -118,12 +114,12 @@ namespace Mewdeko.Tests
         private string GetProjectRoot()
         {
             var currentDir = Directory.GetCurrentDirectory();
-            while (!Directory.Exists(Path.Combine(currentDir, "Modules")))
+            while (!Directory.Exists(Path.Combine(currentDir, "src", "Mewdeko", "Modules")))
             {
                 currentDir = Directory.GetParent(currentDir)?.FullName
-                    ?? throw new DirectoryNotFoundException("Could not find project root with Modules directory");
+                             ?? throw new DirectoryNotFoundException("Could not find project root with Modules directory at src/Mewdeko/Modules");
             }
-            return currentDir;
+            return Path.Combine(currentDir, "src", "Mewdeko");
         }
 
         [OneTimeSetUp]

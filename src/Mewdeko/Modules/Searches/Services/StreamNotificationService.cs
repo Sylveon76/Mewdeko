@@ -255,13 +255,15 @@ public class StreamNotificationService : IReadyExecutor, INService
             if (shardTrackedStreams.TryGetValue(key, out var fss))
             {
                 await fss
-                    // send offline stream notifications only to guilds which enable it with .stoff
                     .SelectMany(x => x.Value)
                     .Where(x => OfflineNotificationServers.Contains(x.GuildId))
                     .Select(fs => client.GetGuild(fs.GuildId)
                         ?.GetTextChannel(fs.ChannelId)
                         ?.EmbedAsync(GetEmbed(fs.GuildId, stream)))
-                    .WhenAll().ConfigureAwait(false);
+                    .Where(task => task != null)
+                    .Select(task => task!)
+                    .WhenAll()
+                    .ConfigureAwait(false);
             }
         }
     }

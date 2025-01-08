@@ -18,6 +18,7 @@
   <!--    happy pride 🏳️‍⚧️ 🏳️‍🌈-->
 
   <ItemGroup>
+    <PackageReference Include="Claudia" Version="1.3.1" />
     <PackageReference Include="Discord.Net.WebSocket" Version="3.16.0"/>
     <PackageReference Include="Discord.Net.Rest" Version="3.16.0"/>
     <PackageReference Include="Discord.Net.Webhook" Version="3.16.0"/>
@@ -26,14 +27,18 @@
     <PackageReference Include="Discord.Addons.Hosting" Version="6.1.0"/>
     <PackageReference Include="EFCore.BulkExtensions" Version="8.1.1"/>
     <PackageReference Include="Google.Cloud.Vision.V1" Version="3.7.0"/>
+    <PackageReference Include="GroqApiLibrary" Version="1.0.8" />
     <PackageReference Include="HarfBuzzSharp" Version="8.3.0-preview.4.1"/>
     <PackageReference Include="HarfBuzzSharp.NativeAssets.Linux" Version="8.3.0-preview.4.1"/>
     <PackageReference Include="LibGit2Sharp" Version="0.30.0"/>
     <PackageReference Include="MathNet.Symbolics" Version="0.25.0"/>
     <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="3.0.1" />
+    <PackageReference Include="OpenAI" Version="2.1.0" />
     <PackageReference Include="OxyPlot.Core" Version="2.2.0"/>
     <PackageReference Include="OxyPlot.SkiaSharp" Version="2.2.0"/>
+    <PackageReference Include="Polly" Version="8.5.0" />
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.3" />
+    <PackageReference Include="System.ServiceProcess.ServiceController" Version="9.0.0" />
     <PackageReference Include="ZiggyCreatures.FusionCache" Version="1.4.0" />
   </ItemGroup>
 
@@ -147,6 +152,10 @@
     <None Remove="DiscordChatExporter\CliFx.dll"/>
     <None Remove="data\http.txt"/>
   </ItemGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <NoWarn>CS8603,CS8601,CS8618,CS1998,CS8625,CS8604,CS0618,CS9113,CS4014,CS8509,CS8602,CS0168,CS0184,CS8600,CS8619,CS0649,CS0169,CS0067,CS1573,CS1572,CS1571,CS1574</NoWarn>
+  </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\MewdekoSourceGen\MewdekoSourceGen.csproj"

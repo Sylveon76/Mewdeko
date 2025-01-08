@@ -582,19 +582,9 @@ public class GuildConfig : DbEntity
     public int removeroles { get; set; }
 
     /// <summary>
-    ///     Gets or sets a value indicating whether to automatically delete greet messages.
-    /// </summary>
-    public bool AutoDeleteGreetMessages { get; set; } = false;
-
-    /// <summary>
     ///     Gets or sets a value indicating whether to automatically delete bye messages.
     /// </summary>
     public bool AutoDeleteByeMessages { get; set; } = false;
-
-    /// <summary>
-    ///     Gets or sets the timer for automatically deleting greet messages.
-    /// </summary>
-    public int AutoDeleteGreetMessagesTimer { get; set; } = 30;
 
     /// <summary>
     ///     Gets or sets the timer for automatically deleting bye messages.
@@ -602,19 +592,9 @@ public class GuildConfig : DbEntity
     public int AutoDeleteByeMessagesTimer { get; set; } = 30;
 
     /// <summary>
-    ///     Gets or sets the channel ID for greet messages.
-    /// </summary>
-    public ulong GreetMessageChannelId { get; set; }
-
-    /// <summary>
     ///     Gets or sets the channel ID for bye messages.
     /// </summary>
     public ulong ByeMessageChannelId { get; set; }
-
-    /// <summary>
-    ///     Gets or sets the webhook URL for greet messages.
-    /// </summary>
-    public string? GreetHook { get; set; } = "";
 
     /// <summary>
     ///     Gets or sets the webhook URL for leave messages.
@@ -630,16 +610,6 @@ public class GuildConfig : DbEntity
     ///     Gets or sets the text for direct message greet messages.
     /// </summary>
     public string? DmGreetMessageText { get; set; } = "Welcome to the %server% server, %user%!";
-
-    /// <summary>
-    ///     Gets or sets a value indicating whether to send a channel greet message.
-    /// </summary>
-    public bool SendChannelGreetMessage { get; set; } = false;
-
-    /// <summary>
-    ///     Gets or sets the text for channel greet messages.
-    /// </summary>
-    public string? ChannelGreetMessageText { get; set; } = "Welcome to the %server% server, %user%!";
 
     /// <summary>
     ///     Gets or sets a value indicating whether to send a channel bye message.

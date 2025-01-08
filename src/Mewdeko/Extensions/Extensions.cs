@@ -265,7 +265,7 @@ public static partial class Extensions
     /// <param name="id">Guild ID.</param>
     /// <param name="config">Retrieved guild configuration if found, otherwise null.</param>
     /// <returns>True if the configuration was found, otherwise false.</returns>
-    public static bool TryGetConfig(this List<GuildConfig> configList, ulong id, out GuildConfig config)
+    public static bool TryGetConfig(this List<GuildConfig> configList, ulong id, out GuildConfig? config)
     {
         var tocheck = configList.Find(x => x.GuildId == id);
         if (tocheck == null)
@@ -349,7 +349,7 @@ public static partial class Extensions
     /// <param name="emojiStr">String representation of the emoji.</param>
     /// <param name="value">Resulting IEmote instance.</param>
     /// <returns>True if conversion is successful, otherwise false.</returns>
-    public static bool TryToIEmote(this string emojiStr, out IEmote value)
+    public static bool TryToIEmote(this string emojiStr, out IEmote? value)
     {
         value = Emote.TryParse(emojiStr, out var emoteValue)
             ? emoteValue

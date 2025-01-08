@@ -276,7 +276,7 @@ public partial class ReplacementBuilder
         reps.TryAdd("%channel.id%", () => ch.Id.ToString());
         reps.TryAdd("%channel.created%", () => ch.CreatedAt.ToString("HH:mm dd.MM.yyyy"));
         reps.TryAdd("%channel.nsfw%", () => (ch as ITextChannel)?.IsNsfw.ToString() ?? "-");
-        reps.TryAdd("%channel.topic%", () => (ch as ITextChannel)?.Topic.EscapeWeirdStuff() ?? "-");
+        reps.TryAdd("%channel.topic%", () => (ch as ITextChannel)?.Topic?.EscapeWeirdStuff() ?? "-");
         return this;
     }
 
@@ -302,7 +302,7 @@ public partial class ReplacementBuilder
     {
         /*OBSOLETE*/
         reps.TryAdd("%user%", () => string.Join(" ", users.Select(user => user.Mention)));
-        reps.TryAdd("%userfull%", () => string.Join(" ", users.Select(user => user.ToString().EscapeWeirdStuff())));
+        reps.TryAdd("%userfull%", () => string.Join(" ", users.Select(user => user.ToString()?.EscapeWeirdStuff())));
         reps.TryAdd("%username%", () => string.Join(" ", users.Select(user => user.Username.EscapeWeirdStuff())));
         reps.TryAdd("%userdiscrim%", () => string.Join(" ", users.Select(user => user.Discriminator)));
         reps.TryAdd("%useravatar%",
@@ -312,7 +312,7 @@ public partial class ReplacementBuilder
         /*NEW*/
         reps.TryAdd("%user.mention%", () => string.Join(" ", users.Select(user => user.Mention)));
         reps.TryAdd("%user.fullname%",
-            () => string.Join(" ", users.Select(user => user.ToString().EscapeWeirdStuff())));
+            () => string.Join(" ", users.Select(user => user.ToString()?.EscapeWeirdStuff())));
         reps.TryAdd("%user.name%", () => string.Join(" ", users.Select(user => user.Username.EscapeWeirdStuff())));
         reps.TryAdd("%user.banner%",
             () => string.Join(" ",

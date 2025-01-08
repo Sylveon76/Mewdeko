@@ -11,7 +11,6 @@ using Mewdeko.Modules.Chat_Triggers.Extensions;
 using Mewdeko.Modules.Permissions.Common;
 using Mewdeko.Modules.Permissions.Services;
 using Mewdeko.Services.Settings;
-using Mewdeko.Services.strings;
 using Mewdeko.Services.Strings;
 using Microsoft.EntityFrameworkCore;
 using Serilog;

@@ -16,6 +16,7 @@ public class CurrencyPermissionsAttribute : PreconditionAttribute
     public override async Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command,
         IServiceProvider services)
     {
+        await Task.CompletedTask.ConfigureAwait(false);
         var currencyService = services.GetRequiredService<ICurrencyService>();
         var credService = services.GetRequiredService<IBotCredentials>();
         var discordPermOverrideService = services.GetRequiredService<DiscordPermOverrideService>();

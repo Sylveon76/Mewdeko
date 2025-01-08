@@ -1,9 +1,7 @@
 using System.Web;
-using Mewdeko.Services.strings;
-using Mewdeko.Services.strings.impl;
 using StackExchange.Redis;
 
-namespace Mewdeko.Services.Strings.Impl;
+namespace Mewdeko.Services.strings.impl;
 
 /// <summary>
 ///     Uses <see cref="IStringsSource" /> to load strings into Redis hash (only on Shard 0)

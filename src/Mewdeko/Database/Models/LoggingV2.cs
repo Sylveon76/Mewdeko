@@ -107,7 +107,7 @@ public class LoggingV2 : DbEntity
     /// <summary>
     ///     Gets or sets the ID for logging text-to-speech voice presence.
     /// </summary>
-    public ulong? LogVoicePresenceTTSId { get; set; } = 0;
+    public ulong? LogVoicePresenceTtsId { get; set; } = 0;
 
     /// <summary>
     ///     Gets or sets the ID for logging server updates.

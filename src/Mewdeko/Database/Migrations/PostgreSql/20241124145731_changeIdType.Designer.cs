@@ -14,7 +14,7 @@ namespace Mewdeko.Database.Migrations.PostgreSql
 {
     [DbContext(typeof(MewdekoPostgresContext))]
     [Migration("20241124145731_changeIdType")]
-    partial class changeIdType
+    partial class ChangeIdType
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

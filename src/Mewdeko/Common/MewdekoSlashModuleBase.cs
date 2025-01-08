@@ -1,7 +1,5 @@
-using System.Globalization;
 using Discord.Interactions;
 using Mewdeko.Common.Configs;
-using Mewdeko.Services.strings;
 using Mewdeko.Services.Strings;
 using Microsoft.Extensions.DependencyInjection;
 

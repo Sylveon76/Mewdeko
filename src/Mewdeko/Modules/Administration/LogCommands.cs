@@ -116,7 +116,7 @@ public partial class Administration
                 LogType.ChannelDestroyed => l.ChannelDestroyedId,
                 LogType.ChannelUpdated => l.ChannelUpdatedId,
                 LogType.VoicePresence => l.LogVoicePresenceId,
-                LogType.VoicePresenceTts => l.LogVoicePresenceTTSId,
+                LogType.VoicePresenceTts => l.LogVoicePresenceTtsId,
                 LogType.UserMuted => l.UserMutedId,
                 LogType.EventCreated => l.EventCreatedId,
                 LogType.ThreadCreated => l.ThreadCreatedId,
@@ -160,6 +160,7 @@ public partial class Administration
         {
             try
             {
+                channel ??= ctx.Channel as ITextChannel;
                 await Service.SetLogChannel(ctx.Guild.Id, channel?.Id ?? 0, type).ConfigureAwait(false);
                 if (channel is not null)
                 {

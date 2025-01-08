@@ -21,7 +21,7 @@ namespace Mewdeko.Modules.Utility;
 ///     Contains utility commands such as user and server information retrieval.
 /// </summary>
 [Group("utility", "Utility commands like userinfo")]
-public class SlashUtility(
+public partial class SlashUtility(
     DiscordShardedClient client,
     StatsService stats,
     IBotCredentials creds,

@@ -2,7 +2,6 @@
 using System.Threading;
 using CommandLine;
 using Mewdeko.Common.Configs;
-using Mewdeko.Services.strings;
 using Mewdeko.Services.Strings;
 
 namespace Mewdeko.Modules.Games.Common;

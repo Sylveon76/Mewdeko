@@ -6,7 +6,6 @@ using Humanizer;
 using Mewdeko.Common.Attributes.TextCommands;
 using Mewdeko.Common.TypeReaders.Models;
 using Mewdeko.Modules.Administration.Services;
-using Mewdeko.Services.Settings;
 using Serilog;
 
 namespace Mewdeko.Modules.Administration;

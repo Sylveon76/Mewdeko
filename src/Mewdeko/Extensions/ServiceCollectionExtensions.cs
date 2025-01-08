@@ -2,7 +2,6 @@
 using Mewdeko.Services.Settings;
 using Mewdeko.Services.strings;
 using Mewdeko.Services.strings.impl;
-using Mewdeko.Services.Strings.Impl;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Mewdeko.Extensions;

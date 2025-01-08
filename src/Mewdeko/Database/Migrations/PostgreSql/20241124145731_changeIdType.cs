@@ -6,7 +6,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Mewdeko.Database.Migrations.PostgreSql
 {
     /// <inheritdoc />
-    public partial class changeIdType : Migration
+    public partial class ChangeIdType : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

@@ -275,7 +275,7 @@ public class MuteService : INService, IReadyExecutor
                 if (await GetRemoveOnMute(usr.Guild.Id) == 1)
                     config.MutedUsers.Add(new MutedUserId
                     {
-                        UserId = usr.Id, roles = uroles
+                        UserId = usr.Id, Roles = uroles
                     });
                 if (MutedUsers.TryGetValue(usr.Guild.Id, out var muted)) muted.Add(usr.Id);
 
@@ -374,8 +374,8 @@ public class MuteService : INService, IReadyExecutor
                     try
                     {
                         Uroles = config.MutedUsers
-                            .FirstOrDefault(p => p.UserId == usr.Id && p.roles != null)
-                            ?.roles
+                            .FirstOrDefault(p => p.UserId == usr.Id && p.Roles != null)
+                            ?.Roles
                             .Split(' ');
                     }
                     catch (Exception)

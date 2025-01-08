@@ -5,7 +5,7 @@
 namespace Mewdeko.Database.Migrations.PostgreSql
 {
     /// <inheritdoc />
-    public partial class moreMusicStuffs : Migration
+    public partial class MoreMusicStuffs : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

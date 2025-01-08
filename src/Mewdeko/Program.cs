@@ -1,11 +1,11 @@
 using System.IO;
 using System.Net.Http;
+using System.Text.Json.Serialization;
 using Discord.Commands;
 using Discord.Interactions;
 using Fergun.Interactive;
 using Lavalink4NET.Extensions;
 using MartineApiNet;
-using Mewdeko.Api.Services;
 using Mewdeko.AuthHandlers;
 using Mewdeko.Common.Configs;
 using Mewdeko.Common.ModuleBehaviors;
@@ -30,7 +30,6 @@ using Microsoft.OpenApi.Models;
 using NekosBestApiNet;
 using Serilog;
 using Serilog.Events;
-using Serilog.Sinks.SystemConsole.Themes;
 using ZiggyCreatures.Caching.Fusion;
 using RunMode = Discord.Commands.RunMode;
 
@@ -53,6 +52,7 @@ public class Program
         AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
         var log = LogSetup.SetupLogger("Mewdeko");
         var credentials = new BotCredentials();
+        DependencyInstaller.CheckAndInstallDependencies(credentials.PsqlConnectionString);
         Cache = new RedisCache(credentials);
 
         if (!Uri.TryCreate(credentials.LavalinkUrl, UriKind.Absolute, out _))
@@ -96,6 +96,7 @@ public class Program
                 .AddJsonOptions(options =>
                 {
                     options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+                    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
                 });
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen(x =>
@@ -140,7 +141,34 @@ public class Program
                         .AddAuthenticationSchemes(AuthHandler.SchemeName));
             });
 
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("BotInstancePolicy", policy =>
+                {
+                    policy
+                        .AllowAnyOrigin()     // Allow any origin since dashboard could be accessed from anywhere
+                        .AllowAnyMethod()     // Allow GET, POST, etc.
+                        .AllowAnyHeader();    // Allow any headers including custom auth headers
+                });
+            });
+
+
             var app = builder.Build();
+            app.Use(async (context, next) =>
+            {
+                try
+                {
+                    await next();
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "Error processing request: {Method} {Path}",
+                        context.Request.Method,
+                        context.Request.Path);
+                    throw;
+                }
+            });
+            app.UseCors("BotInstancePolicy");
             app.UseSerilogRequestLogging(options =>
             {
                 options.IncludeQueryInRequestPath = true;

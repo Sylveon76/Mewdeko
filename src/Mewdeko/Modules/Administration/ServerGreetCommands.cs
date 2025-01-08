@@ -160,7 +160,7 @@ public partial class Administration
             }
 
             var enabled = await Service.SetBye(ctx.Guild.Id, ctx.Channel.Id).ConfigureAwait(false);
-            var message = enabled ? Strings.Leavehookset(ctx.Guild.Id) : Strings.Leavehooksettwo(ctx.Guild.Id, await guildSettings.GetPrefix(ctx.Guild.Id));
+            var message = enabled ? Strings.Leavehookset(ctx.Guild.Id) : Strings.Leavehooksettwo(ctx.Guild.Id, await guildSettings.GetPrefix(ctx.Guild));
             await ctx.Channel.SendConfirmAsync(message)
                 .ConfigureAwait(false);
         }

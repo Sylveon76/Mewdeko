@@ -23,6 +23,7 @@ public class EventPubSub : IPubSub
     public async Task Sub<TData>(TypedKey<TData> key, Func<TData, ValueTask> action)
         where TData : notnull
     {
+        await Task.CompletedTask.ConfigureAwait(false);
         var keyActions = actions.GetOrAdd(key.Key,
             _ => new ConcurrentDictionary<Delegate, List<Func<object, ValueTask>>>());
         var sameActions = keyActions.GetOrAdd(action, _ => []);

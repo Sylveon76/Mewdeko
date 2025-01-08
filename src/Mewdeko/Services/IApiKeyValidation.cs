@@ -1,4 +1,4 @@
-﻿namespace Mewdeko.Api.Services;
+﻿namespace Mewdeko.Services;
 
 /// <summary>
 ///     Api key validation interface

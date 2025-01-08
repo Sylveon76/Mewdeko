@@ -4,6 +4,7 @@ using Fergun.Interactive;
 using Fergun.Interactive.Pagination;
 using Mewdeko.Common.Attributes.InteractionCommands;
 using Mewdeko.Common.Modals;
+using Mewdeko.Modules.Tickets.Services;
 using Serilog;
 using StackExchange.Redis;
 

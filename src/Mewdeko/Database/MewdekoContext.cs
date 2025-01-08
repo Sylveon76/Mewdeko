@@ -95,9 +95,29 @@ public class MewdekoContext : DbContext
     public DbSet<MessageCount> MessageCounts { get; set; }
 
     /// <summary>
+    /// Gets or sets message timestamps
+    /// </summary>
+    public DbSet<MessageTimestamp> MessageTimestamps { get; set; }
+
+    /// <summary>
     ///     Gets or sets the anti-alt settings.
     /// </summary>
     public DbSet<AntiAltSetting> AntiAltSettings { get; set; }
+
+    /// <summary>
+    ///     Gets or sets the per guild AI Config
+    /// </summary>
+    public DbSet<GuildAiConfig> GuildAiConfig { get; set; }
+
+    /// <summary>
+    ///     AI Messages
+    /// </summary>
+    public DbSet<AiMessage> AiMessages { get; set; }
+
+    /// <summary>
+    ///     AI Conversations
+    /// </summary>
+    public DbSet<AiConversation> AiConversations { get; set; }
 
     /// <summary>
     ///     Gets or sets the anti-spam settings.
@@ -464,7 +484,7 @@ public class MewdekoContext : DbContext
     /// <summary>
     ///     gets or sets the local running instances, for dashboard management.
     /// </summary>
-    public DbSet<LocalBotInstances> BotInstances { get; set; }
+    public DbSet<BotInstance> BotInstances { get; set; }
 
     /// <summary>
     ///     Settings for invite counting
@@ -633,9 +653,6 @@ public class MewdekoContext : DbContext
             .HasDefaultValue(true);
 
         configEntity.Property(x => x.SendDmGreetMessage)
-            .HasDefaultValue(false);
-
-        configEntity.Property(x => x.SendChannelGreetMessage)
             .HasDefaultValue(false);
 
         configEntity.Property(x => x.SendChannelByeMessage)

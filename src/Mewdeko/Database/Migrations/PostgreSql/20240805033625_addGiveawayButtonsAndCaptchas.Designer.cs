@@ -13,7 +13,7 @@ namespace Mewdeko.Database.Migrations.PostgreSql
 {
     [DbContext(typeof(MewdekoPostgresContext))]
     [Migration("20240805033625_addGiveawayButtonsAndCaptchas")]
-    partial class addGiveawayButtonsAndCaptchas
+    partial class AddGiveawayButtonsAndCaptchas
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

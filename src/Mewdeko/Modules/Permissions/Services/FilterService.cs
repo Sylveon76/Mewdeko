@@ -8,7 +8,6 @@ using Mewdeko.Common.PubSub;
 using Mewdeko.Database.DbContextStuff;
 using Mewdeko.Modules.Administration.Services;
 using Mewdeko.Modules.Moderation.Services;
-using Mewdeko.Services.strings;
 using Mewdeko.Services.Strings;
 using Microsoft.EntityFrameworkCore;
 using Serilog;

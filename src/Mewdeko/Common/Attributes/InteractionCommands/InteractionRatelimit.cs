@@ -65,10 +65,9 @@ public sealed class InteractionRatelimitAttribute : PreconditionAttribute
         return PreconditionResult.FromError(msgContent);
     }
 
-    private async Task<TimeSpan?> TryAddRatelimitAsync(IFusionCache cache, string cacheKey, int expireIn)
+    private static async Task<TimeSpan?> TryAddRatelimitAsync(IFusionCache cache, string cacheKey, int expireIn)
     {
-        var existingRatelimit = await cache.GetOrSetAsync<TimeSpan?>(cacheKey,
-            async _ => TimeSpan.FromSeconds(expireIn), options => options.SetDuration(TimeSpan.FromSeconds(expireIn)));
+        var existingRatelimit = await cache.GetOrSetAsync(cacheKey, _ => Task.FromResult<TimeSpan?>(TimeSpan.FromSeconds(expireIn)), options => options.SetDuration(TimeSpan.FromSeconds(expireIn)));
 
         return existingRatelimit == TimeSpan.FromSeconds(expireIn) ? null : existingRatelimit;
     }

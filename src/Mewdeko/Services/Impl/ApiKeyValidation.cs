@@ -1,6 +1,4 @@
-﻿using Mewdeko.Api.Services;
-
-namespace Mewdeko.Services.Impl;
+﻿namespace Mewdeko.Services.Impl;
 
 /// <summary>
 ///     Implementation for pai key validation

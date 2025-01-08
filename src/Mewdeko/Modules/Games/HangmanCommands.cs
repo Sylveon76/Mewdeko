@@ -27,7 +27,7 @@ public partial class Games
         {
             await ctx.Channel
                 .SendConfirmAsync(
-                    $"{Format.Code(Strings.HangmanTypes(ctx.Guild.Id, await guildSettings.GetPrefix(ctx.Guild.Id)))}\n{string.Join("\n", Service.TermPool.Data.Keys)}")
+                    $"{Format.Code(Strings.HangmanTypes(ctx.Guild.Id, await guildSettings.GetPrefix(ctx.Guild)))}\n{string.Join("\n", Service.TermPool.Data.Keys)}")
                 .ConfigureAwait(false);
         }
 

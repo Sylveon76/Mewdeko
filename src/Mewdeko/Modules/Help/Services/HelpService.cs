@@ -3,7 +3,6 @@ using CommandLine;
 using Discord.Commands;
 using Discord.Interactions;
 using Mewdeko.Common.Attributes.TextCommands;
-using Mewdeko.Common.ModuleBehaviors;
 using Mewdeko.Modules.Administration.Services;
 using Mewdeko.Modules.Permissions.Common;
 using Mewdeko.Modules.Permissions.Services;

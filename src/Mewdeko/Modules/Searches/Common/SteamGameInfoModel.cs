@@ -1,7 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 using Mewdeko.Modules.Searches.Services;
 
-namespace Mewdeko.Modules.Searches;
+namespace Mewdeko.Modules.Searches.Common;
 
 /// <summary>
 ///     Represents detailed information about a Steam game.

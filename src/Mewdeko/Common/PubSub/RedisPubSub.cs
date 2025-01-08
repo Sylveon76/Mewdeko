@@ -78,7 +78,7 @@ public sealed class RedisPubSub : IPubSub
         {
             try
             {
-                var dataObj = serializer.Deserialize<TData?>(data);
+                var dataObj = serializer.Deserialize<TData?>(data!);
                 if (dataObj is not null)
                 {
                     await action(dataObj).ConfigureAwait(false);

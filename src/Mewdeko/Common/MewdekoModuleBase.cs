@@ -1,10 +1,7 @@
 using System.Globalization;
 using Discord.Commands;
 using Mewdeko.Common.Configs;
-using Mewdeko.Services.Impl;
-using Mewdeko.Services.strings;
 using Mewdeko.Services.Strings;
-using Microsoft.VisualBasic;
 
 // ReSharper disable NotNullOrRequiredMemberIsNotInitialized
 
@@ -196,7 +193,7 @@ public abstract class MewdekoModule : ModuleBase
     /// <param name="userId">The ID of the user who interacted with the button.</param>
     /// <param name="alreadyDeferred">Determines whether the interaction has already been deferred.</param>
     /// <returns>A task representing the asynchronous operation, containing the user input string.</returns>
-    public async Task<string>? GetButtonInputAsync(ulong channelId, ulong msgId, ulong userId,
+    public async Task<string?>? GetButtonInputAsync(ulong channelId, ulong msgId, ulong userId,
         bool alreadyDeferred = false)
     {
         var userInputTask = new TaskCompletionSource<string>();
@@ -250,7 +247,7 @@ public abstract class MewdekoModule : ModuleBase
     /// <param name="channelId">The ID of the channel where the message is expected.</param>
     /// <param name="userId">The ID of the user whose message is awaited.</param>
     /// <returns>A task representing the asynchronous operation, containing the user's message content.</returns>
-    public async Task<string>? NextMessageAsync(ulong channelId, ulong userId)
+    public async Task<string?>? NextMessageAsync(ulong channelId, ulong userId)
     {
         var userInputTask = new TaskCompletionSource<string>();
         var dsc = (DiscordShardedClient)ctx.Client;
@@ -294,7 +291,7 @@ public abstract class MewdekoModule : ModuleBase
     /// <param name="channelId">The ID of the channel where the message is expected.</param>
     /// <param name="userId">The ID of the user whose message is awaited.</param>
     /// <returns>A task representing the asynchronous operation, containing the user's message.</returns>
-    public async Task<SocketMessage>? NextFullMessageAsync(ulong channelId, ulong userId)
+    public async Task<SocketMessage?>? NextFullMessageAsync(ulong channelId, ulong userId)
     {
         var userInputTask = new TaskCompletionSource<SocketMessage>();
         var dsc = (DiscordShardedClient)ctx.Client;

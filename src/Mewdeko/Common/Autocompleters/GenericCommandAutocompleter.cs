@@ -61,7 +61,7 @@ public class GenericCommandAutocompleter : AutocompleteHandler
         return Task.FromResult(AutocompletionResult.FromSuccess(Commands.Commands
             .Where(c => !Perms.BlockedCommands.Contains(c.Aliases[0].ToLowerInvariant()))
             .Select(x =>
-                $"{x.Name} : {x.RealSummary(Strings, context.Guild?.Id, guildSettings.GetPrefix(context.Guild.Id).GetAwaiter().GetResult())}")
+                $"{x.Name} : {x.RealSummary(Strings, context.Guild?.Id, guildSettings.GetPrefix(context.Guild).GetAwaiter().GetResult())}")
             .Where(x => x.Contains((string)autocompleteInteraction.Data.Current.Value,
                 StringComparison.OrdinalIgnoreCase))
             .OrderByDescending(x =>

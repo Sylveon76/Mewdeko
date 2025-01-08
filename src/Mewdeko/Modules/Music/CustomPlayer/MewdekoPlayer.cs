@@ -10,7 +10,6 @@ using Lavalink4NET.Rest.Entities.Tracks;
 using Mewdeko.Common.Configs;
 using Mewdeko.Database.DbContextStuff;
 using Mewdeko.Modules.Music.Common;
-using Mewdeko.Services.strings;
 using Mewdeko.Services.Strings;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;

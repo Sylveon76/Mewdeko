@@ -1,11 +1,9 @@
 ﻿using System.IO;
 using System.Net.Http;
 using Discord.Rest;
-using LinqToDB.EntityFrameworkCore;
 using Mewdeko.Common.ModuleBehaviors;
 using Mewdeko.Database.DbContextStuff;
 using Mewdeko.Modules.Moderation.Services;
-using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 namespace Mewdeko.Modules.Administration.Services;
@@ -1746,7 +1744,7 @@ public class LogCommandService : INService, IReadyExecutor
                 logSetting.LogVoicePresenceId = channelId;
                 break;
             case LogType.VoicePresenceTts:
-                logSetting.LogVoicePresenceTTSId = channelId;
+                logSetting.LogVoicePresenceTtsId = channelId;
                 break;
             case LogType.UserMuted:
                 logSetting.UserMutedId = channelId;
@@ -1808,7 +1806,7 @@ public class LogCommandService : INService, IReadyExecutor
                 logSetting.LogVoicePresenceId = channelId;
                 logSetting.UserRoleAddedId = channelId;
                 logSetting.UserRoleRemovedId = channelId;
-                logSetting.LogVoicePresenceTTSId = channelId;
+                logSetting.LogVoicePresenceTtsId = channelId;
                 break;
             case LogCategoryTypes.Users:
                 logSetting.NicknameUpdatedId = channelId;
@@ -1874,7 +1872,7 @@ public class LogCommandService : INService, IReadyExecutor
                 logSetting.LogVoicePresenceId = 0;
                 logSetting.UserRoleAddedId = 0;
                 logSetting.UserRoleRemovedId = 0;
-                logSetting.LogVoicePresenceTTSId = 0;
+                logSetting.LogVoicePresenceTtsId = 0;
                 break;
         }
 

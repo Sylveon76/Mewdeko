@@ -17,7 +17,7 @@ public class MutedUserId : DbEntity
     /// <summary>
     ///     Gets or sets the roles of the muted user.
     /// </summary>
-    public string? roles { get; set; }
+    public string? Roles { get; set; }
 
     /// <summary>
     ///     Gets or sets the guild configuration ID.

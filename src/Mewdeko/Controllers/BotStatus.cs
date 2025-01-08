@@ -1,5 +1,7 @@
 using System.Diagnostics;
 using System.Reflection;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Discord.Commands;
 using Mewdeko.Common.Attributes.ASPNET;
 using Mewdeko.Services.Impl;
@@ -17,6 +19,12 @@ namespace Mewdeko.Controllers;
 public class BotStatus(DiscordShardedClient client, StatsService statsService, CommandService commandService)
     : Controller
 {
+
+    private static readonly JsonSerializerOptions options = new()
+    {
+        ReferenceHandler = ReferenceHandler.IgnoreCycles
+    };
+
     /// <summary>
     ///     Actual definition for getting bot status
     /// </summary>
@@ -56,7 +64,7 @@ public class BotStatus(DiscordShardedClient client, StatsService statsService, C
     public async Task<IActionResult> GetGuilds()
     {
         await Task.CompletedTask;
-        return Ok(client.Guilds.Select(x => x.Id));
+        return Ok(JsonSerializer.Serialize(client.Guilds.Select(x => x.Id), options));
     }
 
     private string GetCommitHash()

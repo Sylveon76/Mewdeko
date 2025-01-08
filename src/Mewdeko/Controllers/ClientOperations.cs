@@ -85,14 +85,32 @@ public class ClientOperations(DiscordShardedClient client) : Controller
         if (guild == null)
             return NotFound();
 
-        return channelType switch
+        var channels = channelType switch
         {
-            ChannelType.Text => Ok(guild.Channels.Where(x => x is ITextChannel)),
-            ChannelType.Voice => Ok(guild.Channels.Where(x => x is IVoiceChannel)),
-            ChannelType.Category => Ok(guild.Channels.Where(x => x is ICategoryChannel)),
-            ChannelType.Announcement => Ok(guild.Channels.Where(x => x is INewsChannel)),
-            _ => Ok(guild.Channels)
+            ChannelType.Text => guild.Channels
+                .Where(x => x is ITextChannel)
+                .Select(c => new NeededRoleInfo
+                {
+                    Id = c.Id,
+                    Name = c.Name
+                }),
+            ChannelType.Voice => guild.Channels
+                .Where(x => x is IVoiceChannel)
+                .Select(c => new NeededRoleInfo
+                {
+                    Id = c.Id,
+                    Name = c.Name
+                }),
+            // ... similar for other types
+            _ => guild.Channels
+                .Select(c => new NeededRoleInfo
+                {
+                    Id = c.Id,
+                    Name = c.Name
+                })
         };
+
+        return Ok(channels);
     }
 
     /// <summary>
@@ -163,7 +181,7 @@ public class ClientOperations(DiscordShardedClient client) : Controller
     public async Task<IActionResult> GetGuilds()
     {
         await Task.CompletedTask;
-        return Ok(JsonSerializer.Serialize(client.Guilds.Select(x => x.Id)));
+        return Ok(JsonSerializer.Serialize(client.Guilds.Select(x => x.Id), options));
     }
 
     /// <summary>
