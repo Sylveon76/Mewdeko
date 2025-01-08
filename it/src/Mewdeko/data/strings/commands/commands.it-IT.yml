@@ -40,6 +40,36 @@ toggleremoveinviteonleave:
   args:
     - ""
   desc: "Toggles whether invites should be removed when a user leaves the server."
+aichannel:
+  args:
+    - "channel"
+  desc: "Configures which channel the AI will respond in and enables/disables AI responses."
+aiwebhook:
+  args:
+    - "name"
+    - "avatar"
+  desc: "Sets a webhook for AI responses. Provide no arguments to disable."
+aimodel:
+  args:
+    - "provider"
+    - "model"
+  desc: "Sets the AI provider and model. If model is omitted, lists available models for the provider."
+aikey:
+  args:
+    - ""
+  desc: "Sets the API key for the current AI provider using a modal. Requires Administrator permission."
+aiprompt:
+  args:
+    - "prompt"
+  desc: "Sets the system prompt that controls how the AI responds to messages."
+aicustomembed:
+  args:
+    - "template"
+  desc: "Sets the custom embed template. Supports user, server, channel and client placeholders. Use %airesponse% to set where you want the response to be."
+aiconfig:
+  args:
+    - ""
+  desc: "Displays current AI configuration including enabled status, channel, provider, model and usage stats."
 setminaccountage:
   args:
     - "days"
