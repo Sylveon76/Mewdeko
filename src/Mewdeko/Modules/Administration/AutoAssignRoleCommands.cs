@@ -43,7 +43,7 @@ public partial class Administration
             else if (roles.Contains(role.Id))
                 await AutoAssignRole().ConfigureAwait(false);
             else
-                await ReplyConfirmAsync(Strings.AabrRoleRemoved(ctx.Guild.Id, Format.Bold(role.Mention))).ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.AarRoleRemoved(ctx.Guild.Id, Format.Bold(role.Mention))).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -72,7 +72,7 @@ public partial class Administration
             if (existing.Count != roles.Count())
                 await Service.SetAarRolesAsync(ctx.Guild.Id, existing.Select(x => x.Id)).ConfigureAwait(false);
 
-            await ReplyConfirmAsync(Strings.AabrRoles(ctx.Guild.Id,
+            await ReplyConfirmAsync(Strings.AarRoles(ctx.Guild.Id,
                 $"\n{existing.Select(x => Format.Bold(x.Mention)).JoinWith("\n")}")).ConfigureAwait(false);
         }
 
