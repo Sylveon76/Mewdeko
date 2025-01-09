@@ -146,7 +146,9 @@ public sealed class AutoAssignRoleService : INService
     {
         if (arsg2.IsBot)
             return;
-        if (arsg2.IsPending.HasValue && !arsg2.IsPending.Value)
+
+        var old = args.HasValue ? args.Value : null;
+        if (old?.IsPending != null && old.IsPending.Value && (arsg2.IsPending.HasValue && arsg2.IsPending.Value))
             await assignQueue.Writer.WriteAsync(arsg2).ConfigureAwait(false);
     }
 
