@@ -72,6 +72,8 @@ public class MigrationService
         else
             builder.DataSource = builder.DataSource = folderpath + $"/Mewdeko/{clientId}/data/Mewdeko.db";
 
+        Log.Information(builder.DataSource);
+
         return builder.ToString();
     }
 
