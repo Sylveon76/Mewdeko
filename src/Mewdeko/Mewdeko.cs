@@ -137,6 +137,7 @@ public class Mewdeko
         {
             ReadyCount++;
             Log.Information($"Shard {unused.ShardId} is ready");
+            Log.Information($"{ReadyCount}/{Client.Shards.Count} shards connected");
             if (ReadyCount != Client.Shards.Count)
                 return Task.CompletedTask;
             _ = Task.Run(() => clientReady.TrySetResult(true));
