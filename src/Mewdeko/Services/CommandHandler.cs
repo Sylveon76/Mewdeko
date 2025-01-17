@@ -38,7 +38,6 @@ public class CommandHandler : INService
     private readonly Timer clearUsersOnShortCooldown;
     private readonly DiscordShardedClient client;
     private readonly CommandService commandService;
-    private readonly IBotCredentials creds;
     private readonly DbContextProvider dbProvider;
     private readonly GuildSettingsService gss;
     private readonly InteractionService interactionService;
@@ -46,33 +45,28 @@ public class CommandHandler : INService
     /// Services stuffs
     /// </summary>
     public readonly IServiceProvider Services;
-    private readonly IBotStrings strings;
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="CommandHandler" /> class.
     /// </summary>
     /// <param name="client">The Discord client.</param>
-    /// <param name="db">The database service.</param>
+    /// <param name="dbProvider">The database service.</param>
     /// <param name="commandService">The service for handling commands.</param>
     /// <param name="bss">The bot configuration service.</param>
     /// <param name="bot">The bot instance.</param>
     /// <param name="services">The service provider for dependency injection.</param>
-    /// <param name="strngs">The strings resources service.</param>
     /// <param name="interactionService">The service for handling interactions.</param>
     /// <param name="gss">The guild settings service.</param>
     /// <param name="eventHandler">The event handler for discord events.</param>
-    /// <param name="creds">The bot credentials.</param>
     /// <param name="cache">The data cache service.</param>
     public CommandHandler(DiscordShardedClient client, DbContextProvider dbProvider, CommandService commandService,
-        BotConfigService bss, Mewdeko bot, IServiceProvider services, IBotStrings strngs,
+        BotConfigService bss, Mewdeko bot, IServiceProvider services,
         InteractionService interactionService,
-        GuildSettingsService gss, EventHandler eventHandler, IBotCredentials creds, IDataCache cache)
+        GuildSettingsService gss, EventHandler eventHandler, IDataCache cache)
     {
         this.interactionService = interactionService;
         this.gss = gss;
-        this.creds = creds;
         this.cache = cache;
-        strings = strngs;
         this.client = client;
         this.commandService = commandService;
         this.bss = bss;

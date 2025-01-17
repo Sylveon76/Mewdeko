@@ -171,7 +171,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Content Remove="credentials_example.json"/>
-    <Content Update="gcreds1.json">
+    <Content Update="gcreds.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

@@ -17,7 +17,7 @@ public class ClientOperations(DiscordShardedClient client) : Controller
     /// <summary>
     ///     Used for getting a specific channel type in the api
     /// </summary>
-    [System.Text.Json.Serialization.JsonConverter(typeof(JsonStringEnumConverter))]
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum ChannelType
     {
         /// <summary>
@@ -161,16 +161,46 @@ public class ClientOperations(DiscordShardedClient client) : Controller
     public async Task<IActionResult> GetUser(ulong guildId, ulong userId)
     {
         await Task.CompletedTask;
-        var guild = client.GetGuild(guildId);
+        var guild = client.Guilds.FirstOrDefault(x => x.Id == guildId);
         if (guild == null)
             return NotFound();
 
-        var user = guild.GetUser(userId);
+        var user = guild.Users.FirstOrDefault(x => x.Id == userId);
+        if (user == null)
+            return NotFound();
         var partial = new
         {
             UserId = user.Id, user.Username, AvatarUrl = user.GetAvatarUrl()
         };
         return Ok(partial);
+    }
+
+    /// <summary>
+    ///     Gets a list of guilds the bot and user have mutual
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <returns></returns>
+    [HttpGet("mutualguilds/{userId}")]
+    public async Task<IActionResult> GetMutualAdminGuilds(ulong userId)
+    {
+        var guilds = client.Guilds;
+        var mutuals = guilds
+            .Where(x => x.Users.Any(y => y.Id == userId && y.GuildPermissions.Has(GuildPermission.Administrator)))
+            .Select(g => new
+            {
+
+                id = g.Id,
+                name = g.Name,
+                icon = g.IconId,  // This will be the icon hash
+                owner = g.OwnerId == userId,
+                permissions = (int)g.GetUser(userId).GuildPermissions.RawValue,
+                features =  Enum.GetValues(typeof(GuildFeature)).Cast<GuildFeature>().Where(x => g.Features.Value.HasFlag(x))
+            })
+            .ToList();
+
+        if (mutuals.Count!=0)
+            return Ok(mutuals);
+        return NotFound();
     }
 
     /// <summary>
