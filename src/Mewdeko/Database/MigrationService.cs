@@ -125,14 +125,10 @@ public class MigrationService
         await TransferEntityDataAsync<HighlightSettings, HighlightSettings>(sourceContext, destinationContext, x => x);
         await TransferEntityDataAsync<JoinLeaveLogs, JoinLeaveLogs>(sourceContext, destinationContext, x => x);
         await TransferEntityDataAsync<MultiGreet, MultiGreet>(sourceContext, destinationContext, x => x);
-        await TransferEntityDataAsync<MusicPlaylist, MusicPlaylist>(sourceContext, destinationContext, x => x);
-        await TransferEntityDataAsync<MusicPlayerSettings, MusicPlayerSettings>(sourceContext, destinationContext,
-            x => x);
         await TransferEntityDataAsync<MutedUserId, MutedUserId>(sourceContext, destinationContext, x => x);
         await TransferEntityDataAsync<GlobalUserBalance, GlobalUserBalance>(sourceContext, destinationContext, x => x);
         await TransferEntityDataAsync<GuildUserBalance, GuildUserBalance>(sourceContext, destinationContext, x => x);
         await TransferEntityDataAsync<OwnerOnly, OwnerOnly>(sourceContext, destinationContext, x => x);
-        await TransferEntityDataAsync<PlaylistSong, PlaylistSong>(sourceContext, destinationContext, x => x);
         await TransferEntityDataAsync<PublishUserBlacklist, PublishUserBlacklist>(sourceContext, destinationContext,
             x => x);
         await TransferEntityDataAsync<PublishWordBlacklist, PublishWordBlacklist>(sourceContext, destinationContext,
@@ -168,16 +164,8 @@ public class MigrationService
         await destinationContext.ExecuteAsync("SET session_replication_role = default;");
 
         Log.Warning(
-            "Copy Complete. Shutting down bot and turning off migration mode...");
-        var creds = new BotCredentials
-        {
-            MigrateToPsql = false
-        };
-
-        // Create a FileStream to write to the file
-        await using var fs = File.Create("./credentials.json");
-        await JsonSerializer.SerializeAsync(fs, creds);
-        Helpers.ReadErrorAndExit(0);
+            "Copy Complete. Please set migratetopsql to false in credentials and relaunch.");
+        Environment.Exit(0);
     }
 
     /// <summary>
