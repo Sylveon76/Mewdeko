@@ -169,7 +169,7 @@ public class JoinLeaveLoggerService : INService, IDisposable
     /// <param name="guildId">The ID of the guild.</param>
     /// <param name="isJoin">Determines whether to retrieve join or leave logs.</param>
     /// <returns>A list of date-wise grouped logs.</returns>
-    private async Task<List<DailyLog>> GetGroupedJoinLeaveDataAsync(ulong guildId, bool isJoin)
+    public async Task<List<DailyLog>> GetGroupedJoinLeaveDataAsync(ulong guildId, bool isJoin)
     {
         var redisDatabase = cache.Redis.GetDatabase();
         var redisKey = GetRedisKey(guildId);
@@ -492,9 +492,15 @@ public class JoinLeaveLoggerService : INService, IDisposable
     /// <summary>
     ///     Represents a daily log with date and count.
     /// </summary>
-    private record DailyLog
+    public record DailyLog
     {
+        /// <summary>
+        /// Date
+        /// </summary>
         public DateTime Date { get; init; }
+        /// <summary>
+        /// Count
+        /// </summary>
         public int Count { get; init; }
     }
 }

@@ -39,6 +39,7 @@ public class Mewdeko
         Cache = Services.GetRequiredService<IDataCache>();
         Client = Services.GetRequiredService<DiscordShardedClient>();
         CommandService = Services.GetRequiredService<CommandService>();
+        GuildSettingsService = Services.GetRequiredService<GuildSettingsService>();
     }
 
     /// <summary>
@@ -52,6 +53,8 @@ public class Mewdeko
     ///     Gets the Discord client used by the bot.
     /// </summary>
     public DiscordShardedClient Client { get; }
+
+    private GuildSettingsService GuildSettingsService { get; }
 
     private CommandService CommandService { get; }
 
@@ -103,7 +106,6 @@ public class Mewdeko
                         && x.BaseType.GetGenericArguments().Length > 0
                         && !x.IsAbstract);
 
-        var toReturn = new List<object>();
         foreach (var ft in filteredTypes)
         {
             var x = (TypeReader)ActivatorUtilities.CreateInstance(Services, ft);
@@ -111,7 +113,6 @@ public class Mewdeko
             var typeArgs = baseType?.GetGenericArguments();
             if (typeArgs != null)
                 CommandService.AddTypeReader(typeArgs[0], x);
-            toReturn.Add(x);
         }
 
         CommandService.AddTypeReaders<IEmote>(
@@ -198,11 +199,10 @@ public class Mewdeko
     {
         _ = Task.Run(async () =>
         {
-            var dbContext = Services.GetRequiredService<MewdekoContext>();
             await arg.DownloadUsersAsync().ConfigureAwait(false);
             Log.Information("Joined server: {0} [{1}]", arg.Name, arg.Id);
 
-            var gc = await dbContext.ForGuildId(arg.Id);
+            var gc = await GuildSettingsService.GetGuildConfig(arg.Id).ConfigureAwait(false);
 
             await JoinedGuild.Invoke(gc).ConfigureAwait(false);
             var chan =
