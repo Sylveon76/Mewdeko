@@ -2174,7 +2174,7 @@
   "registered_on": "Registrerad på",
   "remind_invalid_format": "Inte en giltig tids format. Kolla kommandolistan.",
   "remind_too_long": "Remind time has exceeded maximum.",
-  "remind": "Jag kommer påminna {0} att {1} om {2} `({3:d.M.yyyy.} klockan {4:HH:mm})`",
+  "remind": "I will remind {0} to {1} {2}",
   "reminder_deleted": "Reminder #{0} was deleted.",
   "reminder_list": "List of reminders",
   "reminder_not_exist": "Reminder at that index does not exist.",
