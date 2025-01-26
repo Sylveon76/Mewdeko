@@ -2174,7 +2174,7 @@
   "registered_on": "Înregistrat pe",
   "remind_invalid_format": "Nu este un format de timp valid. Verificați lista de comenzi.",
   "remind_too_long": "Remind time has exceeded maximum.",
-  "remind": "O să îi aduc aminte lui {0} a {1} să {2} `({3:d.M.yyyy.} at {4:HH:mm})`",
+  "remind": "I will remind {0} to {1} {2}",
   "reminder_deleted": "Mementoul  #{0} a fost șters.",
   "reminder_list": "Listă de mementouri",
   "reminder_not_exist": "Memento în acel index nu există.",
