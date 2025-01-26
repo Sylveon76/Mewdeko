@@ -2174,7 +2174,7 @@
   "registered_on": "Zarejestrowany",
   "remind_invalid_format": "Błędny format czasu. Sprawdź listę komend.",
   "remind_too_long": "Remind time has exceeded maximum.",
-  "remind": "Przypomnę {0} dla {1} za {2} `({3:d.M.yyyy.} o {4:HH:mm})`",
+  "remind": "I will remind {0} to {1} {2}",
   "reminder_deleted": "Reminder #{0} was deleted.",
   "reminder_list": "List of reminders",
   "reminder_not_exist": "Reminder at that index does not exist.",
