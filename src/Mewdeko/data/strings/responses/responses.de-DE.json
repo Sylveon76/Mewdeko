@@ -2174,7 +2174,7 @@
   "registered_on": "Registriert an",
   "remind_invalid_format": "Kein gültiges Zeitformat. Überprüfe die Befehlsliste.",
   "remind_too_long": "Remind time has exceeded maximum.",
-  "remind": "Ich werde {0} erinnern {1} in {2} `({3:d.M.yyyy.} um {4:HH:mm})` zu tun.",
+  "remind": "I will remind {0} to {1} {2}",
   "reminder_deleted": "Erinnerung  #{0} wurde gelöscht.",
   "reminder_list": "Liste von Erinnerungen.",
   "reminder_not_exist": "Erinnerung existiert nicht in diesem Verzeichnis.",
