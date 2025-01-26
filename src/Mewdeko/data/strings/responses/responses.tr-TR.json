@@ -2174,7 +2174,7 @@
   "registered_on": "Tarihinden beri kayıtlı",
   "remind_invalid_format": "Geçerli zaman biçimi değil. Komut listesine bakın.",
   "remind_too_long": "Remind time has exceeded maximum.",
-  "remind": "({4:HH:mm} de {3:d.M.yyyy.}) {0}'ı {2}`de {1}'e hatırlatacağım",
+  "remind": "I will remind {0} to {1} {2}",
   "reminder_deleted": "Hatırlatma #{0} silindi.",
   "reminder_list": "Hatırlatıcıların listesi",
   "reminder_not_exist": "Bu dizinde anımsatıcı yok.",
