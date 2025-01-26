@@ -2174,7 +2174,7 @@
   "registered_on": "Registrado em",
   "remind_invalid_format": "Formato de data inválido. Verifique a lista de comandos.",
   "remind_too_long": "O tempo de lembrete excede o máximo permitido.",
-  "remind": "Lembrarei {0} de {1} em {2} `({3:d.M.yyyy.} às {4:HH:mm})`",
+  "remind": "I will remind {0} to {1} {2}",
   "reminder_deleted": "O lembrete #{0} foi excluído.",
   "reminder_list": "Lista de lembretes",
   "reminder_not_exist": "Não existe lembrete nesse índice.",
