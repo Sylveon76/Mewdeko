@@ -2174,7 +2174,7 @@
   "registered_on": "登録者\n",
   "remind_invalid_format": "有効な時刻形式ではありません。コマンドリストを確認してください。\n",
   "remind_too_long": "Remind time has exceeded maximum.",
-  "remind": "{2}後（{3:yyyy\"年\"M\"月\"d\"日\"} {4:HH\"時\"mm\"分\"}）に、「{1}」を{0}にお知らせします。\n",
+  "remind": "I will remind {0} to {1} {2}",
   "reminder_deleted": "Reminder #{0} was deleted.",
   "reminder_list": "List of reminders",
   "reminder_not_exist": "Reminder at that index does not exist.",
