@@ -2174,7 +2174,7 @@
   "registered_on": "Geregistreerd op",
   "remind_invalid_format": "Incorrecte tijd formaat. Controleer de commandolijst.",
   "remind_too_long": "Herinner-tijd heeft het maximum overschreden.",
-  "remind": "Ik zal {0} herinneren om {1} in {2} `({3:d.M.yyyy.} op {4:HH:mm})`",
+  "remind": "I will remind {0} to {1} {2}",
   "reminder_deleted": "Herinnering #{0} is verwijdert.",
   "reminder_list": "Lijst met herinneringen",
   "reminder_not_exist": "Herinnering in de inhoudsopgave bestaat niet.",
