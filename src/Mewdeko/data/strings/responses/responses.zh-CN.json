@@ -2174,7 +2174,7 @@
   "registered_on": "注册日",
   "remind_invalid_format": "无效时间格式。 检查命令列表。",
   "remind_too_long": "Remind time has exceeded maximum.",
-  "remind": "我将在{2}`（{3：d.M.yyyy。}的{4：HH：mm}）提醒{0}关于{1}",
+  "remind": "I will remind {0} to {1} {2}",
   "reminder_deleted": "通知#{0}已被删除。",
   "reminder_list": "提醒列表",
   "reminder_not_exist": "此指数没有提醒。",
