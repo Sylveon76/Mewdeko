@@ -2174,7 +2174,7 @@
   "registered_on": "註冊於",
   "remind_invalid_format": "無效的時間格式。請檢查指令說明。",
   "remind_too_long": "Remind time has exceeded maximum.",
-  "remind": "我將會在 {2} 後提醒 {0} 說 {1} `({3:d.M.yyyy.} 於 {4:HH:mm})` ",
+  "remind": "I will remind {0} to {1} {2}",
   "reminder_deleted": "Reminder #{0} was deleted.",
   "reminder_list": "List of reminders",
   "reminder_not_exist": "Reminder at that index does not exist.",
