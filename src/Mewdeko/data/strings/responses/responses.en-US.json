@@ -2174,7 +2174,7 @@
   "registered_on": "Registered on",
   "remind_invalid_format": "Not a valid remind format. Check the command list.",
   "remind_too_long": "Remind time has exceeded maximum.",
-  "remind": "I will remind {0} to {1} in {2} `({3:d.M.yyyy.} at {4:HH:mm})`",
+  "remind": "I will remind {0} to {1} {2}",
   "reminder_deleted": "Reminder #{0} was deleted.",
   "reminder_list": "List of reminders",
   "reminder_not_exist": "Reminder at that index does not exist.",
