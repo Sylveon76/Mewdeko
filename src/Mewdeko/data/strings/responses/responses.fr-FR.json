@@ -2174,7 +2174,7 @@
   "registered_on": "Inscrit sur",
   "remind_invalid_format": "Format de date non valide. Vérifiez la liste des commandes.",
   "remind_too_long": "Le temps restant a dépassé le maximum.",
-  "remind": "Je vais rappeler {0} de {1} dans {2} `({3:d.M.yyyy} à {4:HH:mm})`",
+  "remind": "I will remind {0} to {1} {2}",
   "reminder_deleted": "Rappel #{0} a été supprimé.",
   "reminder_list": "Liste des rappels",
   "reminder_not_exist": "Le rappel à cet index n'existe pas.",
