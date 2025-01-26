@@ -75,6 +75,16 @@ public class MewdekoContext : DbContext
     public DbSet<BlacklistedPermission> BlacklistedPermissions { get; set; }
 
     /// <summary>
+    ///     Gets or sets starboard posts
+    /// </summary>
+    public DbSet<StarboardPost> StarboardPosts { get; set; }
+
+    /// <summary>
+    ///     Gets or sets starboard configs
+    /// </summary>
+    public DbSet<StarboardConfig> Starboards { get; set; }
+
+    /// <summary>
     ///     Role Monitor WR
     /// </summary>
     public DbSet<WhitelistedRole> WhitelistedRoles { get; set; }
@@ -259,11 +269,6 @@ public class MewdekoContext : DbContext
     ///     Gets or sets the giveaways.
     /// </summary>
     public DbSet<Giveaways> Giveaways { get; set; }
-
-    /// <summary>
-    ///     Gets or sets the starboard posts.
-    /// </summary>
-    public DbSet<StarboardPosts> Starboard { get; set; }
 
     /// <summary>
     ///     Gets or sets the quotes.

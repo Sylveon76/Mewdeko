@@ -143,7 +143,7 @@ public class MigrationService
             x => x);
         await TransferEntityDataAsync<ServerRecoveryStore, ServerRecoveryStore>(sourceContext, destinationContext,
             x => x);
-        await TransferEntityDataAsync<StarboardPosts, StarboardPosts>(sourceContext, destinationContext, x => x);
+        await TransferEntityDataAsync<StarboardPost, StarboardPost>(sourceContext, destinationContext, x => x);
         await TransferEntityDataAsync<StatusRolesTable, StatusRolesTable>(sourceContext, destinationContext, x => x);
         await TransferEntityDataAsync<SuggestionsModel, SuggestionsModel>(sourceContext, destinationContext, x => x);
         await TransferEntityDataAsync<SuggestThreads, SuggestThreads>(sourceContext, destinationContext, x => x);

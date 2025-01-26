@@ -21,6 +21,56 @@ invites:
 invitesettings:
   - invitesettings
   - inviteconfig
+createstarboard:
+  - createstarboard
+  - addstarboard
+  - newstarboard
+
+deletestarboard:
+  - deletestarboard
+  - removestarboard
+  - delstarboard
+liststarboards:
+  - liststarboards
+  - starboardlist
+  - starboards
+setrepostthreshold:
+  - setrepostthreshold
+  - starboardrepost
+  - repostthreshold
+setstarboardthreshold:
+  - setstarboardthreshold
+  - starthreshold
+  - starcount
+starboardchtoggle:
+  - starboardchtoggle
+  - starboardchannel
+  - togglestarboardchannel
+  - scht
+starboardwlmode:
+  - starboardwlmode
+  - starboardmode
+  - starboardwhitelist
+  - swm
+starboardremoveonreactionsclear:
+  - starboardremoveonreactionsclear
+  - starboardreactionclear
+  - starclear
+starboardremoveondelete:
+  - starboardremoveondelete
+  - starboarddelete
+  - stardelete
+  - srod
+starboardremoveonbelowthreshold:
+  - starboardremoveonbelowthreshold
+  - starboardbelowthreshold
+  - starbelow
+  - srobt
+starboardallowbots:
+  - starboardallowbots
+  - starbots
+  - starbotsallow
+  - starbab
 toggleinvitetracking:
   - toggleinvitetracking
 toggleremoveinviteonleave:
@@ -1740,9 +1790,6 @@ setname:
   - newnm
 setnick:
   - setnick
-setrepostthreshold:
-  - repostthreshold
-  - setrepostthreshold
 setrole:
   - setrole
   - sr
@@ -1889,24 +1936,9 @@ staffroledisable:
   - staffroledisable
 stand:
   - stand
-starboardallowbots:
-  - starboardallowbots
-  - starbab
-starboardchtoggle:
-  - starboardchtoggle
-  - scht
-starboardremoveonbelowthreshold:
-  - starboardremoveonbelowthreshold
-  - srobt
-starboardremoveondelete:
-  - starboardremoveondelete
-  - srod
 starboardremoveonreactionscleared:
   - starboardremoveonreactionscleared
   - srrc
-starboardwlmode:
-  - starboardwlmode
-  - swm
 stare:
   - stare
 startupcommandadd:

@@ -37,6 +37,58 @@ toggleinvitetracking:
   args:
     - ""
   desc: "Enables or disables invite tracking for the server."
+createstarboard:
+  args:
+    - "#channel emote threshold"
+  desc: "Creates a new starboard configuration with the specified channel, emote, and threshold."
+deletestarboard:
+  args:
+    - "starboardId"
+  desc: "Deletes an existing starboard configuration."
+liststarboards:
+  args:
+    - ""
+  desc: "Shows all starboard configurations in the server."
+setrepostthreshold:
+  args:
+    - "starboardId"
+    - "threshold"
+  desc: "Sets after how many messages a starboard post should be reposted."
+setstarboardthreshold:
+  args:
+    - "starboardId"
+    - "threshold"
+  desc: "Sets how many stars are needed for a message to be added to the starboard."
+starboardchtoggle:
+  args:
+    - "starboardId"
+    - "#channel"
+  desc: "Toggles whether a channel is included in the starboard's whitelist/blacklist."
+starboardwlmode:
+  args:
+    - "starboardId"
+    - "whitelist/blacklist"
+  desc: "Sets whether the starboard uses whitelist or blacklist mode."
+starboardremoveonreactionsclear:
+  args:
+    - "starboardId"
+    - "true/false"
+  desc: "Sets whether to remove starboard posts when reactions are cleared from the original message."
+starboardremoveondelete:
+  args:
+    - "starboardId"
+    - "true/false"
+  desc: "Sets whether to remove starboard posts when the original message is deleted."
+starboardremoveonbelowthreshold:
+  args:
+    - "starboardId"
+    - "true/false"
+  desc: "Sets whether to remove starboard posts when they fall below the star threshold."
+starboardallowbots:
+  args:
+    - "starboardId"
+    - "true/false"
+  desc: "Sets whether bot messages can be starred and added to the starboard."
 toggleremoveinviteonleave:
   args:
     - ""
@@ -3810,35 +3862,12 @@ stand:
   args:
     - ''
   desc: Finish your turn in the blackjack game.
-starboardallowbots:
-  args:
-    - true
-  desc: Sets wether starboard ignores bots. Defaults to false.
-starboardchtoggle:
-  args:
-    - '#channel'
-  desc: >-
-    Adds or removes a channel from the black/whitelist depending on what's set
-    in `{0}swm`
-starboardremoveonbelowthreshold:
-  args:
-    - true
-  desc: Sets wether a post is removed when its below the set star count.
-starboardremoveondelete:
-  args:
-    - true
-  desc: Sets wether starboard removes a post when the origin message is deleted.
 starboardremoveonreactionscleared:
   args:
     - true
   desc: >-
     Sets wether starboard removes a post when the origin message's reactions get
     cleared
-starboardwlmode:
-  args:
-    - whitelist
-    - blacklist
-  desc: Sets wether starboard is in blacklist/whitelist mode
 stare:
   args:
     - '@user'

@@ -121,12 +121,14 @@ public class ClientOperations(DiscordShardedClient client) : Controller
     [HttpGet("users/{guildId}")]
     public async Task<IActionResult> GetUsers(ulong guildId)
     {
-        var guild = client.GetGuild(guildId);
+        var guild = client.Guilds.FirstOrDefault(g => g.Id == guildId);
         if (guild == null)
             return NotFound();
 
-        var users = await guild.GetUsersAsync().FlattenAsync();
-        return Ok(JsonSerializer.Serialize(users, options));
+        return Ok(JsonSerializer.Serialize(guild.Users.Select(x => new
+        {
+            UserId = x.Id, x.Username, AvatarUrl = x.GetAvatarUrl()
+        }), options));
     }
 
 
@@ -191,10 +193,11 @@ public class ClientOperations(DiscordShardedClient client) : Controller
 
                 id = g.Id,
                 name = g.Name,
-                icon = g.IconId,  // This will be the icon hash
+                icon = g.IconId,
                 owner = g.OwnerId == userId,
                 permissions = (int)g.GetUser(userId).GuildPermissions.RawValue,
-                features =  Enum.GetValues(typeof(GuildFeature)).Cast<GuildFeature>().Where(x => g.Features.Value.HasFlag(x))
+                features =  Enum.GetValues(typeof(GuildFeature)).Cast<GuildFeature>().Where(x => g.Features.Value.HasFlag(x)),
+                banner = g.BannerUrl + "?size=4096",
             })
             .ToList();
 

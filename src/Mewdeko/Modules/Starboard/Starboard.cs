@@ -1,13 +1,15 @@
 ﻿using Discord.Commands;
+using Fergun.Interactive;
+using Fergun.Interactive.Pagination;
 using Mewdeko.Common.Attributes.TextCommands;
 using Mewdeko.Modules.Starboard.Services;
 
 namespace Mewdeko.Modules.Starboard;
 
 /// <summary>
-///     Module for managing starboard settings.
+///     Module for managing multiple starboard configurations in a guild.
 /// </summary>
-public class Starboard(GuildSettingsService guildSettings) : MewdekoSubmodule<StarboardService>
+public class Starboard(GuildSettingsService guildSettings, InteractiveService interactiveService) : MewdekoSubmodule<StarboardService>
 {
     /// <summary>
     ///     Enum representing the mode for whitelisting or blacklisting channels for starboard.
@@ -46,216 +48,283 @@ public class Starboard(GuildSettingsService guildSettings) : MewdekoSubmodule<St
     }
 
     /// <summary>
-    ///     Sets the starboard channel for the guild.
+    ///     Creates a new starboard configuration for the guild.
     /// </summary>
-    /// <param name="chn">The starboard channel. Pass null to disable starboard.</param>
+    /// <param name="channel">The channel where starred messages will be posted.</param>
+    /// <param name="emote">The emote to use for starring messages.</param>
+    /// <param name="threshold">The number of stars required to post a message.</param>
     [Cmd]
     [Aliases]
     [UserPerm(GuildPermission.ManageChannels)]
-    public async Task SetStarboard(ITextChannel? chn = null)
+    public async Task CreateStarboard(ITextChannel channel, IEmote emote, int threshold = 1)
     {
-        if (chn is null)
+        var existingStarboards = Service.GetStarboards(ctx.Guild.Id);
+        if (existingStarboards.Any(s => s.Emote == emote.ToString()))
         {
-            await Service.SetStarboardChannel(ctx.Guild, 0).ConfigureAwait(false);
-            await ctx.Channel.SendConfirmAsync(Strings.StarboardDisabled(ctx.Guild.Id));
-            return;
-        }
-
-        await Service.SetStarboardChannel(ctx.Guild, chn.Id).ConfigureAwait(false);
-        await ctx.Channel.SendConfirmAsync($"Channel set to {chn.Mention}").ConfigureAwait(false);
-    }
-
-    /// <summary>
-    ///     Sets the repost threshold for starboard posts in the guild.
-    /// </summary>
-    /// <param name="num">The repost threshold. Pass 0 to disable reposting.</param>
-    [Cmd]
-    [Aliases]
-    [UserPerm(GuildPermission.ManageChannels)]
-    public async Task SetRepostThreshold(int num)
-    {
-        if (num == 0)
-        {
-            await ctx.Channel.SendErrorAsync(Strings.RepostingDisabled(ctx.Guild.Id), Config);
-            await Service.SetRepostThreshold(ctx.Guild, 0).ConfigureAwait(false);
-            return;
-        }
-
-        await Service.SetRepostThreshold(ctx.Guild, num).ConfigureAwait(false);
-        await ctx.Channel.SendConfirmAsync($"Successfully set the Repost Threshold to {num}").ConfigureAwait(false);
-    }
-
-    /// <summary>
-    ///     Sets the star count required for a message to be added to the starboard in the guild.
-    /// </summary>
-    /// <param name="num">The star count required.</param>
-    [Cmd]
-    [Aliases]
-    [UserPerm(GuildPermission.ManageChannels)]
-    public async Task SetStars(int num)
-    {
-        var count = await Service.GetStarCount(ctx.Guild.Id);
-        await Service.SetStarCount(ctx.Guild, num).ConfigureAwait(false);
-        var count2 = await Service.GetStarCount(ctx.Guild.Id);
-        await ctx.Channel.SendConfirmAsync($"Your star count was successfully changed from {count} to {count2}!")
-            .ConfigureAwait(false);
-    }
-
-    /// <summary>
-    ///     Sets the star emote for the starboard in the guild.
-    /// </summary>
-    /// <param name="emote">The star emote. Pass null to view current emote.</param>
-    [Cmd]
-    [Aliases]
-    [UserPerm(GuildPermission.ManageChannels)]
-    public async Task SetStar(IEmote? emote = null)
-    {
-        if (emote is null)
-        {
-            var maybeEmote = (await Service.GetStar(ctx.Guild.Id)).ToIEmote();
-            if (maybeEmote.Name is null)
-            {
-                await ctx.Channel.SendErrorAsync(Strings.NoEmoteSet(ctx.Guild.Id), Config);
-                return;
-            }
-
-            await ctx.Channel.SendConfirmAsync(
-                    $"Your current starboard emote is {maybeEmote} {Format.Code(maybeEmote.ToString())}")
-                .ConfigureAwait(false);
+            await ctx.Channel.SendErrorAsync(Strings.StarboardEmoteInUse(ctx.Guild.Id), Config);
             return;
         }
 
         try
         {
-            await ctx.Message.AddReactionAsync(emote).ConfigureAwait(false);
+            await ctx.Message.AddReactionAsync(emote);
         }
         catch
         {
-            await ctx.Channel.SendErrorAsync(Strings.InvalidEmote(ctx.Guild.Id), Config)
-                .ConfigureAwait(false);
+            await ctx.Channel.SendErrorAsync(Strings.InvalidEmote(ctx.Guild.Id), Config);
             return;
         }
 
-        await Service.SetStar(ctx.Guild, emote.ToString()).ConfigureAwait(false);
-        await ctx.Channel.SendConfirmAsync($"Successfully set the star to {emote}").ConfigureAwait(false);
+        var starboardId = await Service.CreateStarboard(ctx.Guild, channel.Id, emote.ToString(), threshold);
+        await ctx.Channel.SendConfirmAsync(Strings.StarboardCreated(ctx.Guild.Id, channel.Mention, emote.ToString(), threshold));
     }
 
     /// <summary>
-    ///     Toggles whether a channel is checked for starboard posts.
+    ///     Removes a starboard configuration from the guild.
     /// </summary>
-    /// <param name="channel">The channel to toggle.</param>
+    /// <param name="starboardId">The ID of the starboard to remove.</param>
     [Cmd]
     [Aliases]
     [UserPerm(GuildPermission.ManageChannels)]
-    public async Task StarboardChToggle([Remainder] ITextChannel channel)
+    public async Task DeleteStarboard(int starboardId)
     {
-        if (!await Service.ToggleChannel(ctx.Guild, channel.Id.ToString()).ConfigureAwait(false))
-        {
-            await ctx.Channel.SendConfirmAsync(
-                    $"{channel.Mention} has been added to the whitelist/blacklist (Depnding on what was set in {await guildSettings.GetPrefix(ctx.Guild)}swm)")
-                .ConfigureAwait(false);
-        }
+        if (await Service.DeleteStarboard(ctx.Guild, starboardId))
+            await ctx.Channel.SendConfirmAsync(Strings.StarboardRemoved(ctx.Guild.Id, starboardId));
         else
-        {
-            await ctx.Channel.SendConfirmAsync(
-                    $"{channel.Mention} has been removed from the whitelist/blacklist (Depending on what was set in {await guildSettings.GetPrefix(ctx.Guild)}swm)")
-                .ConfigureAwait(false);
-        }
+            await ctx.Channel.SendErrorAsync(Strings.StarboardNotFound(ctx.Guild.Id, starboardId), Config);
     }
 
     /// <summary>
-    ///     Sets the whitelist/blacklist mode for starboard posts in the guild.
+    ///     Lists all starboard configurations in the guild.
     /// </summary>
-    /// <param name="mode">The whitelist/blacklist mode.</param>
     [Cmd]
     [Aliases]
-    [UserPerm(GuildPermission.ManageChannels)]
-    public async Task StarboardWlMode(WhitelistMode mode)
+    public async Task ListStarboards()
     {
-        if (mode > 0)
+        var starboards = Service.GetStarboards(ctx.Guild.Id);
+        if (!starboards.Any())
         {
-            await Service.SetCheckMode(ctx.Guild, true).ConfigureAwait(false);
-            await ctx.Channel.SendConfirmAsync(Strings.StarboardBlacklistEnabled(ctx.Guild.Id));
+            await ctx.Channel.SendErrorAsync(Strings.NoStarboardsConfigured(ctx.Guild.Id), Config).ConfigureAwait(false);
+            return;
         }
-        else
+
+        var paginator = new LazyPaginatorBuilder()
+            .AddUser(ctx.User)
+            .WithPageFactory(PageFactory)
+            .WithFooter(PaginatorFooter.PageNumber | PaginatorFooter.Users)
+            .WithMaxPageIndex(starboards.Count - 1)
+            .WithDefaultEmotes()
+            .WithActionOnCancellation(ActionOnStop.DeleteMessage)
+            .Build();
+
+        await interactiveService.SendPaginatorAsync(paginator, Context.Channel, TimeSpan.FromMinutes(60)).ConfigureAwait(false);
+
+        async Task<PageBuilder> PageFactory(int page)
         {
-            await Service.SetCheckMode(ctx.Guild, false).ConfigureAwait(false);
-            await ctx.Channel.SendConfirmAsync(Strings.StarboardWhitelistEnabled(ctx.Guild.Id));
+            var starboard = starboards.Skip(page).FirstOrDefault();
+            var channel = await ctx.Guild.GetTextChannelAsync(starboard.StarboardChannelId).ConfigureAwait(false);
+            return new PageBuilder()
+                .WithOkColor()
+                .WithTitle(Strings.StarboardConfigurations(ctx.Guild.Id, starboard.Id))
+                .WithDescription(Strings.StarboardConfigDetails(
+                    ctx.Guild.Id,
+                    channel?.Mention ?? "Channel Not Found",
+                    starboard.Emote,
+                    starboard.Threshold,
+                    starboard.AllowBots,
+                    starboard.UseBlacklist,
+                    starboard.RemoveOnDelete,
+                    starboard.RemoveOnReactionsClear,
+                    starboard.RemoveOnBelowThreshold,
+                    starboard.RepostThreshold
+                ));
         }
     }
 
+
     /// <summary>
-    ///     Sets whether to remove starboard posts when reactions are cleared from the original message.
+    ///     Sets whether bots are allowed to be counted for a specific starboard.
     /// </summary>
-    /// <param name="enabled">Whether to remove starboard posts on reactions cleared.</param>
+    /// <param name="starboardId">The ID of the starboard configuration.</param>
+    /// <param name="enabled">Whether to allow bots to be counted.</param>
     [Cmd]
     [Aliases]
     [UserPerm(GuildPermission.ManageChannels)]
-    public async Task StarboardRemoveOnReactionsCleared(bool enabled)
+    public async Task StarboardAllowBots(int starboardId, bool enabled)
     {
-        await Service.SetRemoveOnClear(ctx.Guild, enabled).ConfigureAwait(false);
-        if (enabled)
-            await ctx.Channel.SendConfirmAsync(Strings.StarboardReactionsClearRemoveEnabled(ctx.Guild.Id))
-                .ConfigureAwait(false);
+        if (await Service.SetAllowBots(ctx.Guild, starboardId, enabled))
+        {
+            if (enabled)
+                await ctx.Channel.SendConfirmAsync(Strings.StarboardBotsEnabled(ctx.Guild.Id, starboardId));
+            else
+                await ctx.Channel.SendConfirmAsync(Strings.StarboardBotsDisabled(ctx.Guild.Id, starboardId));
+        }
         else
-            await ctx.Channel.SendConfirmAsync(Strings.StarboardReactionsClearRemoveDisabled(ctx.Guild.Id))
-                .ConfigureAwait(false);
+            await ctx.Channel.SendErrorAsync(Strings.StarboardNotFound(ctx.Guild.Id, starboardId), Config);
+    }
+
+    /// <summary>
+    ///     Sets whether to remove starboard posts when reactions are cleared.
+    /// </summary>
+    /// <param name="starboardId">The ID of the starboard configuration.</param>
+    /// <param name="enabled">Whether to remove posts when reactions are cleared.</param>
+    [Cmd]
+    [Aliases]
+    [UserPerm(GuildPermission.ManageChannels)]
+    public async Task StarboardRemoveOnReactionsClear(int starboardId, bool enabled)
+    {
+        if (await Service.SetRemoveOnClear(ctx.Guild, starboardId, enabled))
+        {
+            if (enabled)
+                await ctx.Channel.SendConfirmAsync(Strings.StarboardReactionsClearRemoveEnabled(ctx.Guild.Id, starboardId));
+            else
+                await ctx.Channel.SendConfirmAsync(Strings.StarboardReactionsClearRemoveDisabled(ctx.Guild.Id, starboardId));
+        }
+        else
+            await ctx.Channel.SendErrorAsync(Strings.StarboardNotFound(ctx.Guild.Id, starboardId), Config);
     }
 
     /// <summary>
     ///     Sets whether to remove starboard posts when the original message is deleted.
     /// </summary>
-    /// <param name="enabled">Whether to remove starboard posts on original message deletion.</param>
+    /// <param name="starboardId">The ID of the starboard configuration.</param>
+    /// <param name="enabled">Whether to remove posts when the original message is deleted.</param>
     [Cmd]
     [Aliases]
     [UserPerm(GuildPermission.ManageChannels)]
-    public async Task StarboardRemoveOnDelete(bool enabled)
+    public async Task StarboardRemoveOnDelete(int starboardId, bool enabled)
     {
-        await Service.SetRemoveOnDelete(ctx.Guild, enabled).ConfigureAwait(false);
-        if (enabled)
-            await ctx.Channel.SendConfirmAsync(Strings.StarboardDeleteRemoveEnabled(ctx.Guild.Id))
-                .ConfigureAwait(false);
+        if (await Service.SetRemoveOnDelete(ctx.Guild, starboardId, enabled))
+        {
+            if (enabled)
+                await ctx.Channel.SendConfirmAsync(Strings.StarboardDeleteRemoveEnabled(ctx.Guild.Id, starboardId));
+            else
+                await ctx.Channel.SendConfirmAsync(Strings.StarboardDeleteRemoveDisabled(ctx.Guild.Id, starboardId));
+        }
         else
-            await ctx.Channel.SendConfirmAsync(Strings.StarboardDeleteRemoveDisabled(ctx.Guild.Id))
-                .ConfigureAwait(false);
+            await ctx.Channel.SendErrorAsync(Strings.StarboardNotFound(ctx.Guild.Id, starboardId), Config);
     }
 
     /// <summary>
-    ///     Sets whether to remove starboard posts when the star count falls below the threshold.
+    ///     Sets whether to remove starboard posts when they fall below the threshold.
     /// </summary>
-    /// <param name="enabled">Whether to remove starboard posts when star count falls below the threshold.</param>
+    /// <param name="starboardId">The ID of the starboard configuration.</param>
+    /// <param name="enabled">Whether to remove posts when they fall below threshold.</param>
     [Cmd]
     [Aliases]
     [UserPerm(GuildPermission.ManageChannels)]
-    public async Task StarboardRemoveOnBelowThreshold(bool enabled)
+    public async Task StarboardRemoveOnBelowThreshold(int starboardId, bool enabled)
     {
-        await Service.SetRemoveOnBelowThreshold(ctx.Guild, enabled).ConfigureAwait(false);
-        if (enabled)
-            await ctx.Channel
-                .SendConfirmAsync(
-                    "Starboard posts will now be removed when the messages star count is below the current star count.")
-                .ConfigureAwait(false);
+        if (await Service.SetRemoveBelowThreshold(ctx.Guild, starboardId, enabled))
+        {
+            if (enabled)
+                await ctx.Channel.SendConfirmAsync(Strings.StarboardBelowThresholdRemoveEnabled(ctx.Guild.Id, starboardId));
+            else
+                await ctx.Channel.SendConfirmAsync(Strings.StarboardBelowThresholdRemoveDisabled(ctx.Guild.Id, starboardId));
+        }
         else
-            await ctx.Channel
-                .SendConfirmAsync(
-                    "Starboard posts will no longer be removed when the messages star count is below the current star count")
-                .ConfigureAwait(false);
+            await ctx.Channel.SendErrorAsync(Strings.StarboardNotFound(ctx.Guild.Id, starboardId), Config);
     }
 
-
     /// <summary>
-    ///     Sets whether to allow bots to be counted for starboard posts in the guild.
+    ///     Sets the whitelist/blacklist mode for a starboard configuration.
     /// </summary>
-    /// <param name="enabled">Whether to allow bots to be counted.</param>
+    /// <param name="starboardId">The ID of the starboard configuration.</param>
+    /// <param name="mode">The whitelist/blacklist mode to set.</param>
     [Cmd]
     [Aliases]
     [UserPerm(GuildPermission.ManageChannels)]
-    public async Task StarboardAllowBots(bool enabled)
+    public async Task StarboardWlMode(int starboardId, WhitelistMode mode)
     {
-        await Service.SetStarboardAllowBots(ctx.Guild, enabled).ConfigureAwait(false);
-        if (enabled)
-            await ctx.Channel.SendConfirmAsync(Strings.StarboardBotsEnabled(ctx.Guild.Id));
+        if (await Service.SetUseBlacklist(ctx.Guild, starboardId, mode > 0))
+        {
+            if (mode > 0)
+                await ctx.Channel.SendConfirmAsync(Strings.StarboardBlacklistEnabled(ctx.Guild.Id, starboardId));
+            else
+                await ctx.Channel.SendConfirmAsync(Strings.StarboardWhitelistEnabled(ctx.Guild.Id, starboardId));
+        }
         else
-            await ctx.Channel.SendConfirmAsync(Strings.StarboardBotsDisabled(ctx.Guild.Id));
+            await ctx.Channel.SendErrorAsync(Strings.StarboardNotFound(ctx.Guild.Id, starboardId), Config);
+    }
+
+    /// <summary>
+    ///     Toggles whether a channel is checked for a specific starboard.
+    /// </summary>
+    /// <param name="starboardId">The ID of the starboard configuration.</param>
+    /// <param name="channel">The channel to toggle.</param>
+    [Cmd]
+    [Aliases]
+    [UserPerm(GuildPermission.ManageChannels)]
+    public async Task StarboardChToggle(int starboardId, [Remainder] ITextChannel channel)
+    {
+        var (wasAdded, config) = await Service.ToggleChannel(ctx.Guild, starboardId, channel.Id.ToString());
+        if (config == null)
+        {
+            await ctx.Channel.SendErrorAsync(Strings.StarboardNotFound(ctx.Guild.Id, starboardId), Config);
+            return;
+        }
+
+        var mode = config.UseBlacklist ? "blacklist" : "whitelist";
+        if (wasAdded)
+        {
+            await ctx.Channel.SendConfirmAsync(
+                Strings.StarboardChannelAdded(
+                    ctx.Guild.Id,
+                    channel.Mention,
+                    starboardId,
+                    mode,
+                    await guildSettings.GetPrefix(ctx.Guild)
+                )
+            );
+        }
+        else
+        {
+            await ctx.Channel.SendConfirmAsync(
+                Strings.StarboardChannelRemoved(
+                    ctx.Guild.Id,
+                    channel.Mention,
+                    starboardId,
+                    mode,
+                    await guildSettings.GetPrefix(ctx.Guild)
+                )
+            );
+        }
+    }
+
+    /// <summary>
+    ///     Sets the repost threshold for a starboard configuration.
+    /// </summary>
+    /// <param name="starboardId">The ID of the starboard configuration.</param>
+    /// <param name="threshold">The repost threshold to set.</param>
+    [Cmd]
+    [Aliases]
+    [UserPerm(GuildPermission.ManageChannels)]
+    public async Task SetRepostThreshold(int starboardId, int threshold)
+    {
+        if (await Service.SetRepostThreshold(ctx.Guild, starboardId, threshold))
+        {
+            if (threshold == 0)
+                await ctx.Channel.SendConfirmAsync(Strings.StarboardRepostingDisabled(ctx.Guild.Id, starboardId));
+            else
+                await ctx.Channel.SendConfirmAsync(Strings.StarboardRepostThresholdSet(ctx.Guild.Id, starboardId, threshold));
+        }
+        else
+            await ctx.Channel.SendErrorAsync(Strings.StarboardNotFound(ctx.Guild.Id, starboardId), Config);
+    }
+
+    /// <summary>
+    ///     Sets the star threshold for a starboard configuration.
+    /// </summary>
+    /// <param name="starboardId">The ID of the starboard configuration.</param>
+    /// <param name="threshold">The star threshold to set.</param>
+    [Cmd]
+    [Aliases]
+    [UserPerm(GuildPermission.ManageChannels)]
+    public async Task SetStarThreshold(int starboardId, int threshold)
+    {
+        if (await Service.SetStarThreshold(ctx.Guild, starboardId, threshold))
+            await ctx.Channel.SendConfirmAsync(Strings.StarboardThresholdSet(ctx.Guild.Id, starboardId, threshold));
+        else
+            await ctx.Channel.SendErrorAsync(Strings.StarboardNotFound(ctx.Guild.Id, starboardId), Config);
     }
 }
