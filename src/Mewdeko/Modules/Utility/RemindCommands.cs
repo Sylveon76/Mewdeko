@@ -198,9 +198,13 @@ public partial class Utility
             try
             {
                 var unixTime = time.ToUnixEpochDate();
+                var formattedTime = $"`({gTime:d.M.yyyy.} at {gTime:HH:mm})`";
                 await ctx.Channel.SendConfirmAsync(
-                        $"⏰ {Strings.Remind(ctx.Guild.Id, Format.Bold(!isPrivate ? $"<#{targetId}>" : ctx.User.Username), Format.Bold(message), ($"<t:{unixTime}:R>", gTime, gTime))}")
-                    .ConfigureAwait(false);
+                    $"{Strings.Remind(ctx.Guild.Id,
+                        Format.Bold(!isPrivate ? $"<#{targetId}>" : ctx.User.Username),
+                        Format.Bold(message),
+                        $"<t:{unixTime}:R>")} {formattedTime}"
+                ).ConfigureAwait(false);
             }
             catch
             {
