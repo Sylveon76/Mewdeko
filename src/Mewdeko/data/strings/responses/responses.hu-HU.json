@@ -2174,7 +2174,7 @@
   "registered_on": "Regisztrálva",
   "remind_invalid_format": "Nem érvényes idő formátum. Ellenőrizd a command listát.",
   "remind_too_long": "Remind time has exceeded maximum.",
-  "remind": "Emlékeztetni fogom {0}-t \"{1}\"-re ",
+  "remind": "I will remind {0} to {1} {2}",
   "reminder_deleted": "#{0} emlékeztető törölve.",
   "reminder_list": "Emlékeztetők listája",
   "reminder_not_exist": "Emlékeztető az adott indexen nem létezik.",
