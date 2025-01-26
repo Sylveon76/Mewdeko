@@ -2174,7 +2174,7 @@
   "registered_on": "Registrován na",
   "remind_invalid_format": "Neplatný vstupní formát. Zkontroluj seznam příkazů.",
   "remind_too_long": "Možný čas upomínky dosáhl maxima.",
-  "remind": "Upozorním {0} na {1} v {2} `({3:d.M.yyyy.} at {4:HH:mm})`",
+  "remind": "I will remind {0} to {1} {2}",
   "reminder_deleted": "Upomínka #{0} byla smazána.",
   "reminder_list": "Seznam upomínek",
   "reminder_not_exist": "Upomínka tohoto indexu neexistuje.",
