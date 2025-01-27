@@ -84,7 +84,7 @@ public class CommandOrCrTypeReader : MewdekoTypeReader<CommandOrCrInfo>
 
         // Checks if the input matches any custom reaction
         if (trigger is not null)
-            return TypeReaderResult.FromSuccess(new CommandOrCrInfo(input, CommandOrCrInfo.Type.Custom));
+            return TypeReaderResult.FromSuccess(new CommandOrCrInfo(trigger.Trigger!, CommandOrCrInfo.Type.Custom));
 
         // Parses the input as a command if not a custom reaction
         var cmd = await new CommandTypeReader(client, cmds).ReadAsync(context, input, services)
