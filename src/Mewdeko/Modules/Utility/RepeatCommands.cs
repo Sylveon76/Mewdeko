@@ -467,7 +467,7 @@ public partial class Utility
                 description = $"{Format.Underline(Format.Bold(Strings.NoRedundant(ctx.Guild.Id)))}\n\n";
 
             description +=
-                $"<#{runner.Repeater.ChannelId}>\n`{Strings.Interval:(ctx.Guild.Id)}` {intervalString}\n`{Strings.ExecutesIn:(ctx.Guild.Id)}` {executesInString}\n`{Strings.Message:(ctx.Guild.Id)}` {message}";
+                $"<#{runner.Repeater.ChannelId}>\n`{Strings.Interval(ctx.Guild.Id)}` {intervalString}\n`{Strings.ExecutesIn(ctx.Guild.Id)}` {executesInString}\n`{Strings.Message(ctx.Guild.Id)}` {message}";
 
             return description;
         }
