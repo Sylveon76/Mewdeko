@@ -1,51 +1,32 @@
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using Mewdeko.Common.Configs;
+using Mewdeko.Database.Common;
 using Mewdeko.Database.DbContextStuff;
-using Mewdeko.Services.Settings;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
-using ZiggyCreatures.Caching.Fusion;
 
 namespace Mewdeko.Services;
 
 /// <summary>
-///     Service responsible for managing and caching Discord guild configurations.
-///     Provides optimized access to guild settings with batch processing and caching capabilities.
+///     Service responsible for managing Discord guild configurations.
+///     Provides methods for retrieving and updating guild settings with proper database context management.
 /// </summary>
 public class GuildSettingsService
 {
     private readonly DbContextProvider dbProvider;
     private readonly BotConfig botSettings;
-    private readonly IFusionCache cache;
-    private readonly ConcurrentDictionary<ulong, GuildConfigChanged> changeTracker;
-    private readonly Channel<(ulong GuildId, GuildConfig Config)> updateChannel;
-
-    private const string PrefixCacheKey = "prefix:{0}";
-    private const string ConfigCacheKey = "guild_config:{0}";
-    private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(1);
 
     /// <summary>
     ///     Initializes a new instance of the GuildSettingsService.
     /// </summary>
     /// <param name="dbProvider">Provider for database context access.</param>
     /// <param name="botSettings">Service for accessing bot configuration settings.</param>
-    /// <param name="cache">Fusion cache instance for storing guild configurations.</param>
     /// <exception cref="ArgumentNullException">Thrown when any required dependency is null.</exception>
     public GuildSettingsService(
         DbContextProvider dbProvider,
-        BotConfig botSettings,
-        IFusionCache cache)
+        BotConfig botSettings)
     {
-        this.dbProvider = dbProvider;
-        this.botSettings = botSettings;
-        this.cache = cache;
-        changeTracker = new ConcurrentDictionary<ulong, GuildConfigChanged>();
-        updateChannel = Channel.CreateUnbounded<(ulong, GuildConfig)>(
-            new UnboundedChannelOptions { SingleReader = true });
-
-        // Start background save processor
-        _ = ProcessConfigUpdatesAsync();
+        this.dbProvider = dbProvider ?? throw new ArgumentNullException(nameof(dbProvider));
+        this.botSettings = botSettings ?? throw new ArgumentNullException(nameof(botSettings));
     }
 
     /// <summary>
@@ -56,22 +37,22 @@ public class GuildSettingsService
     ///     The guild's custom prefix if set, otherwise the default bot prefix.
     ///     Returns default prefix if guild is null.
     /// </returns>
-    public async Task<string?> GetPrefix(IGuild? guild)
+    public async Task<string> GetPrefix(IGuild? guild)
     {
         if (guild == null)
             return botSettings.Prefix;
 
-        var cacheKey = string.Format(PrefixCacheKey, guild.Id);
-        return await cache.GetOrSetAsync(cacheKey,
-            async _ => {
-                var config = await GetGuildConfigFromCache(guild.Id);
-                return string.IsNullOrWhiteSpace(config.Prefix)
-                    ? botSettings.Prefix
-                    : config.Prefix;
-            },
-            new FusionCacheEntryOptions { Duration = CacheDuration });
-    }
+        await using var db = await dbProvider.GetContextAsync();
+        var config = await db.GuildConfigs
+            .AsNoTracking()
+            .Where(x => x.GuildId == guild.Id)
+            .Select(x => x.Prefix)
+            .FirstOrDefaultAsync();
 
+        return string.IsNullOrWhiteSpace(config)
+            ? botSettings.Prefix
+            : config;
+    }
 
     /// <summary>
     ///     Sets a new command prefix for a specified guild.
@@ -79,164 +60,86 @@ public class GuildSettingsService
     /// <param name="guild">The Discord guild to set the prefix for.</param>
     /// <param name="prefix">The new prefix to set.</param>
     /// <returns>The newly set prefix.</returns>
-    /// <exception cref="ArgumentNullException">
-    ///     Thrown when either guild or prefix is null.
-    /// </exception>
+    /// <exception cref="ArgumentNullException">Thrown when either guild or prefix is null.</exception>
     public async Task<string> SetPrefix(IGuild guild, string prefix)
     {
         ArgumentNullException.ThrowIfNull(guild);
         ArgumentNullException.ThrowIfNull(prefix);
 
-        var config = await GetGuildConfigFromCache(guild.Id);
+        await using var db = await dbProvider.GetContextAsync();
+        var config = await db.ForGuildId(guild.Id);
+
         config.Prefix = prefix;
-
-        // Mark config as changed
-        changeTracker.AddOrUpdate(guild.Id,
-            _ => new GuildConfigChanged { LastModified = DateTime.UtcNow },
-            (_, existing) => {
-                existing.LastModified = DateTime.UtcNow;
-                return existing;
-            });
-
-        // Queue update
-        await updateChannel.Writer.WriteAsync((guild.Id, config));
-
-        // Invalidate prefix cache
-        await cache.RemoveAsync(string.Format(PrefixCacheKey, guild.Id));
+        await db.SaveChangesAsync();
 
         return prefix;
     }
 
     /// <summary>
-    ///     Gets the guild configuration for the specified guild ID.
+    ///     Gets the guild configuration for the specified guild ID, optionally including related entities.
     /// </summary>
     /// <param name="guildId">The ID of the guild to get configuration for.</param>
     /// <param name="includes">Optional function to include additional related data.</param>
-    /// <param name="callerName">The name of the calling method.</param>
-    /// <param name="filePath">The file path of the calling method.</param>
-    /// <returns>The guild configuration.</returns>
+    /// <returns>The guild configuration with any specified includes.</returns>
+    /// <remarks>
+    ///     This method leverages the ForGuildId extension method which handles creation of default configurations
+    ///     if none exist. It also ensures proper initialization of warnings and other default settings.
+    /// </remarks>
     /// <exception cref="Exception">Thrown when failing to get guild config.</exception>
     public async Task<GuildConfig> GetGuildConfig(ulong guildId,
-        Func<DbSet<GuildConfig>, IQueryable<GuildConfig>>? includes = null,
-        [CallerMemberName] string callerName = "",
-        [CallerFilePath] string filePath = "")
+        Func<DbSet<GuildConfig>, IQueryable<GuildConfig>>? includes = null)
     {
-        var cacheKey = string.Format(ConfigCacheKey, guildId);
         try
         {
-            return await cache.GetOrSetAsync(cacheKey,
-                async _ =>
-                {
-                    await using var dbContext = await dbProvider.GetContextAsync();
-                    var sw = new Stopwatch();
-                    sw.Start();
-                    var toLoad = await dbContext.ForGuildId(guildId, includes);
-                    return toLoad;
-                },
-                new FusionCacheEntryOptions { Duration = CacheDuration });
+            await using var db = await dbProvider.GetContextAsync();
+            return await db.ForGuildId(guildId, includes);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            Log.Error(e, "Failed to get guild config");
+            Log.Error(ex, "Failed to get guild config for {GuildId}", guildId);
             throw;
         }
     }
 
     /// <summary>
-    ///     Updates the guild configuration.
+    ///     Updates the guild configuration for a specified guild.
     /// </summary>
     /// <param name="guildId">The ID of the guild to update configuration for.</param>
     /// <param name="toUpdate">The updated guild configuration.</param>
-    /// <param name="callerName">The name of the calling method.</param>
-    /// <param name="filePath">The file path of the calling method.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public async Task UpdateGuildConfig(ulong guildId, GuildConfig toUpdate,
-        [CallerMemberName] string callerName = "",
-        [CallerFilePath] string filePath = "")
-    {
-        try
-        {
-            // Mark config as changed
-            changeTracker.AddOrUpdate(guildId,
-                _ => new GuildConfigChanged { LastModified = DateTime.UtcNow },
-                (_, existing) => {
-                    existing.LastModified = DateTime.UtcNow;
-                    return existing;
-                });
-
-            // Queue update for batch processing
-            await updateChannel.Writer.WriteAsync((guildId, toUpdate));
-
-            // Update cache immediately
-            var cacheKey = string.Format(ConfigCacheKey, guildId);
-            await cache.SetAsync(cacheKey, toUpdate, CacheDuration);
-        }
-        catch (Exception e)
-        {
-            Log.Error("Executed from {CallerName} in {FilePath}", callerName, filePath);
-            Log.Error(e, "There was an issue queuing a GuildConfig update");
-            throw;
-        }
-    }
-
-    private async Task<GuildConfig> GetGuildConfigFromCache(ulong guildId)
-    {
-        var cacheKey = string.Format(ConfigCacheKey, guildId);
-        return await cache.GetOrSetAsync(cacheKey,
-            async _ => {
-                await using var db = await dbProvider.GetContextAsync();
-                return await db.ForGuildId(guildId);
-            },
-            new FusionCacheEntryOptions { Duration = CacheDuration });
-    }
-
-    private async Task ProcessConfigUpdatesAsync()
-    {
-        var batch = new List<(ulong GuildId, GuildConfig Config)>();
-
-        while (await updateChannel.Reader.WaitToReadAsync())
-        {
-            while (batch.Count < 100 &&
-                   updateChannel.Reader.TryRead(out var update))
-            {
-                batch.Add(update);
-            }
-
-            if (batch.Count <= 0) continue;
-            await SaveConfigBatchAsync(batch);
-            batch.Clear();
-        }
-    }
-
-    private async Task SaveConfigBatchAsync(
-        IReadOnlyCollection<(ulong GuildId, GuildConfig Config)> updates)
+    /// <exception cref="Exception">Thrown when the update operation fails.</exception>
+    public async Task UpdateGuildConfig(ulong guildId, GuildConfig toUpdate)
     {
         try
         {
             await using var db = await dbProvider.GetContextAsync();
-
-            foreach (var (_, config) in updates)
-            {
-                db.GuildConfigs.Update(config);
-            }
-
+            db.GuildConfigs.Update(toUpdate);
             await db.SaveChangesAsync();
-
-            // Update cache for saved configs
-            foreach (var (guildId, config) in updates)
-            {
-                var cacheKey = string.Format(ConfigCacheKey, guildId);
-                await cache.SetAsync(cacheKey, config, CacheDuration);
-            }
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Error saving guild configs batch");
+            Log.Error(ex, "Failed to update guild config for {GuildId}", guildId);
+            throw;
         }
     }
 
-    private class GuildConfigChanged
+    /// <summary>
+    ///     Gets the reaction roles for a specific guild.
+    /// </summary>
+    /// <param name="guildId">The ID of the guild to get reaction roles for.</param>
+    /// <returns>The collection of reaction role messages for the guild.</returns>
+    /// <exception cref="Exception">Thrown when failing to get reaction roles.</exception>
+    public async Task<IndexedCollection<ReactionRoleMessage>> GetReactionRoles(ulong guildId)
     {
-        public DateTime LastModified { get; set; }
+        try
+        {
+            await using var db = await dbProvider.GetContextAsync();
+            return await db.GetReactionRoles(guildId);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to get reaction roles for {GuildId}", guildId);
+            throw;
+        }
     }
 }

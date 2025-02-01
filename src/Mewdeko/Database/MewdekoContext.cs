@@ -397,6 +397,26 @@ public class MewdekoContext : DbContext
     public DbSet<AutoCommand> AutoCommands { get; set; }
 
     /// <summary>
+    ///     Gets or sets vc roles
+    /// </summary>
+    public DbSet<VcRole> VcRoles { get; set; }
+
+    /// <summary>
+    ///     Gets or sets ticket notes.
+    /// </summary>
+    public DbSet<TicketNote> TicketNotes { get; set; }
+
+    /// <summary>
+    ///     Gets or sets ticket priorities.
+    /// </summary>
+    public DbSet<TicketPriority> TicketPriorities { get; set; }
+
+    /// <summary>
+    ///     Gets or sets ticket tags
+    /// </summary>
+    public DbSet<TicketTag> TicketTags { get; set; }
+
+    /// <summary>
     ///     Gets or sets the auto ban words.
     /// </summary>
     public DbSet<AutoBanEntry> AutoBanWords { get; set; }

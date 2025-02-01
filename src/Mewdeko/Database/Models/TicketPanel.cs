@@ -275,6 +275,11 @@ public class SelectMenuOption
     public TimeSpan? RequiredResponseTime { get; set; }
 
     /// <summary>
+    ///     Gets or sets whether to save transcripts for this part
+    /// </summary>
+    public bool? SaveTranscript { get; set; }
+
+    /// <summary>
     /// Gets or sets the maximum number of active tickets a user can have through this option.
     /// Default is 1.
     /// </summary>

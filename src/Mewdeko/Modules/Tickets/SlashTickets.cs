@@ -46,15 +46,15 @@ public class TicketCommands : MewdekoSlashModuleBase<TicketService>
     }
 
     /// <summary>
-    /// Deletes a ticket panel.
+    ///     Deletes a ticket panel.
     /// </summary>
     /// <param name="panelId">The ID of the panel to delete.</param>
     [SlashCommand("deletepanel", "Deletes a ticket panel")]
     [SlashUserPerm(GuildPermission.Administrator)]
     [RequireContext(ContextType.Guild)]
     public async Task DeletePanel(
-        [Summary("panel-id", "ID of the panel to delete")]
-        int panelId)
+        [Summary("panel-id", "Message ID of the panel to delete")]
+        ulong panelId)
     {
         try
         {
@@ -73,7 +73,108 @@ public class TicketCommands : MewdekoSlashModuleBase<TicketService>
     }
 
     /// <summary>
-    /// Removes a staff member's claim from a ticket.
+    ///     Claims ownership of a ticket as a staff member.
+    /// </summary>
+    /// <param name="channel">Optional channel to claim. If not provided, uses the current channel.</param>
+    /// <remarks>
+    ///     Staff members can use this command to claim responsibility for a ticket.
+    ///     This shows other staff members who is handling the ticket.
+    /// </remarks>
+    [SlashCommand("claim", "Claims a ticket")]
+    [RequireContext(ContextType.Guild)]
+    public async Task ClaimTicket(
+        [Summary("channel", "The ticket channel to claim")]
+        ITextChannel? channel = null
+    )
+    {
+        channel ??= ctx.Channel as ITextChannel;
+        if (channel == null)
+        {
+            await RespondAsync("This command must be used in a text channel.", ephemeral: true);
+            return;
+        }
+
+        try
+        {
+            var success = await Service.ClaimTicket(ctx.Guild, channel.Id, ctx.User as IGuildUser);
+            if (success)
+                await RespondAsync("Ticket claimed successfully!", ephemeral: true);
+            else
+                await RespondAsync("Failed to claim ticket. It may already be claimed or closed.", ephemeral: true);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error claiming ticket in channel {ChannelId}", channel.Id);
+            await RespondAsync("An error occurred while claiming the ticket.", ephemeral: true);
+        }
+    }
+
+    /// <summary>
+    ///     Handles the close button interaction for tickets.
+    /// </summary>
+    /// <remarks>
+    ///     This method is called when a user clicks the close button on a ticket.
+    ///     It will close the ticket and notify the user of the result.
+    ///     The button uses the custom ID "ticket_close".
+    /// </remarks>
+    [ComponentInteraction("ticket_close", true)]
+    public async Task HandleTicketClose()
+    {
+        try
+        {
+            var success = await Service.CloseTicket(ctx.Guild, ctx.Channel.Id);
+            if (success)
+                await RespondAsync("Ticket closed successfully!", ephemeral: true);
+            else
+                await RespondAsync("Failed to close ticket. It may already be closed.", ephemeral: true);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error closing ticket in channel {ChannelId}", ctx.Channel.Id);
+            await RespondAsync("An error occurred while closing the ticket.", ephemeral: true);
+        }
+    }
+
+    /// <summary>
+    ///     Closes a ticket channel.
+    /// </summary>
+    /// <param name="channel">Optional channel to close. If not provided, uses the current channel.</param>
+    /// <remarks>
+    ///     This command allows staff to close tickets either in the current channel
+    ///     or in a specified channel. Closed tickets may be moved to an archive category
+    ///     if one is configured.
+    /// </remarks>
+    [SlashCommand("close", "Closes a ticket")]
+    [RequireContext(ContextType.Guild)]
+    public async Task CloseTicket(
+        [Summary("channel", "The ticket channel to close")]
+        ITextChannel? channel = null
+    )
+    {
+        channel ??= ctx.Channel as ITextChannel;
+        if (channel == null)
+        {
+            await RespondAsync("This command must be used in a text channel.", ephemeral: true);
+            return;
+        }
+
+        try
+        {
+            var success = await Service.CloseTicket(ctx.Guild, channel.Id);
+            if (success)
+                await RespondAsync("Ticket closed successfully!", ephemeral: true);
+            else
+                await RespondAsync("Failed to close ticket. It may already be closed.", ephemeral: true);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error closing ticket in channel {ChannelId}", channel.Id);
+            await RespondAsync("An error occurred while closing the ticket.", ephemeral: true);
+        }
+    }
+
+    /// <summary>
+    ///     Removes a staff member's claim from a ticket.
     /// </summary>
     /// <param name="ticketId">The ID of the ticket to unclaim.</param>
     [SlashCommand("unclaim", "Removes a staff member's claim from a ticket")]
@@ -120,28 +221,6 @@ public class TicketCommands : MewdekoSlashModuleBase<TicketService>
             Log.Error(ex, "Error unclaiming ticket {TicketId}", ticketId);
             await RespondAsync("An error occurred while unclaiming the ticket.", ephemeral: true);
         }
-    }
-
-    /// <summary>
-    ///     Claims a ticket for handling.
-    /// </summary>
-    /// <param name="ticket">The ID of the ticket to claim.</param>
-    [SlashCommand("claim", "Claims a ticket")]
-    [RequireContext(ContextType.Guild)]
-    public async Task ClaimTicket(
-        [Summary("ticket", "The ticket to claim")]
-        int ticket
-    )
-    {
-        var ticketObj = await Service.GetTicketAsync(ticket);
-        if (ticketObj == null)
-        {
-            await RespondAsync("Ticket not found!", ephemeral: true);
-            return;
-        }
-
-        await Service.ClaimTicketAsync(ticketObj, ctx.User as IGuildUser);
-        await RespondAsync("Ticket claimed successfully!", ephemeral: true);
     }
 
     /// <summary>
@@ -556,7 +635,7 @@ public class TicketCommands : MewdekoSlashModuleBase<TicketService>
     public async Task HandlePanelCreation(string channelId, PanelCreationModal modal)
     {
         var channel = await ctx.Guild.GetTextChannelAsync(ulong.Parse(channelId));
-        var panel = await Service.CreatePanelAsync(ctx.Guild, channel, modal.EmbedJson);
+        var panel = await Service.CreatePanelAsync(channel, modal.EmbedJson);
         await RespondAsync("Panel created successfully!", ephemeral: true);
     }
 
@@ -680,45 +759,48 @@ public class TicketCommands : MewdekoSlashModuleBase<TicketService>
     }
 
     /// <summary>
-    ///     Handles ticket button clicks.
+    ///     Handles ticket button clicks and shows modal if configured
     /// </summary>
-    /// <param name="button">The button's custom ID.</param>
     [ComponentInteraction("ticket_btn_*", true)]
+    [RequireContext(ContextType.Guild)]
     public async Task HandleTicketButton(string button)
     {
-        var panelButton = await Service.GetButtonAsync($"ticket_btn_{button}");
-        if (panelButton == null) return;
-
         try
         {
+            var panelButton = await Service.GetButtonAsync($"ticket_btn_{button}");
+            if (panelButton == null)
+            {
+                await RespondAsync("This ticket type is no longer available.", ephemeral: true);
+                return;
+            }
+
             if (!string.IsNullOrEmpty(panelButton.ModalJson))
             {
-                var modalData = JsonSerializer.Deserialize<Dictionary<string, string>>(panelButton.ModalJson);
-                var modal = new ModalBuilder()
-                    .WithTitle("Create Ticket")
-                    .WithCustomId($"ticket_modal_{panelButton.Id}");
-
-                foreach (var field in modalData)
-                {
-                    modal.AddTextInput(field.Key, field.Value, required: true);
-                }
-
-                await RespondWithModalAsync(modal.Build());
+                await Service.HandleModalCreation(
+                    ctx.User as IGuildUser,
+                    panelButton.ModalJson,
+                    $"ticket_modal:{panelButton.Id}",
+                    ctx.Interaction
+                );
             }
             else
             {
                 await Service.CreateTicketAsync(
                     ctx.Guild,
                     ctx.User,
-                    panelButton);
-
-                await RespondAsync("Ticket created!", ephemeral: true);
+                    panelButton
+                );
+                await RespondAsync("Ticket created successfully!", ephemeral: true);
             }
+        }
+        catch (InvalidOperationException ex)
+        {
+            await RespondAsync(ex.Message, ephemeral: true);
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Error creating ticket from button");
-            await RespondAsync("Failed to create ticket. Please try again later.", ephemeral: true);
+            Log.Error(ex, "Error handling ticket button");
+            await RespondAsync("An error occurred while creating your ticket.", ephemeral: true);
         }
     }
 
@@ -960,7 +1042,7 @@ public class TicketCommands : MewdekoSlashModuleBase<TicketService>
     ///     Handles final confirmation.
     /// </summary>
     [ComponentInteraction("btn_confirm:*", true)]
-    public async Task HandleConfirmation(string panelId)
+    public async Task HandleConfirmation(ulong panelId)
     {
         // Get all stored settings
         var style = await cache.Redis.GetDatabase().StringGetAsync($"btn_creation:{ctx.User.Id}:style");

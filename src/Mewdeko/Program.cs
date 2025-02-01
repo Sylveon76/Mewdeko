@@ -1,5 +1,6 @@
 using System.IO;
 using System.Net.Http;
+using System.Text;
 using System.Text.Json.Serialization;
 using Discord.Commands;
 using Discord.Interactions;
@@ -28,8 +29,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using NekosBestApiNet;
+using Npgsql;
 using Serilog;
-using Serilog.Events;
 using ZiggyCreatures.Caching.Fusion;
 using RunMode = Discord.Commands.RunMode;
 
@@ -50,7 +51,7 @@ public class Program
     public static async Task Main(string[] args)
     {
         AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-        var log = LogSetup.SetupLogger("Mewdeko");
+        var log = LogSetup.SetupLogger("Api");
         var credentials = new BotCredentials();
         DependencyInstaller.CheckAndInstallDependencies(credentials.PsqlConnectionString);
         Cache = new RedisCache(credentials);
@@ -89,8 +90,8 @@ public class Program
 
             // Configure web host settings
             builder.WebHost.UseUrls($"http://localhost:{credentials.ApiPort}");
-                services.AddTransient<IApiKeyValidation, ApiKeyValidation>();
-                services.AddAuthorization();
+            services.AddTransient<IApiKeyValidation, ApiKeyValidation>();
+            services.AddAuthorization();
 
             services.AddControllers()
                 .AddJsonOptions(options =>
@@ -101,12 +102,12 @@ public class Program
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen(x =>
             {
-                x.AddSecurityDefinition("ApiKeyHeader", new OpenApiSecurityScheme()
+                x.AddSecurityDefinition("ApiKeyHeader", new OpenApiSecurityScheme
                 {
                     Name = "x-api-key",
                     In = ParameterLocation.Header,
                     Type = SecuritySchemeType.ApiKey,
-                    Description = "Authorization by x-api-key inside request's header",
+                    Description = "Authorization by x-api-key inside request's header"
                 });
                 x.AddSecurityRequirement(new OpenApiSecurityRequirement
                 {
@@ -130,12 +131,12 @@ public class Program
                 options.AddScheme<AuthHandler>(AuthHandler.SchemeName, AuthHandler.SchemeName);
             });
 
-                auth.AddScheme<AuthenticationSchemeOptions, ApiKeyAuthHandler>("ApiKey", null);
+            auth.AddScheme<AuthenticationSchemeOptions, ApiKeyAuthHandler>("ApiKey", null);
 
             services.AddAuthorization(options =>
             {
-                    options.AddPolicy("ApiKeyPolicy", policy =>
-                        policy.RequireAuthenticatedUser().AddAuthenticationSchemes("ApiKey"));
+                options.AddPolicy("ApiKeyPolicy", policy =>
+                    policy.RequireAuthenticatedUser().AddAuthenticationSchemes("ApiKey"));
                 options.AddPolicy("TopggPolicy",
                     policy => policy.RequireClaim(AuthHandler.TopggClaim)
                         .AddAuthenticationSchemes(AuthHandler.SchemeName));
@@ -146,9 +147,9 @@ public class Program
                 options.AddPolicy("BotInstancePolicy", policy =>
                 {
                     policy
-                        .AllowAnyOrigin()     // Allow any origin since dashboard could be accessed from anywhere
-                        .AllowAnyMethod()     // Allow GET, POST, etc.
-                        .AllowAnyHeader();    // Allow any headers including custom auth headers
+                        .AllowAnyOrigin() // Allow any origin since dashboard could be accessed from anywhere
+                        .AllowAnyMethod() // Allow GET, POST, etc.
+                        .AllowAnyHeader(); // Allow any headers including custom auth headers
                 });
             });
 
@@ -172,7 +173,8 @@ public class Program
             app.UseSerilogRequestLogging(options =>
             {
                 options.IncludeQueryInRequestPath = true;
-                options.MessageTemplate = "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms\n{RequestBody}";
+                options.MessageTemplate =
+                    "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms\n{RequestBody}";
                 options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
                 {
                     var originalBody = httpContext.Request.Body;
@@ -188,10 +190,10 @@ public class Program
                             // Create a StreamReader that leaves the stream open
                             using var reader = new StreamReader(
                                 httpContext.Request.Body,
-                                encoding: System.Text.Encoding.UTF8,
-                                detectEncodingFromByteOrderMarks: false,
-                                bufferSize: -1,
-                                leaveOpen: true);
+                                Encoding.UTF8,
+                                false,
+                                -1,
+                                true);
                             requestBody = reader.ReadToEndAsync().Result;
                             // Reset the stream position back to the beginning
                             httpContext.Request.Body.Position = 0;
@@ -261,19 +263,7 @@ public class Program
             LogGatewayIntentWarnings = false,
             DefaultRetryMode = RetryMode.RetryRatelimit
         });
-
-        services.AddSerilog((eserv, lc) => lc
-            .ReadFrom.Services(eserv)
-            .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
-            .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", LogEventLevel.Warning)
-            .MinimumLevel.Override("System", LogEventLevel.Information)
-            .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Verbose)
-            .MinimumLevel.Override("EntityFramework", LogEventLevel.Information)
-            .Enrich.FromLogContext()
-            .WriteTo.Console(LogEventLevel.Information,
-                outputTemplate:
-                "[{Timestamp:HH:mm:ss} {Level:u3}] | {Message:lj}{NewLine}{Exception}")
-            .Enrich.FromLogContext());
+        services.AddSerilog(LogSetup.SetupLogger("Mewdeko"));
         services.AddSingleton(client);
         services.AddSingleton(credentials);
         services.AddSingleton(cache);
@@ -281,13 +271,31 @@ public class Program
 
         services
             .AddSingleton<FontProvider>()
-            .AddSingleton<IBotCredentials>(credentials)
-            .AddDbContext<MewdekoPostgresContext>()
-            .AddPooledDbContextFactory<MewdekoContext>(dbContextOptionsBuilder => dbContextOptionsBuilder
-                .UseNpgsql(credentials.PsqlConnectionString,
-                    x => x.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery))
-                .EnableDetailedErrors()
-                .EnableSensitiveDataLogging())
+            .AddSingleton<IBotCredentials>(credentials);
+        services.AddPooledDbContextFactory<MewdekoContext>(dbContextOptionsBuilder =>
+            {
+                var connString = new NpgsqlConnectionStringBuilder(credentials.PsqlConnectionString)
+                {
+                    Pooling = true,
+                    MinPoolSize = 20,
+                    MaxPoolSize = 100,
+                    ConnectionIdleLifetime = 300,
+                    ConnectionPruningInterval = 10
+                }.ToString();
+
+                dbContextOptionsBuilder
+                    .UseNpgsql(connString, npgsqlOptions =>
+                    {
+                        npgsqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+                        npgsqlOptions.MaxBatchSize(1000);
+                        npgsqlOptions.EnableRetryOnFailure(
+                            3,
+                            TimeSpan.FromSeconds(3),
+                            null);
+                    })
+                    .EnableDetailedErrors()
+                    .EnableSensitiveDataLogging();
+            })
             .AddSingleton<DbContextProvider>()
             .AddSingleton<EventHandler>()
             .AddSingleton(new CommandService(new CommandServiceConfig

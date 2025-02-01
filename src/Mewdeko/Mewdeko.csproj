@@ -151,6 +151,9 @@
     <None Remove="DiscordChatExporter\DiscordChatExporter.Cli.deps.json"/>
     <None Remove="DiscordChatExporter\CliFx.dll"/>
     <None Remove="data\http.txt"/>
+    <Compile Update="Database\Migrations\PostgreSql\SeperateVcRoles.cs">
+      <DependentUpon>SeparateVcRoles.Designer.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">

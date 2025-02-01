@@ -255,7 +255,7 @@ public static class DependencyInstaller
         var (pgCheck, redisCheck) = PackageChecks[distro];
 
         var postgresInstalled = CheckPackage(pgCheck) && CheckService("postgresql");
-        var redisInstalled = CheckPackage(redisCheck) && CheckService(distro == LinuxDistro.Alpine ? "redis" : "redis-server");
+        var redisInstalled = CheckPackage(redisCheck) && CheckService("redis");
 
         Log.Information($"PostgreSQL installed and running: {postgresInstalled}");
         Log.Information($"Redis installed and running: {redisInstalled}");

@@ -1,4 +1,5 @@
-﻿using Serilog;
+﻿using Discord.Interactions;
+using Serilog;
 
 namespace Mewdeko.Services.Impl;
 
@@ -59,6 +60,7 @@ public sealed class EventHandler : IDisposable
         _client.LeftGuild += ClientOnLeftGuild;
         _client.InviteCreated += ClientOnInviteCreated;
         _client.InviteDeleted += ClientOnInviteDeleted;
+        _client.ModalSubmitted += ClientOnModalSubmitted;
     }
 
     #region Delegates
@@ -115,6 +117,11 @@ public sealed class EventHandler : IDisposable
     ///     Occurs when a message is received in any channel the bot has access to.
     /// </summary>
     public event AsyncEventHandler<SocketMessage>? MessageReceived;
+
+    /// <summary>
+    /// Occurs when a modal gets submitted to the bot.
+    /// </summary>
+    public event AsyncEventHandler<SocketModal>? ModalSubmitted;
 
     /// <summary>
     ///     Occurs when an invite is created in a guild.
@@ -303,108 +310,114 @@ public sealed class EventHandler : IDisposable
 
     #region Event Handlers
 
+    private Task ClientOnModalSubmitted(SocketModal arg)
+    {
+        if (ModalSubmitted is not null)
+            _ = SafeExecuteHandler(() => ModalSubmitted(arg), nameof(ModalSubmitted));
+        return Task.CompletedTask;
+    }
     private Task ClientOnInviteDeleted(SocketGuildChannel arg1, string arg2)
     {
         if (InviteDeleted is not null)
-            SafeExecuteHandler(() => InviteDeleted(arg1, arg2), nameof(InviteDeleted));
+            _ = SafeExecuteHandler(() => InviteDeleted(arg1, arg2), nameof(InviteDeleted));
         return Task.CompletedTask;
     }
 
     private Task ClientOnInviteCreated(SocketInvite arg)
     {
         if (InviteCreated is not null)
-            SafeExecuteHandler(() => InviteCreated(arg), nameof(InviteCreated));
+            _ = SafeExecuteHandler(() => InviteCreated(arg), nameof(InviteCreated));
         return Task.CompletedTask;
     }
 
     private Task ClientOnLeftGuild(SocketGuild arg)
     {
         if (LeftGuild is not null)
-            SafeExecuteHandler(() => LeftGuild(arg), nameof(LeftGuild));
+            _ = SafeExecuteHandler(() => LeftGuild(arg), nameof(LeftGuild));
         return Task.CompletedTask;
     }
 
     private Task ClientOnGuildAvailable(SocketGuild arg)
     {
         if (GuildAvailable is not null)
-            SafeExecuteHandler(() => GuildAvailable(arg), nameof(GuildAvailable));
+            _ = SafeExecuteHandler(() => GuildAvailable(arg), nameof(GuildAvailable));
         return Task.CompletedTask;
     }
 
     private Task ClientOnAuditLogCreated(SocketAuditLogEntry arg1, SocketGuild arg2)
     {
         if (AuditLogCreated is not null)
-            SafeExecuteHandler(() => AuditLogCreated(arg1, arg2), nameof(AuditLogCreated));
+            _ = SafeExecuteHandler(() => AuditLogCreated(arg1, arg2), nameof(AuditLogCreated));
         return Task.CompletedTask;
     }
 
     private Task ClientOnThreadMemberLeft(SocketThreadUser arg)
     {
         if (ThreadMemberLeft is not null)
-            SafeExecuteHandler(() => ThreadMemberLeft(arg), nameof(ThreadMemberLeft));
+            _ = SafeExecuteHandler(() => ThreadMemberLeft(arg), nameof(ThreadMemberLeft));
         return Task.CompletedTask;
     }
 
     private Task ClientOnThreadMemberJoined(SocketThreadUser arg)
     {
         if (ThreadMemberJoined is not null)
-            SafeExecuteHandler(() => ThreadMemberJoined(arg), nameof(ThreadMemberJoined));
+            _ = SafeExecuteHandler(() => ThreadMemberJoined(arg), nameof(ThreadMemberJoined));
         return Task.CompletedTask;
     }
 
     private Task ClientOnThreadDeleted(Cacheable<SocketThreadChannel, ulong> arg)
     {
         if (ThreadDeleted is not null)
-            SafeExecuteHandler(() => ThreadDeleted(arg), nameof(ThreadDeleted));
+            _ = SafeExecuteHandler(() => ThreadDeleted(arg), nameof(ThreadDeleted));
         return Task.CompletedTask;
     }
 
     private Task ClientOnThreadUpdated(Cacheable<SocketThreadChannel, ulong> arg1, SocketThreadChannel arg2)
     {
         if (ThreadUpdated is not null)
-            SafeExecuteHandler(() => ThreadUpdated(arg1, arg2), nameof(ThreadUpdated));
+            _ = SafeExecuteHandler(() => ThreadUpdated(arg1, arg2), nameof(ThreadUpdated));
         return Task.CompletedTask;
     }
 
     private Task ClientOnThreadCreated(SocketThreadChannel arg)
     {
         if (ThreadCreated is not null)
-            SafeExecuteHandler(() => ThreadCreated(arg), nameof(ThreadCreated));
+            _ = SafeExecuteHandler(() => ThreadCreated(arg), nameof(ThreadCreated));
         return Task.CompletedTask;
     }
 
     private Task ClientOnJoinedGuild(SocketGuild arg)
     {
         if (JoinedGuild is not null)
-            SafeExecuteHandler(() => JoinedGuild(arg), nameof(JoinedGuild));
+            _ = SafeExecuteHandler(() => JoinedGuild(arg), nameof(JoinedGuild));
         return Task.CompletedTask;
     }
 
     private Task ClientOnPresenceUpdated(SocketUser arg1, SocketPresence arg2, SocketPresence arg3)
     {
         if (PresenceUpdated is not null)
-            SafeExecuteHandler(() => PresenceUpdated(arg1, arg2, arg3), nameof(PresenceUpdated));
+            _ = SafeExecuteHandler(() => PresenceUpdated(arg1, arg2, arg3), nameof(PresenceUpdated));
         return Task.CompletedTask;
     }
 
     private Task ClientOnUserIsTyping(Cacheable<IUser, ulong> arg1, Cacheable<IMessageChannel, ulong> arg2)
     {
         if (UserIsTyping is not null)
-            SafeExecuteHandler(() => UserIsTyping(arg1, arg2), nameof(UserIsTyping));
+            _ = SafeExecuteHandler(() => UserIsTyping(arg1, arg2), nameof(UserIsTyping));
         return Task.CompletedTask;
     }
 
     private Task ClientOnInteractionCreated(SocketInteraction arg)
     {
         if (InteractionCreated is not null)
-            SafeExecuteHandler(() => InteractionCreated(arg), nameof(InteractionCreated));
+            _ = SafeExecuteHandler(() => InteractionCreated(arg), nameof(InteractionCreated));
         return Task.CompletedTask;
     }
 
     private Task ClientOnReactionsCleared(Cacheable<IUserMessage, ulong> arg1, Cacheable<IMessageChannel, ulong> arg2)
     {
         if (ReactionsCleared is not null)
-            SafeExecuteHandler(() => ReactionsCleared(arg1, arg2), nameof(ReactionsCleared));
+            _ = SafeExecuteHandler(() => ReactionsCleared(arg1, arg2), nameof(ReactionsCleared));
         return Task.CompletedTask;
     }
 
@@ -412,7 +425,7 @@ public sealed class EventHandler : IDisposable
         SocketReaction arg3)
     {
         if (ReactionRemoved is not null)
-            SafeExecuteHandler(() => ReactionRemoved(arg1, arg2, arg3), nameof(ReactionRemoved));
+            _ = SafeExecuteHandler(() => ReactionRemoved(arg1, arg2, arg3), nameof(ReactionRemoved));
         return Task.CompletedTask;
     }
 
@@ -420,63 +433,63 @@ public sealed class EventHandler : IDisposable
         SocketReaction arg3)
     {
         if (ReactionAdded is not null)
-            SafeExecuteHandler(() => ReactionAdded(arg1, arg2, arg3), nameof(ReactionAdded));
+            _ = SafeExecuteHandler(() => ReactionAdded(arg1, arg2, arg3), nameof(ReactionAdded));
         return Task.CompletedTask;
     }
 
     private Task ClientOnRoleDeleted(SocketRole arg)
     {
         if (RoleDeleted is not null)
-            SafeExecuteHandler(() => RoleDeleted(arg), nameof(RoleDeleted));
+            _ = SafeExecuteHandler(() => RoleDeleted(arg), nameof(RoleDeleted));
         return Task.CompletedTask;
     }
 
     private Task ClientOnChannelUpdated(SocketChannel arg1, SocketChannel arg2)
     {
         if (ChannelUpdated is not null)
-            SafeExecuteHandler(() => ChannelUpdated(arg1, arg2), nameof(ChannelUpdated));
+            _ = SafeExecuteHandler(() => ChannelUpdated(arg1, arg2), nameof(ChannelUpdated));
         return Task.CompletedTask;
     }
 
     private Task ClientOnChannelDestroyed(SocketChannel arg)
     {
         if (ChannelDestroyed is not null)
-            SafeExecuteHandler(() => ChannelDestroyed(arg), nameof(ChannelDestroyed));
+            _ = SafeExecuteHandler(() => ChannelDestroyed(arg), nameof(ChannelDestroyed));
         return Task.CompletedTask;
     }
 
     private Task ClientOnChannelCreated(SocketChannel arg)
     {
         if (ChannelCreated is not null)
-            SafeExecuteHandler(() => ChannelCreated(arg), nameof(ChannelCreated));
+            _ = SafeExecuteHandler(() => ChannelCreated(arg), nameof(ChannelCreated));
         return Task.CompletedTask;
     }
 
     private Task ClientOnUserUpdated(SocketUser arg1, SocketUser arg2)
     {
         if (UserUpdated is not null)
-            SafeExecuteHandler(() => UserUpdated(arg1, arg2), nameof(UserUpdated));
+            _ = SafeExecuteHandler(() => UserUpdated(arg1, arg2), nameof(UserUpdated));
         return Task.CompletedTask;
     }
 
     private Task ClientOnUserVoiceStateUpdated(SocketUser arg1, SocketVoiceState arg2, SocketVoiceState arg3)
     {
         if (UserVoiceStateUpdated is not null)
-            SafeExecuteHandler(() => UserVoiceStateUpdated(arg1, arg2, arg3), nameof(UserVoiceStateUpdated));
+            _ = SafeExecuteHandler(() => UserVoiceStateUpdated(arg1, arg2, arg3), nameof(UserVoiceStateUpdated));
         return Task.CompletedTask;
     }
 
     private Task ClientOnUserUnbanned(SocketUser arg1, SocketGuild arg2)
     {
         if (UserUnbanned is not null)
-            SafeExecuteHandler(() => UserUnbanned(arg1, arg2), nameof(UserUnbanned));
+            _ = SafeExecuteHandler(() => UserUnbanned(arg1, arg2), nameof(UserUnbanned));
         return Task.CompletedTask;
     }
 
     private Task ClientOnUserBanned(SocketUser arg1, SocketGuild arg2)
     {
         if (UserBanned is not null)
-            SafeExecuteHandler(() => UserBanned(arg1, arg2), nameof(UserBanned));
+            _ = SafeExecuteHandler(() => UserBanned(arg1, arg2), nameof(UserBanned));
         return Task.CompletedTask;
     }
 
@@ -484,77 +497,77 @@ public sealed class EventHandler : IDisposable
         Cacheable<IMessageChannel, ulong> arg2)
     {
         if (MessagesBulkDeleted is not null)
-            SafeExecuteHandler(() => MessagesBulkDeleted(arg1, arg2), nameof(MessagesBulkDeleted));
+            _ = SafeExecuteHandler(() => MessagesBulkDeleted(arg1, arg2), nameof(MessagesBulkDeleted));
         return Task.CompletedTask;
     }
 
     private Task ClientOnMessageUpdated(Cacheable<IMessage, ulong> arg1, SocketMessage arg2, ISocketMessageChannel arg3)
     {
         if (MessageUpdated is not null)
-            SafeExecuteHandler(() => MessageUpdated(arg1, arg2, arg3), nameof(MessageUpdated));
+            _ = SafeExecuteHandler(() => MessageUpdated(arg1, arg2, arg3), nameof(MessageUpdated));
         return Task.CompletedTask;
     }
 
     private Task ClientOnGuildMemberUpdated(Cacheable<SocketGuildUser, ulong> arg1, SocketGuildUser arg2)
     {
         if (GuildMemberUpdated is not null)
-            SafeExecuteHandler(() => GuildMemberUpdated(arg1, arg2), nameof(GuildMemberUpdated));
+            _ = SafeExecuteHandler(() => GuildMemberUpdated(arg1, arg2), nameof(GuildMemberUpdated));
         return Task.CompletedTask;
     }
 
     private Task ClientOnMessageDeleted(Cacheable<IMessage, ulong> arg1, Cacheable<IMessageChannel, ulong> arg2)
     {
         if (MessageDeleted is not null)
-            SafeExecuteHandler(() => MessageDeleted(arg1, arg2), nameof(MessageDeleted));
+            _ = SafeExecuteHandler(() => MessageDeleted(arg1, arg2), nameof(MessageDeleted));
         return Task.CompletedTask;
     }
 
     private Task ClientOnUserLeft(SocketGuild arg1, SocketUser arg2)
     {
         if (UserLeft is not null)
-            SafeExecuteHandler(() => UserLeft(arg1, arg2), nameof(UserLeft));
+            _ = SafeExecuteHandler(() => UserLeft(arg1, arg2), nameof(UserLeft));
         return Task.CompletedTask;
     }
 
     private Task ClientOnUserJoined(SocketGuildUser arg)
     {
         if (UserJoined is not null)
-            SafeExecuteHandler(() => UserJoined(arg), nameof(UserJoined));
+            _ = SafeExecuteHandler(() => UserJoined(arg), nameof(UserJoined));
         return Task.CompletedTask;
     }
 
     private Task ClientOnMessageReceived(SocketMessage arg)
     {
         if (MessageReceived is not null)
-            SafeExecuteHandler(() => MessageReceived(arg), nameof(MessageReceived));
+            _ = SafeExecuteHandler(() => MessageReceived(arg), nameof(MessageReceived));
         return Task.CompletedTask;
     }
 
     private Task ClientOnEventCreated(SocketGuildEvent args)
     {
         if (EventCreated is not null)
-            SafeExecuteHandler(() => EventCreated(args), nameof(EventCreated));
+            _ = SafeExecuteHandler(() => EventCreated(args), nameof(EventCreated));
         return Task.CompletedTask;
     }
 
     private Task ClientOnRoleUpdated(SocketRole arg1, SocketRole arg2)
     {
         if (RoleUpdated is not null)
-            SafeExecuteHandler(() => RoleUpdated(arg1, arg2), nameof(RoleUpdated));
+            _ = SafeExecuteHandler(() => RoleUpdated(arg1, arg2), nameof(RoleUpdated));
         return Task.CompletedTask;
     }
 
     private Task ClientOnGuildUpdated(SocketGuild arg1, SocketGuild arg2)
     {
         if (GuildUpdated is not null)
-            SafeExecuteHandler(() => GuildUpdated(arg1, arg2), nameof(GuildUpdated));
+            _ = SafeExecuteHandler(() => GuildUpdated(arg1, arg2), nameof(GuildUpdated));
         return Task.CompletedTask;
     }
 
     private Task ClientOnRoleCreated(SocketRole args)
     {
         if (RoleCreated is not null)
-            SafeExecuteHandler(() => RoleCreated(args), nameof(RoleCreated));
+            _ = SafeExecuteHandler(() => RoleCreated(args), nameof(RoleCreated));
         return Task.CompletedTask;
     }
 
@@ -563,9 +576,10 @@ public sealed class EventHandler : IDisposable
     /// <summary>
     ///     Safely executes an event handler with error logging
     /// </summary>
-    private static void SafeExecuteHandler(Func<Task> handlerAction, string eventName)
+    private static Task SafeExecuteHandler(Func<Task> handlerAction, string eventName)
     {
         _ = ExecuteHandlerAsync(handlerAction, eventName);
+        return Task.CompletedTask;
     }
 
     private static async Task ExecuteHandlerAsync(Func<Task> handlerAction, string eventName)

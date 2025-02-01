@@ -270,7 +270,8 @@ public partial class Administration
                                 string.Join(",",
                                     rr.ReactionRoles.Select(x => $"{x.EmoteName} {g.GetRole(x.RoleId).Mention}")))
                             .AddField(Strings.UsersCanSelectMorethanOne(ctx.Guild.Id), rr.Exclusive)
-                            .AddField(Strings.Wasdeleted(ctx.Guild.Id), msg == null ? Strings.Yes(ctx.Guild.Id) : Strings.No(ctx.Guild.Id))
+                            .AddField(Strings.Wasdeleted(ctx.Guild.Id),
+                                msg == null ? Strings.Yes(ctx.Guild.Id) : Strings.No(ctx.Guild.Id))
                             .AddField(Strings.Messagelink(ctx.Guild.Id),
                                 (msg == null
                                     ? Strings.Messagewasdeleted(ctx.Guild.Id)
@@ -603,7 +604,8 @@ public partial class Administration
             await role.ModifyAsync(r => r.Hoist = newHoisted).ConfigureAwait(false);
             if (newHoisted)
             {
-                await ReplyConfirmAsync(Strings.RolehoistEnabled(ctx.Guild.Id, Format.Bold(role.Name))).ConfigureAwait(false);
+                await ReplyConfirmAsync(Strings.RolehoistEnabled(ctx.Guild.Id, Format.Bold(role.Name)))
+                    .ConfigureAwait(false);
             }
             else
             {

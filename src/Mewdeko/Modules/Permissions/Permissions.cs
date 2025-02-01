@@ -56,13 +56,11 @@ public partial class Permissions(
     public async Task Verbose(PermissionAction? action = null)
     {
         await using var dbContext = await dbProvider.GetContextAsync();
-        {
-            var config = await dbContext.GcWithPermissionsv2For(ctx.Guild.Id);
-            action ??= new PermissionAction(config.VerbosePermissions);
-            config.VerbosePermissions = action.Value;
-            await dbContext.SaveChangesAsync().ConfigureAwait(false);
-            Service.UpdateCache(config);
-        }
+        var config = await dbContext.GcWithPermissionsv2For(ctx.Guild.Id);
+        action ??= new PermissionAction(!config.VerbosePermissions);
+        config.VerbosePermissions = action.Value;
+        await dbContext.SaveChangesAsync().ConfigureAwait(false);
+        Service.UpdateCache(config);
 
         if (action.Value)
             await ReplyConfirmAsync(Strings.VerboseTrue(ctx.Guild.Id)).ConfigureAwait(false);
