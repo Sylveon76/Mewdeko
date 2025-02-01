@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using Discord.Commands;
 using Fergun.Interactive;
@@ -151,94 +152,95 @@ public partial class Tickets : MewdekoModuleBase<TicketService>
         }
 
         /// <summary>
-/// Adds a select menu to a ticket panel.
-/// </summary>
-/// <param name="panelId">The ID of the panel to add the menu to</param>
-[Cmd]
-[RequireContext(ContextType.Guild)]
-[UserPerm(GuildPermission.Administrator)]
-public async Task AddSelectMenu(ulong panelId)
-{
-    var panel = await Service.GetPanelAsync(panelId);
-    if (panel == null || panel.GuildId != ctx.Guild.Id)
-    {
-        await ctx.Channel.SendErrorAsync("Panel not found.", Config);
-        return;
-    }
+        ///     Adds a select menu to a ticket panel.
+        /// </summary>
+        /// <param name="panelId">The ID of the panel to add the menu to</param>
+        [Cmd]
+        [RequireContext(ContextType.Guild)]
+        [UserPerm(GuildPermission.Administrator)]
+        public async Task AddSelectMenu(ulong panelId)
+        {
+            var panel = await Service.GetPanelAsync(panelId);
+            if (panel == null || panel.GuildId != ctx.Guild.Id)
+            {
+                await ctx.Channel.SendErrorAsync("Panel not found.", Config);
+                return;
+            }
 
-    // Get all required information first
-    var embed = new EmbedBuilder()
-        .WithTitle("Select Menu Setup")
-        .WithDescription("Please provide the following information:")
-        .AddField("1. Placeholder", "The text shown when no option is selected")
-        .AddField("2. First Option Label", "The text shown for the first option")
-        .AddField("3. First Option Description", "Optional description for the first option")
-        .AddField("4. First Option Emoji", "Optional emoji for the first option")
-        .WithFooter("Type your response for #1 (Placeholder)")
-        .WithOkColor();
+            // Get all required information first
+            var embed = new EmbedBuilder()
+                .WithTitle("Select Menu Setup")
+                .WithDescription("Please provide the following information:")
+                .AddField("1. Placeholder", "The text shown when no option is selected")
+                .AddField("2. First Option Label", "The text shown for the first option")
+                .AddField("3. First Option Description", "Optional description for the first option")
+                .AddField("4. First Option Emoji", "Optional emoji for the first option")
+                .WithFooter("Type your response for #1 (Placeholder)")
+                .WithOkColor();
 
-    var setupMsg = await ctx.Channel.SendMessageAsync(embed: embed.Build());
+            var setupMsg = await ctx.Channel.SendMessageAsync(embed: embed.Build());
 
-    var placeholder = await NextMessageAsync(ctx.Channel.Id, ctx.User.Id);
-    if (string.IsNullOrEmpty(placeholder))
-    {
-        await ctx.Channel.SendErrorAsync("Setup cancelled - no placeholder provided.", Config);
-        return;
-    }
+            var placeholder = await NextMessageAsync(ctx.Channel.Id, ctx.User.Id);
+            if (string.IsNullOrEmpty(placeholder))
+            {
+                await ctx.Channel.SendErrorAsync("Setup cancelled - no placeholder provided.", Config);
+                return;
+            }
 
-    embed.Fields[0].Value += $" ✓ {placeholder}";
-    embed.Footer.Text = "Type your response for #2 (First Option Label)";
-    await setupMsg.ModifyAsync(x => x.Embed = embed.Build());
+            embed.Fields[0].Value += $" ✓ {placeholder}";
+            embed.Footer.Text = "Type your response for #2 (First Option Label)";
+            await setupMsg.ModifyAsync(x => x.Embed = embed.Build());
 
-    var label = await NextMessageAsync(ctx.Channel.Id, ctx.User.Id);
-    if (string.IsNullOrEmpty(label))
-    {
-        await ctx.Channel.SendErrorAsync("Setup cancelled - no label provided.", Config);
-        return;
-    }
+            var label = await NextMessageAsync(ctx.Channel.Id, ctx.User.Id);
+            if (string.IsNullOrEmpty(label))
+            {
+                await ctx.Channel.SendErrorAsync("Setup cancelled - no label provided.", Config);
+                return;
+            }
 
-    embed.Fields[1].Value += $" ✓ {label}";
-    embed.Footer.Text = "Type your response for #3 (Description) or type 'skip'";
-    await setupMsg.ModifyAsync(x => x.Embed = embed.Build());
+            embed.Fields[1].Value += $" ✓ {label}";
+            embed.Footer.Text = "Type your response for #3 (Description) or type 'skip'";
+            await setupMsg.ModifyAsync(x => x.Embed = embed.Build());
 
-    var description = await NextMessageAsync(ctx.Channel.Id, ctx.User.Id);
-    description = description?.ToLower() == "skip" ? null : description;
+            var description = await NextMessageAsync(ctx.Channel.Id, ctx.User.Id);
+            description = description?.ToLower() == "skip" ? null : description;
 
-    embed.Fields[2].Value += description == null ? " ✓ Skipped" : $" ✓ {description}";
-    embed.Footer.Text = "Type your response for #4 (Emoji) or type 'skip'";
-    await setupMsg.ModifyAsync(x => x.Embed = embed.Build());
+            embed.Fields[2].Value += description == null ? " ✓ Skipped" : $" ✓ {description}";
+            embed.Footer.Text = "Type your response for #4 (Emoji) or type 'skip'";
+            await setupMsg.ModifyAsync(x => x.Embed = embed.Build());
 
-    var emoji = await NextMessageAsync(ctx.Channel.Id, ctx.User.Id);
-    emoji = emoji?.ToLower() == "skip" ? null : emoji;
+            var emoji = await NextMessageAsync(ctx.Channel.Id, ctx.User.Id);
+            emoji = emoji?.ToLower() == "skip" ? null : emoji;
 
-    try
-    {
-        var menu = await Service.AddSelectMenuAsync(
-            panel,
-            placeholder,
-            label,
-            description,
-            emoji);
+            try
+            {
+                var menu = await Service.AddSelectMenuAsync(
+                    panel,
+                    placeholder,
+                    label,
+                    description,
+                    emoji);
 
-        var confirmEmbed = new EmbedBuilder()
-            .WithTitle("Select Menu Created")
-            .WithDescription("Successfully created select menu with first option.")
-            .AddField("Placeholder", placeholder)
-            .AddField("First Option",
-                $"Label: {label}\n" +
-                $"Description: {description ?? "None"}\n" +
-                $"Emoji: {emoji ?? "None"}")
-            .AddField("Note", $"Use `{Config.Prefix}tc config addoption {menu.Id} <label>` to add more options.")
-            .WithOkColor();
+                var confirmEmbed = new EmbedBuilder()
+                    .WithTitle("Select Menu Created")
+                    .WithDescription("Successfully created select menu with first option.")
+                    .AddField("Placeholder", placeholder)
+                    .AddField("First Option",
+                        $"Label: {label}\n" +
+                        $"Description: {description ?? "None"}\n" +
+                        $"Emoji: {emoji ?? "None"}")
+                    .AddField("Note",
+                        $"Use `{Config.Prefix}tc config addoption {menu.Id} <label>` to add more options.")
+                    .WithOkColor();
 
-        await ctx.Channel.SendMessageAsync(embed: confirmEmbed.Build());
-    }
-    catch (Exception ex)
-    {
-        Log.Error(ex, "Error creating select menu");
-        await ctx.Channel.SendErrorAsync("Failed to create select menu.", Config);
-    }
-}
+                await ctx.Channel.SendMessageAsync(embed: confirmEmbed.Build());
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error creating select menu");
+                await ctx.Channel.SendErrorAsync("Failed to create select menu.", Config);
+            }
+        }
 
         /// <summary>
         ///     Adds an option to an existing select menu
@@ -558,274 +560,462 @@ public async Task AddSelectMenu(ulong panelId)
 
             await ctx.Channel.SendMessageAsync(embed: embed.Build());
         }
-    }
 
-    /// <summary>
-    ///     Sets the title for a ticket creation modal
-    /// </summary>
-    /// <param name="buttonId">The ID of the button to configure</param>
-    /// <param name="title">The title to display on the modal</param>
-    /// <remarks>
-    ///     When a user clicks this button, they will see a modal with this title.
-    ///     The default title is "Create Ticket" if none is set.
-    /// </remarks>
-    [Cmd]
-    [RequireContext(ContextType.Guild)]
-    [UserPerm(GuildPermission.Administrator)]
-    public async Task SetModalTitle(int buttonId, [Remainder] string title)
-    {
-        var button = await Service.GetButtonAsync(buttonId);
-        if (button == null || button.Panel.GuildId != ctx.Guild.Id)
+        /// <summary>
+        ///     Sets the title for a ticket creation modal
+        /// </summary>
+        /// <param name="buttonId">The ID of the button to configure</param>
+        /// <param name="title">The title to display on the modal</param>
+        /// <remarks>
+        ///     When a user clicks this button, they will see a modal with this title.
+        ///     The default title is "Create Ticket" if none is set.
+        /// </remarks>
+        [Cmd]
+        [RequireContext(ContextType.Guild)]
+        [UserPerm(GuildPermission.Administrator)]
+        public async Task SetModalTitle(int buttonId, [Remainder] string title)
         {
-            await ctx.Channel.SendErrorAsync("Button not found.", Config);
-            return;
-        }
-
-        // Get or create modal config
-        var modalConfig = new ModalConfiguration();
-        if (!string.IsNullOrWhiteSpace(button.ModalJson))
-        {
-            try
+            var button = await Service.GetButtonAsync(buttonId);
+            if (button == null || button.Panel.GuildId != ctx.Guild.Id)
             {
-                modalConfig = JsonSerializer.Deserialize<ModalConfiguration>(button.ModalJson);
+                await ctx.Channel.SendErrorAsync("Button not found.", Config);
+                return;
             }
-            catch
+
+            // Get or create modal config
+            var modalConfig = new ModalConfiguration();
+            if (!string.IsNullOrWhiteSpace(button.ModalJson))
             {
-                // If old format, try to preserve fields
                 try
                 {
-                    modalConfig.Fields =
-                        JsonSerializer.Deserialize<Dictionary<string, ModalFieldConfig>>(button.ModalJson);
+                    modalConfig = JsonSerializer.Deserialize<ModalConfiguration>(button.ModalJson);
                 }
                 catch
                 {
-                    modalConfig.Fields = new Dictionary<string, ModalFieldConfig>();
+                    // If old format, try to preserve fields
+                    try
+                    {
+                        modalConfig.Fields =
+                            JsonSerializer.Deserialize<Dictionary<string, ModalFieldConfig>>(button.ModalJson);
+                    }
+                    catch
+                    {
+                        modalConfig.Fields = new Dictionary<string, ModalFieldConfig>();
+                    }
                 }
             }
+
+            // Update title
+            modalConfig.Title = title;
+
+            // Update button
+            await Service.UpdateButtonSettingsAsync(ctx.Guild, buttonId, new Dictionary<string, object>
+            {
+                {
+                    "modalJson", JsonSerializer.Serialize(modalConfig)
+                }
+            });
+
+            await ctx.Channel.SendConfirmAsync($"Modal title set to: {title}");
         }
 
-        // Update title
-        modalConfig.Title = title;
-
-        // Update button
-        await Service.UpdateButtonSettingsAsync(ctx.Guild, buttonId, new Dictionary<string, object>
+        /// <summary>
+        ///     Adds a field to the ticket creation modal
+        /// </summary>
+        /// <param name="buttonId">The ID of the button to configure</param>
+        /// <param name="label">The label for the field</param>
+        /// <param name="fieldConfig">Optional configuration options</param>
+        /// <remarks>
+        ///     Configuration options (comma-separated):
+        ///     - paragraph: Makes the field multi-line
+        ///     - optional: Makes the field not required
+        ///     - min:X: Sets minimum length (0-4000)
+        ///     - max:X: Sets maximum length (0-4000)
+        /// </remarks>
+        [Cmd]
+        [RequireContext(ContextType.Guild)]
+        [UserPerm(GuildPermission.Administrator)]
+        public async Task AddModalField(int buttonId, string label, [Remainder] string fieldConfig = null)
         {
+            var button = await Service.GetButtonAsync(buttonId);
+            if (button == null || button.Panel.GuildId != ctx.Guild.Id)
             {
-                "modalJson", JsonSerializer.Serialize(modalConfig)
+                await ctx.Channel.SendErrorAsync("Button not found.", Config);
+                return;
             }
-        });
 
-        await ctx.Channel.SendConfirmAsync($"Modal title set to: {title}");
-    }
-
-    /// <summary>
-    ///     Adds a field to the ticket creation modal
-    /// </summary>
-    /// <param name="buttonId">The ID of the button to configure</param>
-    /// <param name="label">The label for the field</param>
-    /// <param name="fieldConfig">Optional configuration options</param>
-    /// <remarks>
-    ///     Configuration options (comma-separated):
-    ///     - paragraph: Makes the field multi-line
-    ///     - optional: Makes the field not required
-    ///     - min:X: Sets minimum length (0-4000)
-    ///     - max:X: Sets maximum length (0-4000)
-    /// </remarks>
-    [Cmd]
-    [RequireContext(ContextType.Guild)]
-    [UserPerm(GuildPermission.Administrator)]
-    public async Task AddModalField(int buttonId, string label, [Remainder] string fieldConfig = null)
-    {
-        var button = await Service.GetButtonAsync(buttonId);
-        if (button == null || button.Panel.GuildId != ctx.Guild.Id)
-        {
-            await ctx.Channel.SendErrorAsync("Button not found.", Config);
-            return;
-        }
-
-        // Get or create modal config
-        var modalConfig = new ModalConfiguration();
-        if (!string.IsNullOrWhiteSpace(button.ModalJson))
-        {
-            try
+            // Get or create modal config
+            var modalConfig = new ModalConfiguration();
+            if (!string.IsNullOrWhiteSpace(button.ModalJson))
             {
-                modalConfig = JsonSerializer.Deserialize<ModalConfiguration>(button.ModalJson);
-            }
-            catch
-            {
-                // If old format, try to preserve fields
                 try
                 {
-                    modalConfig.Fields =
-                        JsonSerializer.Deserialize<Dictionary<string, ModalFieldConfig>>(button.ModalJson);
+                    modalConfig = JsonSerializer.Deserialize<ModalConfiguration>(button.ModalJson);
                 }
                 catch
                 {
-                    modalConfig.Fields = new Dictionary<string, ModalFieldConfig>();
+                    // If old format, try to preserve fields
+                    try
+                    {
+                        modalConfig.Fields =
+                            JsonSerializer.Deserialize<Dictionary<string, ModalFieldConfig>>(button.ModalJson);
+                    }
+                    catch
+                    {
+                        modalConfig.Fields = new Dictionary<string, ModalFieldConfig>();
+                    }
                 }
             }
+
+            // Process optional field config
+            var fieldSettings = new ModalFieldConfig
+            {
+                Label = label,
+                Style = 1, // Default to short style
+                Required = true, // Default to required
+                MinLength = 1,
+                MaxLength = 1000
+            };
+
+            if (!string.IsNullOrWhiteSpace(fieldConfig))
+            {
+                var options = fieldConfig.Split(',')
+                    .Select(o => o.Trim().ToLower())
+                    .ToList();
+
+                foreach (var option in options)
+                {
+                    if (option == "paragraph")
+                        fieldSettings.Style = 2;
+                    else if (option == "optional")
+                        fieldSettings.Required = false;
+                    else if (option.StartsWith("min:") && int.TryParse(option[4..], out var min))
+                        fieldSettings.MinLength = Math.Max(0, Math.Min(min, 4000));
+                    else if (option.StartsWith("max:") && int.TryParse(option[4..], out var max))
+                        fieldSettings.MaxLength = Math.Max(fieldSettings.MinLength ?? 0, Math.Min(max, 4000));
+                }
+            }
+
+            // Add or update field
+            var fieldId = label.ToLower().Replace(" ", "_");
+            modalConfig.Fields[fieldId] = fieldSettings;
+
+            // Update button
+            await Service.UpdateButtonSettingsAsync(ctx.Guild, buttonId, new Dictionary<string, object>
+            {
+                {
+                    "modalJson", JsonSerializer.Serialize(modalConfig)
+                }
+            });
+
+            var embed = new EmbedBuilder()
+                .WithTitle("Modal Field Added")
+                .WithDescription($"Added field '{label}' to the ticket creation modal.")
+                .AddField("Field ID", fieldId, true)
+                .AddField("Style", fieldSettings.Style == 2 ? "Paragraph" : "Short", true)
+                .AddField("Required", fieldSettings.Required, true)
+                .AddField("Length Limits",
+                    $"Min: {fieldSettings.MinLength ?? 0}, Max: {fieldSettings.MaxLength ?? 4000}",
+                    true)
+                .WithOkColor();
+
+            await ctx.Channel.SendMessageAsync(embed: embed.Build());
         }
 
-        // Process optional field config
-        var fieldSettings = new ModalFieldConfig
+        /// <summary>
+        ///     Removes a field from a ticket creation modal
+        /// </summary>
+        [Cmd]
+        [RequireContext(ContextType.Guild)]
+        [UserPerm(GuildPermission.Administrator)]
+        public async Task RemoveModalField(int buttonId, string fieldId)
         {
-            Label = label,
-            Style = 1, // Default to short style
-            Required = true, // Default to required
-            MinLength = 1,
-            MaxLength = 1000
-        };
-
-        if (!string.IsNullOrWhiteSpace(fieldConfig))
-        {
-            var options = fieldConfig.Split(',')
-                .Select(o => o.Trim().ToLower())
-                .ToList();
-
-            foreach (var option in options)
+            var button = await Service.GetButtonAsync(buttonId);
+            if (button == null || button.Panel.GuildId != ctx.Guild.Id)
             {
-                if (option == "paragraph")
-                    fieldSettings.Style = 2;
-                else if (option == "optional")
-                    fieldSettings.Required = false;
-                else if (option.StartsWith("min:") && int.TryParse(option[4..], out var min))
-                    fieldSettings.MinLength = Math.Max(0, Math.Min(min, 4000));
-                else if (option.StartsWith("max:") && int.TryParse(option[4..], out var max))
-                    fieldSettings.MaxLength = Math.Max(fieldSettings.MinLength ?? 0, Math.Min(max, 4000));
+                await ctx.Channel.SendErrorAsync("Button not found.", Config);
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(button.ModalJson))
+            {
+                await ctx.Channel.SendErrorAsync("This button has no modal configuration.", Config);
+                return;
+            }
+
+            var modalFields = JsonSerializer.Deserialize<Dictionary<string, ModalFieldConfig>>(button.ModalJson);
+            if (!modalFields.ContainsKey(fieldId))
+            {
+                await ctx.Channel.SendErrorAsync("Field not found in modal configuration.", Config);
+                return;
+            }
+
+            modalFields.Remove(fieldId);
+
+            // Update button
+            await Service.UpdateButtonSettingsAsync(ctx.Guild, buttonId, new Dictionary<string, object>
+            {
+                {
+                    "modalJson", modalFields.Any() ? JsonSerializer.Serialize(modalFields) : null
+                }
+            });
+
+            await ctx.Channel.SendConfirmAsync($"Removed field '{fieldId}' from the modal configuration.");
+        }
+
+        /// <summary>
+        ///     Lists all fields in a ticket creation modal
+        /// </summary>
+        [Cmd]
+        [RequireContext(ContextType.Guild)]
+        [UserPerm(GuildPermission.Administrator)]
+        public async Task ListModalFields(int buttonId)
+        {
+            var button = await Service.GetButtonAsync(buttonId);
+            if (button == null || button.Panel.GuildId != ctx.Guild.Id)
+            {
+                await ctx.Channel.SendErrorAsync("Button not found.", Config);
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(button.ModalJson))
+            {
+                await ctx.Channel.SendErrorAsync("This button has no modal configuration.", Config);
+                return;
+            }
+
+            var modalFields = JsonSerializer.Deserialize<Dictionary<string, ModalFieldConfig>>(button.ModalJson);
+
+            var embed = new EmbedBuilder()
+                .WithTitle($"Modal Fields for {button.Label}")
+                .WithOkColor();
+
+            foreach (var (fieldId, config) in modalFields)
+            {
+                embed.AddField(fieldId,
+                    $"Label: {config.Label}\n" +
+                    $"Style: {(config.Style == 2 ? "Paragraph" : "Short")}\n" +
+                    $"Required: {config.Required}\n" +
+                    $"Length: {config.MinLength ?? 0}-{config.MaxLength ?? 4000}");
+            }
+
+            await ctx.Channel.SendMessageAsync(embed: embed.Build());
+        }
+
+        /// <summary>
+        ///     Updates the modal help command to include title configuration
+        /// </summary>
+        [Cmd]
+        [RequireContext(ContextType.Guild)]
+        [UserPerm(GuildPermission.Administrator)]
+        public async Task ModalHelp()
+        {
+            var embed = new EmbedBuilder()
+                .WithTitle("Modal Configuration Help")
+                .WithDescription(
+                    "Modals are forms that appear when users create tickets. You can configure what fields appear in these forms.\n\n" +
+                    $"`{Config.Prefix}setmodaltitle <buttonId> <title>`\n" +
+                    "Sets the title shown at the top of the modal\n\n" +
+                    $"`{Config.Prefix}addmodalfield <buttonId> <label> [options]`\n" +
+                    "Options (comma-separated):\n" +
+                    "• paragraph - Makes the field multi-line\n" +
+                    "• optional - Makes the field not required\n" +
+                    "• min:X - Sets minimum length (0-4000)\n" +
+                    "• max:X - Sets maximum length (0-4000)\n\n" +
+                    $"`{Config.Prefix}removemodalfield <buttonId> <fieldId>`\n" +
+                    "Removes a field from the modal\n\n" +
+                    $"`{Config.Prefix}listmodalfields <buttonId>`\n" +
+                    "Shows all fields and title in a button's modal")
+                .WithOkColor();
+
+            await ctx.Channel.SendMessageAsync(embed: embed.Build());
+        }
+
+
+        /// <summary>
+        ///     Lists all components of a specific ticket panel
+        /// </summary>
+        /// <param name="panelId">The message ID of the panel to inspect</param>
+        /// <remarks>
+        ///     Shows detailed information about a panel's buttons and select menus, including:
+        ///     - Component IDs and custom IDs
+        ///     - Labels and styles
+        ///     - Modal and custom message configurations
+        ///     - Category and role settings
+        /// </remarks>
+        [Cmd]
+        [RequireContext(ContextType.Guild)]
+        [UserPerm(GuildPermission.ManageChannels)]
+        public async Task TicketListPanel(ulong panelId)
+        {
+            try
+            {
+                var buttons = await Service.GetPanelButtonsAsync(panelId);
+                var menus = await Service.GetPanelSelectMenusAsync(panelId);
+
+                var embed = new EmbedBuilder()
+                    .WithTitle("Panel Components")
+                    .WithOkColor();
+
+                if (buttons.Any())
+                {
+                    var buttonText = new StringBuilder();
+                    foreach (var button in buttons)
+                    {
+                        buttonText.AppendLine($"**Button ID: {button.Id}**")
+                            .AppendLine($"└ Label: {button.Label}")
+                            .AppendLine($"└ Style: {button.Style}")
+                            .AppendLine($"└ Custom ID: {button.CustomId}")
+                            .AppendLine($"└ Has Modal: {(button.HasModal ? "Yes" : "No")}")
+                            .AppendLine($"└ Has Custom Open Message: {(button.HasCustomOpenMessage ? "Yes" : "No")}")
+                            .AppendLine(
+                                $"└ Category: {(button.CategoryId.HasValue ? $"<#{button.CategoryId}>" : "None")}")
+                            .AppendLine(
+                                $"└ Archive Category: {(button.ArchiveCategoryId.HasValue ? $"<#{button.ArchiveCategoryId}>" : "None")}")
+                            .AppendLine(
+                                $"└ Support Roles: {string.Join(", ", button.SupportRoles.Select(r => $"<@&{r}>"))}")
+                            .AppendLine(
+                                $"└ Viewer Roles: {string.Join(", ", button.ViewerRoles.Select(r => $"<@&{r}>"))}")
+                            .AppendLine();
+                    }
+
+                    embed.AddField("Buttons", buttonText.ToString());
+                }
+
+                if (menus.Any())
+                {
+                    var menuText = new StringBuilder();
+                    foreach (var menu in menus)
+                    {
+                        menuText.AppendLine($"**Menu ID: {menu.Id}**")
+                            .AppendLine($"└ Custom ID: {menu.CustomId}")
+                            .AppendLine($"└ Placeholder: {menu.Placeholder}")
+                            .AppendLine("└ Options:");
+
+                        foreach (var option in menu.Options)
+                        {
+                            menuText.AppendLine($"  **Option ID: {option.Id}**")
+                                .AppendLine($"  └ Label: {option.Label}")
+                                .AppendLine($"  └ Value: {option.Value}")
+                                .AppendLine($"  └ Description: {option.Description}")
+                                .AppendLine($"  └ Has Modal: {(option.HasModal ? "Yes" : "No")}")
+                                .AppendLine(
+                                    $"  └ Has Custom Open Message: {(option.HasCustomOpenMessage ? "Yes" : "No")}")
+                                .AppendLine(
+                                    $"  └ Category: {(option.CategoryId.HasValue ? $"<#{option.CategoryId}>" : "None")}")
+                                .AppendLine(
+                                    $"  └ Archive Category: {(option.ArchiveCategoryId.HasValue ? $"<#{option.ArchiveCategoryId}>" : "None")}");
+                        }
+
+                        menuText.AppendLine();
+                    }
+
+                    embed.AddField("Select Menus", menuText.ToString());
+                }
+
+                if (!buttons.Any() && !menus.Any())
+                {
+                    embed.WithDescription("No components found on this panel.");
+                }
+
+                await ctx.Channel.SendMessageAsync(embed: embed.Build());
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error listing panel components for panel {PanelId}", panelId);
+                await ctx.Channel.SendErrorAsync("An error occurred while listing panel components.", Config);
             }
         }
 
-        // Add or update field
-        var fieldId = label.ToLower().Replace(" ", "_");
-        modalConfig.Fields[fieldId] = fieldSettings;
-
-        // Update button
-        await Service.UpdateButtonSettingsAsync(ctx.Guild, buttonId, new Dictionary<string, object>
+        /// <summary>
+        ///     Lists all ticket panels in the guild
+        /// </summary>
+        /// <remarks>
+        ///     Shows a paginated list of all panels in the server, including:
+        ///     - Channel locations
+        ///     - Message IDs
+        ///     - Button and select menu configurations
+        ///     - Associated categories and roles
+        /// </remarks>
+        [Cmd]
+        [RequireContext(ContextType.Guild)]
+        [UserPerm(GuildPermission.ManageChannels)]
+        public async Task TicketListPanels()
         {
+            try
             {
-                "modalJson", JsonSerializer.Serialize(modalConfig)
+                var panels = await Service.GetAllPanelsAsync(Context.Guild.Id);
+
+                if (!panels.Any())
+                {
+                    await ctx.Channel.SendErrorAsync("No ticket panels found in this server.", Config);
+                    return;
+                }
+
+                var paginator = new LazyPaginatorBuilder()
+                    .AddUser(ctx.User)
+                    .WithPageFactory(PageFactory)
+                    .WithFooter(PaginatorFooter.PageNumber | PaginatorFooter.Users)
+                    .WithMaxPageIndex(panels.Count / 5)
+                    .WithDefaultEmotes()
+                    .WithActionOnCancellation(ActionOnStop.DeleteMessage)
+                    .Build();
+
+                await interactivity.SendPaginatorAsync(paginator, Context.Channel, TimeSpan.FromMinutes(60));
+
+                async Task<PageBuilder> PageFactory(int page)
+                {
+                    await Task.CompletedTask;
+                    var pagePanels = panels.Skip(5 * page).Take(5);
+                    var pageBuilder = new PageBuilder()
+                        .WithTitle("Ticket Panels")
+                        .WithOkColor();
+
+                    foreach (var panel in pagePanels)
+                    {
+                        var channel = await Context.Guild.GetChannelAsync(panel.ChannelId) as ITextChannel;
+                        var fieldBuilder = new StringBuilder();
+
+                        fieldBuilder.AppendLine($"Channel: #{channel?.Name ?? "deleted-channel"}");
+
+                        if (panel.Buttons.Any())
+                        {
+                            fieldBuilder.AppendLine("\n**Buttons:**");
+                            foreach (var button in panel.Buttons)
+                            {
+                                fieldBuilder.AppendLine($"• ID: {button.Id} | Label: {button.Label}")
+                                    .AppendLine($"  Style: {button.Style}")
+                                    .AppendLine(
+                                        $"  Category: {(button.CategoryId.HasValue ? $"<#{button.CategoryId}>" : "None")}")
+                                    .AppendLine(
+                                        $"  Support Roles: {string.Join(", ", button.SupportRoles.Select(r => $"<@&{r}>"))}");
+                            }
+                        }
+
+                        if (panel.SelectMenus.Any())
+                        {
+                            fieldBuilder.AppendLine("\n**Select Menus:**");
+                            foreach (var menu in panel.SelectMenus)
+                            {
+                                fieldBuilder.AppendLine($"• ID: {menu.Id} | Options: {menu.Options.Count}");
+                                foreach (var option in menu.Options)
+                                {
+                                    fieldBuilder.AppendLine($"  - Option ID: {option.Id} | Label: {option.Label}");
+                                }
+                            }
+                        }
+
+                        pageBuilder.AddField($"Panel ID: {panel.MessageId}", fieldBuilder.ToString());
+                    }
+
+                    return pageBuilder;
+                }
             }
-        });
-
-        var embed = new EmbedBuilder()
-            .WithTitle("Modal Field Added")
-            .WithDescription($"Added field '{label}' to the ticket creation modal.")
-            .AddField("Field ID", fieldId, true)
-            .AddField("Style", fieldSettings.Style == 2 ? "Paragraph" : "Short", true)
-            .AddField("Required", fieldSettings.Required, true)
-            .AddField("Length Limits", $"Min: {fieldSettings.MinLength ?? 0}, Max: {fieldSettings.MaxLength ?? 4000}",
-                true)
-            .WithOkColor();
-
-        await ctx.Channel.SendMessageAsync(embed: embed.Build());
-    }
-
-    /// <summary>
-    ///     Removes a field from a ticket creation modal
-    /// </summary>
-    [Cmd]
-    [RequireContext(ContextType.Guild)]
-    [UserPerm(GuildPermission.Administrator)]
-    public async Task RemoveModalField(int buttonId, string fieldId)
-    {
-        var button = await Service.GetButtonAsync(buttonId);
-        if (button == null || button.Panel.GuildId != ctx.Guild.Id)
-        {
-            await ctx.Channel.SendErrorAsync("Button not found.", Config);
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(button.ModalJson))
-        {
-            await ctx.Channel.SendErrorAsync("This button has no modal configuration.", Config);
-            return;
-        }
-
-        var modalFields = JsonSerializer.Deserialize<Dictionary<string, ModalFieldConfig>>(button.ModalJson);
-        if (!modalFields.ContainsKey(fieldId))
-        {
-            await ctx.Channel.SendErrorAsync("Field not found in modal configuration.", Config);
-            return;
-        }
-
-        modalFields.Remove(fieldId);
-
-        // Update button
-        await Service.UpdateButtonSettingsAsync(ctx.Guild, buttonId, new Dictionary<string, object>
-        {
+            catch (Exception ex)
             {
-                "modalJson", modalFields.Any() ? JsonSerializer.Serialize(modalFields) : null
+                Log.Error(ex, "Error listing panels");
+                await ctx.Channel.SendErrorAsync("An error occurred while listing panels.", Config);
             }
-        });
-
-        await ctx.Channel.SendConfirmAsync($"Removed field '{fieldId}' from the modal configuration.");
-    }
-
-    /// <summary>
-    ///     Lists all fields in a ticket creation modal
-    /// </summary>
-    [Cmd]
-    [RequireContext(ContextType.Guild)]
-    [UserPerm(GuildPermission.Administrator)]
-    public async Task ListModalFields(int buttonId)
-    {
-        var button = await Service.GetButtonAsync(buttonId);
-        if (button == null || button.Panel.GuildId != ctx.Guild.Id)
-        {
-            await ctx.Channel.SendErrorAsync("Button not found.", Config);
-            return;
         }
-
-        if (string.IsNullOrWhiteSpace(button.ModalJson))
-        {
-            await ctx.Channel.SendErrorAsync("This button has no modal configuration.", Config);
-            return;
-        }
-
-        var modalFields = JsonSerializer.Deserialize<Dictionary<string, ModalFieldConfig>>(button.ModalJson);
-
-        var embed = new EmbedBuilder()
-            .WithTitle($"Modal Fields for {button.Label}")
-            .WithOkColor();
-
-        foreach (var (fieldId, config) in modalFields)
-        {
-            embed.AddField(fieldId,
-                $"Label: {config.Label}\n" +
-                $"Style: {(config.Style == 2 ? "Paragraph" : "Short")}\n" +
-                $"Required: {config.Required}\n" +
-                $"Length: {config.MinLength ?? 0}-{config.MaxLength ?? 4000}");
-        }
-
-        await ctx.Channel.SendMessageAsync(embed: embed.Build());
-    }
-
-    /// <summary>
-    ///     Updates the modal help command to include title configuration
-    /// </summary>
-    [Cmd]
-    [RequireContext(ContextType.Guild)]
-    [UserPerm(GuildPermission.Administrator)]
-    public async Task ModalHelp()
-    {
-        var embed = new EmbedBuilder()
-            .WithTitle("Modal Configuration Help")
-            .WithDescription(
-                "Modals are forms that appear when users create tickets. You can configure what fields appear in these forms.\n\n" +
-                $"`{Config.Prefix}setmodaltitle <buttonId> <title>`\n" +
-                "Sets the title shown at the top of the modal\n\n" +
-                $"`{Config.Prefix}addmodalfield <buttonId> <label> [options]`\n" +
-                "Options (comma-separated):\n" +
-                "• paragraph - Makes the field multi-line\n" +
-                "• optional - Makes the field not required\n" +
-                "• min:X - Sets minimum length (0-4000)\n" +
-                "• max:X - Sets maximum length (0-4000)\n\n" +
-                $"`{Config.Prefix}removemodalfield <buttonId> <fieldId>`\n" +
-                "Removes a field from the modal\n\n" +
-                $"`{Config.Prefix}listmodalfields <buttonId>`\n" +
-                "Shows all fields and title in a button's modal")
-            .WithOkColor();
-
-        await ctx.Channel.SendMessageAsync(embed: embed.Build());
     }
 }

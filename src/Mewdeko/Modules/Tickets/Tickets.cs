@@ -687,4 +687,6 @@ public partial class Tickets : MewdekoModuleBase<TicketService>
         else
             await ctx.Channel.SendErrorAsync(Strings.NoteAddFailed(ctx.Guild.Id), Config);
     }
+
+
 }

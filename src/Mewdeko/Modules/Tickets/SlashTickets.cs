@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using Discord.Interactions;
 using Fergun.Interactive;
@@ -43,6 +44,190 @@ public class TicketCommands : MewdekoSlashModuleBase<TicketService>
     )
     {
         return RespondWithModalAsync<PanelCreationModal>($"create_panel:{channel.Id}");
+    }
+
+    /// <summary>
+    ///     Lists all components of a specific ticket panel
+    /// </summary>
+    /// <remarks>
+    ///     This command provides detailed information about all components on a panel, including:
+    ///     - Button and select menu IDs
+    ///     - Component configurations
+    ///     - Associated categories and roles
+    ///     - Modal and custom message settings
+    /// </remarks>
+    /// <param name="panelId">The message ID of the panel to list components from</param>
+    [SlashCommand("listpanel", "Lists all components of a ticket panel")]
+    [RequireContext(ContextType.Guild)]
+    public async Task ListPanel(
+        [Summary("panel-id", "Message ID of the panel to list")]
+        ulong panelId)
+    {
+        try
+        {
+            var buttons = await Service.GetPanelButtonsAsync(panelId);
+            var menus = await Service.GetPanelSelectMenusAsync(panelId);
+
+            var embed = new EmbedBuilder()
+                .WithTitle("Panel Components")
+                .WithOkColor();
+
+            if (buttons.Any())
+            {
+                var buttonText = new StringBuilder();
+                foreach (var button in buttons)
+                {
+                    buttonText.AppendLine($"**Button ID: {button.Id}**")
+                        .AppendLine($"└ Label: {button.Label}")
+                        .AppendLine($"└ Style: {button.Style}")
+                        .AppendLine($"└ Custom ID: {button.CustomId}")
+                        .AppendLine($"└ Has Modal: {(button.HasModal ? "Yes" : "No")}")
+                        .AppendLine($"└ Has Custom Open Message: {(button.HasCustomOpenMessage ? "Yes" : "No")}")
+                        .AppendLine($"└ Category: {(button.CategoryId.HasValue ? $"<#{button.CategoryId}>" : "None")}")
+                        .AppendLine(
+                            $"└ Archive Category: {(button.ArchiveCategoryId.HasValue ? $"<#{button.ArchiveCategoryId}>" : "None")}")
+                        .AppendLine(
+                            $"└ Support Roles: {string.Join(", ", button.SupportRoles.Select(r => $"<@&{r}>"))}")
+                        .AppendLine($"└ Viewer Roles: {string.Join(", ", button.ViewerRoles.Select(r => $"<@&{r}>"))}")
+                        .AppendLine();
+                }
+
+                embed.AddField("Buttons", buttonText.ToString());
+            }
+
+            if (menus.Any())
+            {
+                var menuText = new StringBuilder();
+                foreach (var menu in menus)
+                {
+                    menuText.AppendLine($"**Menu ID: {menu.Id}**")
+                        .AppendLine($"└ Custom ID: {menu.CustomId}")
+                        .AppendLine($"└ Placeholder: {menu.Placeholder}")
+                        .AppendLine("└ Options:");
+
+                    foreach (var option in menu.Options)
+                    {
+                        menuText.AppendLine($"  **Option ID: {option.Id}**")
+                            .AppendLine($"  └ Label: {option.Label}")
+                            .AppendLine($"  └ Value: {option.Value}")
+                            .AppendLine($"  └ Description: {option.Description}")
+                            .AppendLine($"  └ Has Modal: {(option.HasModal ? "Yes" : "No")}")
+                            .AppendLine($"  └ Has Custom Open Message: {(option.HasCustomOpenMessage ? "Yes" : "No")}")
+                            .AppendLine(
+                                $"  └ Category: {(option.CategoryId.HasValue ? $"<#{option.CategoryId}>" : "None")}")
+                            .AppendLine(
+                                $"  └ Archive Category: {(option.ArchiveCategoryId.HasValue ? $"<#{option.ArchiveCategoryId}>" : "None")}");
+                    }
+
+                    menuText.AppendLine();
+                }
+
+                embed.AddField("Select Menus", menuText.ToString());
+            }
+
+            if (!buttons.Any() && !menus.Any())
+            {
+                embed.WithDescription("No components found on this panel.");
+            }
+
+            await RespondAsync(embed: embed.Build());
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error listing panel components for panel {PanelId}", panelId);
+            await RespondAsync("An error occurred while listing panel components.", ephemeral: true);
+        }
+    }
+
+    /// <summary>
+    ///     Lists all ticket panels in the guild
+    /// </summary>
+    /// <remarks>
+    ///     This command displays paginated information about all ticket panels in the server, including:
+    ///     - Channel locations
+    ///     - Message IDs
+    ///     - Component configurations
+    ///     - Associated categories and roles
+    ///     Each panel's information is shown on its own page for easy navigation.
+    /// </remarks>
+    [SlashCommand("listpanels", "Lists all ticket panels in the server")]
+    [RequireContext(ContextType.Guild)]
+    public async Task ListPanels()
+    {
+        try
+        {
+            var panels = await Service.GetAllPanelsAsync(Context.Guild.Id);
+
+            if (!panels.Any())
+            {
+                await RespondAsync("No ticket panels found in this server.", ephemeral: true);
+                return;
+            }
+
+            var paginator = new LazyPaginatorBuilder()
+                .AddUser(ctx.User)
+                .WithPageFactory(PageFactory)
+                .WithFooter(PaginatorFooter.PageNumber | PaginatorFooter.Users)
+                .WithMaxPageIndex(panels.Count / 5)
+                .WithDefaultEmotes()
+                .WithActionOnCancellation(ActionOnStop.DeleteMessage)
+                .Build();
+
+            await _interactivity.SendPaginatorAsync(paginator, Context.Interaction, TimeSpan.FromMinutes(60));
+
+            async Task<PageBuilder> PageFactory(int page)
+            {
+                await Task.CompletedTask;
+                var pagePanels = panels.Skip(5 * page).Take(5);
+                var pageBuilder = new PageBuilder()
+                    .WithTitle("Ticket Panels")
+                    .WithOkColor();
+
+                foreach (var panel in pagePanels)
+                {
+                    var channel = await Context.Guild.GetChannelAsync(panel.ChannelId) as ITextChannel;
+                    var fieldBuilder = new StringBuilder();
+
+                    fieldBuilder.AppendLine($"Channel: #{channel?.Name ?? "deleted-channel"}");
+
+                    if (panel.Buttons.Any())
+                    {
+                        fieldBuilder.AppendLine("\n**Buttons:**");
+                        foreach (var button in panel.Buttons)
+                        {
+                            fieldBuilder.AppendLine($"• ID: {button.Id} | Label: {button.Label}")
+                                .AppendLine($"  Style: {button.Style}")
+                                .AppendLine(
+                                    $"  Category: {(button.CategoryId.HasValue ? $"<#{button.CategoryId}>" : "None")}")
+                                .AppendLine(
+                                    $"  Support Roles: {string.Join(", ", button.SupportRoles.Select(r => $"<@&{r}>"))}");
+                        }
+                    }
+
+                    if (panel.SelectMenus.Any())
+                    {
+                        fieldBuilder.AppendLine("\n**Select Menus:**");
+                        foreach (var menu in panel.SelectMenus)
+                        {
+                            fieldBuilder.AppendLine($"• ID: {menu.Id} | Options: {menu.Options.Count}");
+                            foreach (var option in menu.Options)
+                            {
+                                fieldBuilder.AppendLine($"  - Option ID: {option.Id} | Label: {option.Label}");
+                            }
+                        }
+                    }
+
+                    pageBuilder.AddField($"Panel ID: {panel.MessageId}", fieldBuilder.ToString());
+                }
+
+                return pageBuilder;
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error listing panels");
+            await RespondAsync("An error occurred while listing panels.", ephemeral: true);
+        }
     }
 
     /// <summary>

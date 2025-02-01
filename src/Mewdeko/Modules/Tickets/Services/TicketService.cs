@@ -1549,6 +1549,127 @@ public class TicketService : INService
     }
 
     /// <summary>
+/// Gets a formatted list of all buttons on a specific ticket panel
+/// </summary>
+/// <param name="panelId">The message ID of the panel to get buttons from</param>
+/// <returns>A list of ButtonInfo objects containing button details</returns>
+public async Task<List<ButtonInfo>> GetPanelButtonsAsync(ulong panelId)
+{
+    await using var ctx = await _db.GetContextAsync();
+    var panel = await ctx.TicketPanels
+        .Include(p => p.Buttons)
+        .FirstOrDefaultAsync(p => p.MessageId == panelId);
+
+    if (panel == null)
+        return new List<ButtonInfo>();
+
+    return panel.Buttons.Select(b => new ButtonInfo
+    {
+        Id = b.Id,
+        CustomId = b.CustomId,
+        Label = b.Label,
+        Style = b.Style,
+        Emoji = b.Emoji,
+        CategoryId = b.CategoryId,
+        ArchiveCategoryId = b.ArchiveCategoryId,
+        SupportRoles = b.SupportRoles,
+        ViewerRoles = b.ViewerRoles,
+        HasModal = !string.IsNullOrEmpty(b.ModalJson),
+        HasCustomOpenMessage = !string.IsNullOrEmpty(b.OpenMessageJson)
+    }).ToList();
+}
+
+/// <summary>
+/// Gets a formatted list of all select menus on a specific ticket panel
+/// </summary>
+/// <param name="panelId">The message ID of the panel to get select menus from</param>
+/// <returns>A list of SelectMenuInfo objects containing menu details</returns>
+public async Task<List<SelectMenuInfo>> GetPanelSelectMenusAsync(ulong panelId)
+{
+    await using var ctx = await _db.GetContextAsync();
+    var panel = await ctx.TicketPanels
+        .Include(p => p.SelectMenus)
+        .ThenInclude(m => m.Options)
+        .FirstOrDefaultAsync(p => p.MessageId == panelId);
+
+    if (panel == null)
+        return new List<SelectMenuInfo>();
+
+    return panel.SelectMenus.Select(m => new SelectMenuInfo
+    {
+        Id = m.Id,
+        CustomId = m.CustomId,
+        Placeholder = m.Placeholder,
+        Options = m.Options.Select(o => new SelectOptionInfo
+        {
+            Id = o.Id,
+            Label = o.Label,
+            Value = o.Value,
+            Description = o.Description,
+            Emoji = o.Emoji,
+            CategoryId = o.CategoryId,
+            ArchiveCategoryId = o.ArchiveCategoryId,
+            HasModal = !string.IsNullOrEmpty(o.ModalJson),
+            HasCustomOpenMessage = !string.IsNullOrEmpty(o.OpenMessageJson)
+        }).ToList()
+    }).ToList();
+}
+
+/// <summary>
+/// Gets a detailed list of all ticket panels and their components in a guild
+/// </summary>
+/// <param name="guildId">The ID of the guild to get panels from</param>
+/// <returns>A list of PanelInfo objects containing complete panel details</returns>
+public async Task<List<PanelInfo>> GetAllPanelsAsync(ulong guildId)
+{
+    await using var ctx = await _db.GetContextAsync();
+    var panels = await ctx.TicketPanels
+        .Include(p => p.Buttons)
+        .Include(p => p.SelectMenus)
+        .ThenInclude(m => m.Options)
+        .Where(p => p.GuildId == guildId)
+        .ToListAsync();
+
+    return panels.Select(p => new PanelInfo
+    {
+        MessageId = p.MessageId,
+        ChannelId = p.ChannelId,
+        Buttons = p.Buttons.Select(b => new ButtonInfo
+        {
+            Id = b.Id,
+            CustomId = b.CustomId,
+            Label = b.Label,
+            Style = b.Style,
+            Emoji = b.Emoji,
+            CategoryId = b.CategoryId,
+            ArchiveCategoryId = b.ArchiveCategoryId,
+            SupportRoles = b.SupportRoles,
+            ViewerRoles = b.ViewerRoles,
+            HasModal = !string.IsNullOrEmpty(b.ModalJson),
+            HasCustomOpenMessage = !string.IsNullOrEmpty(b.OpenMessageJson)
+        }).ToList(),
+        SelectMenus = p.SelectMenus.Select(m => new SelectMenuInfo
+        {
+            Id = m.Id,
+            CustomId = m.CustomId,
+            Placeholder = m.Placeholder,
+            Options = m.Options.Select(o => new SelectOptionInfo
+            {
+                Id = o.Id,
+                Label = o.Label,
+                Value = o.Value,
+                Description = o.Description,
+                Emoji = o.Emoji,
+                CategoryId = o.CategoryId,
+                ArchiveCategoryId = o.ArchiveCategoryId,
+                HasModal = !string.IsNullOrEmpty(o.ModalJson),
+                HasCustomOpenMessage = !string.IsNullOrEmpty(o.OpenMessageJson)
+            }).ToList()
+        }).ToList()
+    }).ToList();
+}
+
+    /// <summary>
     ///     Retrieves a ticket by its ID.
     /// </summary>
     /// <param name="ticketId">The ID of the ticket.</param>
