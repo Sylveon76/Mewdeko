@@ -101,6 +101,7 @@ public partial class Permissions(
 
 
         await using var dbContext = await dbProvider.GetContextAsync();
+
         {
             var config = await dbContext.GcWithPermissionsv2For(ctx.Guild.Id);
             config.PermissionRole = role.Id.ToString();

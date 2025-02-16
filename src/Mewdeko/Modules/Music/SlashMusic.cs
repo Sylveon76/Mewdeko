@@ -13,6 +13,7 @@ using Mewdeko.Common.Attributes.InteractionCommands;
 using Mewdeko.Modules.Music.Common;
 using Mewdeko.Modules.Music.CustomPlayer;
 using Serilog;
+using SpotifyAPI.Web;
 using Swan;
 
 namespace Mewdeko.Modules.Music;
@@ -37,7 +38,8 @@ public class SlashMusic(
     {
         var (player, result) = await GetPlayerAsync();
         if (string.IsNullOrWhiteSpace(result))
-            await ReplyConfirmAsync(Strings.MusicJoinSuccess(ctx.Guild.Id, player.VoiceChannelId)).ConfigureAwait(false);
+            await ReplyConfirmAsync(Strings.MusicJoinSuccess(ctx.Guild.Id, player.VoiceChannelId))
+                .ConfigureAwait(false);
         else
         {
             var eb = new EmbedBuilder()
@@ -145,144 +147,50 @@ public class SlashMusic(
     }
 
     /// <summary>
-    ///     Plays a track in the current voice channel.
+    ///     Plays music from various sources including YouTube, Spotify, and direct searches.
+    ///     Supports tracks, playlists, and albums from supported platforms.
     /// </summary>
-    /// <param name="query">The query to search for.</param>
-    [SlashCommand("play", "Plays a song from a query or URL")]
+    /// <param name="query">URL or search query for the music to play</param>
+    [SlashCommand("play", "Plays music from various sources")]
     [RequireContext(ContextType.Guild)]
     [CheckPermissions]
     public async Task Play(string query)
     {
-        var (player, result) = await GetPlayerAsync();
+        await DeferAsync();
 
-        if (result is not null)
+        try
         {
-            var eb = new EmbedBuilder()
-                .WithErrorColor()
-                .WithTitle(Strings.MusicPlayerError(ctx.Guild.Id))
-                .WithDescription(result);
-
-            await Context.Channel.SendMessageAsync(embed: eb.Build()).ConfigureAwait(false);
-            return;
-        }
-
-        await player.SetVolumeAsync(await player.GetVolume() / 100f).ConfigureAwait(false);
-
-        var queue = await cache.GetMusicQueue(Context.Guild.Id);
-        if (Uri.TryCreate(query, UriKind.Absolute, out var uri))
-        {
-            TrackLoadOptions options;
-            if (query.Contains("music.youtube"))
+            var (player, result) = await GetPlayerAsync();
+            if (result is not null)
             {
-                options = new TrackLoadOptions
-                {
-                    SearchMode = TrackSearchMode.YouTubeMusic
-                };
-            }
-            else if (query.Contains("youtube.com") || query.Contains("youtu.be"))
-            {
-                options = new TrackLoadOptions
-                {
-                    SearchMode = TrackSearchMode.YouTube
-                };
-            }
-            else if (query.Contains("open.spotify") || query.Contains("spotify.com"))
-            {
-                options = new TrackLoadOptions
-                {
-                    SearchMode = TrackSearchMode.Spotify
-                };
-            }
-            else if (query.Contains("soundcloud.com"))
-            {
-                options = new TrackLoadOptions
-                {
-                    SearchMode = TrackSearchMode.SoundCloud
-                };
-            }
-            else
-            {
-                options = new TrackLoadOptions
-                {
-                    SearchMode = TrackSearchMode.None
-                };
-            }
-
-            var trackResults = await service.Tracks.LoadTracksAsync(query, options);
-            if (!trackResults.IsSuccess)
-            {
-                await ReplyErrorAsync(Strings.MusicSearchFail(ctx.Guild.Id)).ConfigureAwait(false);
-                return;
-            }
-
-            if (trackResults.Tracks.Length > 1)
-            {
-                var startIndex = queue.Count + 1;
-                queue.AddRange(trackResults.Tracks.Select(track =>
-                    new MewdekoTrack(startIndex++, track, new PartialUser
-                    {
-                        Id = Context.User.Id, Username = Context.User.Username, AvatarUrl = Context.User.GetAvatarUrl()
-                    })));
-                await cache.SetMusicQueue(Context.Guild.Id, queue);
-
                 var eb = new EmbedBuilder()
-                    .WithDescription(
-                        $"Added {trackResults.Tracks.Length} tracks to the queue from {trackResults.Playlist.Name}")
-                    .WithThumbnailUrl(trackResults.Tracks[0].ArtworkUri?.ToString())
-                    .WithOkColor()
-                    .Build();
+                    .WithErrorColor()
+                    .WithTitle(Strings.MusicPlayerError(Context.Guild.Id))
+                    .WithDescription(result);
 
-                await Context.Channel.SendMessageAsync(embed: eb).ConfigureAwait(false);
-            }
-            else
-            {
-                queue.Add(new MewdekoTrack(queue.Count + 1, trackResults.Tracks[0], new PartialUser
-                {
-                    Id = Context.User.Id, Username = Context.User.Username, AvatarUrl = Context.User.GetAvatarUrl()
-                }));
-                await cache.SetMusicQueue(Context.Guild.Id, queue);
-            }
-
-            if (player.CurrentItem is null)
-            {
-                await player.PlayAsync(trackResults.Tracks[0]).ConfigureAwait(false);
-                await cache.SetCurrentTrack(Context.Guild.Id, queue[0]);
-            }
-        }
-        else
-        {
-            var tracks = await service.Tracks.LoadTracksAsync(query, TrackSearchMode.YouTube);
-
-            if (!tracks.IsSuccess)
-            {
-                await ReplyErrorAsync(Strings.MusicNoTracks(ctx.Guild.Id)).ConfigureAwait(false);
+                await FollowupAsync(embed: eb.Build());
                 return;
             }
 
-            var trackList = tracks.Tracks.Take(25).ToList();
-            var selectMenu = new SelectMenuBuilder()
-                .WithCustomId($"track_select:{Context.User.Id}")
-                .WithPlaceholder(Strings.MusicSelectTracks(ctx.Guild.Id))
-                .WithMaxValues(trackList.Count)
-                .WithMinValues(1);
+            await player.SetVolumeAsync(await player.GetVolume() / 100f);
+            var queue = await cache.GetMusicQueue(Context.Guild.Id);
 
-            foreach (var track in trackList)
+            if (Uri.TryCreate(query, UriKind.Absolute, out var uri))
             {
-                var index = trackList.IndexOf(track);
-                selectMenu.AddOption(track.Title.Truncate(100), $"track_{index}");
+                await HandleUrlPlay(uri, queue, player);
             }
-
-            var eb = new EmbedBuilder()
-                .WithDescription(Strings.MusicSelectTracksEmbed(ctx.Guild.Id))
-                .WithOkColor()
-                .Build();
-
-            var components = new ComponentBuilder().WithSelectMenu(selectMenu).Build();
-
-            var message = await Context.Channel.SendMessageAsync(embed: eb, components: components);
-
-            await cache.Redis.GetDatabase().StringSetAsync($"{Context.User.Id}_{message.Id}_tracks",
-                JsonSerializer.Serialize(trackList), TimeSpan.FromMinutes(5));
+            else
+            {
+                await HandleSearchPlay(query);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error in Play command with query: {Query}", query);
+            await FollowupAsync(embed: new EmbedBuilder()
+                .WithErrorColor()
+                .WithDescription(Strings.MusicGenericError(Context.Guild.Id))
+                .Build());
         }
     }
 
@@ -470,7 +378,7 @@ public class SlashMusic(
         queue.Remove(track);
         queue.Insert(to - 1, track);
 
-        for (int i = 0; i < queue.Count; i++)
+        for (var i = 0; i < queue.Count; i++)
         {
             queue[i].Index = i + 1;
         }
@@ -544,7 +452,8 @@ public class SlashMusic(
         }
 
         await player.SeekAsync(player.CurrentItem.Track.Duration).ConfigureAwait(false);
-        await ReplyConfirmAsync(Strings.SkippedTo(ctx.Guild.Id, player.CurrentTrack.Author, player.CurrentTrack.Title)).ConfigureAwait(false);
+        await ReplyConfirmAsync(Strings.SkippedTo(ctx.Guild.Id, player.CurrentTrack.Author, player.CurrentTrack.Title))
+            .ConfigureAwait(false);
     }
 
     /// <summary>
@@ -822,6 +731,365 @@ public class SlashMusic(
         await cache.SetMusicQueue(ctx.Guild.Id, queue);
         await cache.Redis.GetDatabase().KeyDeleteAsync($"{ctx.User.Id}_{componentInteraction.Message.Id}_tracks");
         await ctx.Channel.DeleteMessageAsync(componentInteraction.Message.Id);
+    }
+
+    /// <summary>
+    ///     Determines the appropriate search mode based on the URL
+    /// </summary>
+    private static TrackSearchMode GetSearchMode(string url)
+    {
+        return url switch
+        {
+            var u when u.Contains("music.youtube") => TrackSearchMode.YouTubeMusic,
+            var u when u.Contains("youtube.com") || u.Contains("youtu.be") => TrackSearchMode.YouTube,
+            var u when u.Contains("soundcloud.com") => TrackSearchMode.SoundCloud,
+            _ => TrackSearchMode.None
+        };
+    }
+
+    /// <summary>
+    ///     Handles playing music from URLs (YouTube, Spotify, SoundCloud, etc.)
+    /// </summary>
+    private async Task HandleUrlPlay(Uri uri, List<MewdekoTrack> queue, MewdekoPlayer player)
+    {
+        var url = uri.ToString();
+
+        try
+        {
+            List<LavalinkTrack> tracks;
+            if (url.Contains("spotify.com"))
+            {
+                var spotify = await player.GetSpotifyClient();
+                tracks = await ProcessSpotifyUrl(url, spotify);
+
+                if (!tracks.Any())
+                {
+                    await FollowupAsync(embed: new EmbedBuilder()
+                        .WithErrorColor()
+                        .WithDescription(Strings.MusicSpotifyProcessingError(Context.Guild.Id))
+                        .Build());
+                    return;
+                }
+            }
+            else
+            {
+                var options = new TrackLoadOptions
+                {
+                    SearchMode = GetSearchMode(url)
+                };
+
+                var trackResults = await service.Tracks.LoadTracksAsync(url, options);
+                if (!trackResults.IsSuccess)
+                {
+                    await FollowupAsync(embed: new EmbedBuilder()
+                        .WithErrorColor()
+                        .WithDescription(Strings.MusicSearchFail(Context.Guild.Id))
+                        .Build());
+                    return;
+                }
+
+                tracks = trackResults.Tracks.ToList();
+            }
+
+            await AddTracksToQueue(tracks, queue, player);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error processing URL: {Url}", url);
+            await FollowupAsync(embed: new EmbedBuilder()
+                .WithErrorColor()
+                .WithDescription(Strings.MusicUrlProcessError(Context.Guild.Id))
+                .Build());
+        }
+    }
+
+    /// <summary>
+    ///     Handles playing music from search queries
+    /// </summary>
+    private async Task HandleSearchPlay(string query)
+    {
+        try
+        {
+            var tracks = await service.Tracks.LoadTracksAsync(query, TrackSearchMode.YouTube);
+
+            if (!tracks.IsSuccess)
+            {
+                await FollowupAsync(embed: new EmbedBuilder()
+                    .WithErrorColor()
+                    .WithDescription(Strings.MusicNoTracks(Context.Guild.Id))
+                    .Build());
+                return;
+            }
+
+            var trackList = tracks.Tracks.Take(25).ToList();
+            var selectMenu = new SelectMenuBuilder()
+                .WithCustomId($"track_select:{Context.User.Id}")
+                .WithPlaceholder(Strings.MusicSelectTracks(Context.Guild.Id))
+                .WithMaxValues(trackList.Count)
+                .WithMinValues(1);
+
+            foreach (var track in trackList)
+            {
+                var index = trackList.IndexOf(track);
+                selectMenu.AddOption(track.Title.Truncate(100), $"track_{index}");
+            }
+
+            var eb = new EmbedBuilder()
+                .WithDescription(Strings.MusicSelectTracksEmbed(Context.Guild.Id))
+                .WithOkColor()
+                .Build();
+
+            var components = new ComponentBuilder().WithSelectMenu(selectMenu).Build();
+
+            await FollowupAsync(embed: eb, components: components);
+
+            // Cache the track list for the selection menu handler
+            await cache.Redis.GetDatabase().StringSetAsync(
+                $"{Context.User.Id}_{Context.Interaction.Id}_tracks",
+                JsonSerializer.Serialize(trackList),
+                TimeSpan.FromMinutes(5)
+            );
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error processing search query: {Query}", query);
+            await FollowupAsync(embed: new EmbedBuilder()
+                .WithErrorColor()
+                .WithDescription(Strings.MusicSearchError(Context.Guild.Id))
+                .Build());
+        }
+    }
+
+    /// <summary>
+    ///     Processes Spotify URLs and converts them to playable tracks
+    /// </summary>
+    private async Task<List<LavalinkTrack>> ProcessSpotifyUrl(string url, SpotifyClient spotify)
+    {
+        var tracks = new List<LavalinkTrack>();
+        var currentQueue = await cache.GetMusicQueue(Context.Guild.Id);
+        var currentTrack = await cache.GetCurrentTrack(Context.Guild.Id);
+        var (player, _) = await GetPlayerAsync();
+        var shouldPlayFirst = currentQueue.Count == 0 && currentTrack == null && player.CurrentItem == null;
+
+        try
+        {
+            if (url.Contains("/track/"))
+            {
+                var id = url.Split("/track/")[1].Split("?")[0];
+                var track = await spotify.Tracks.Get(id);
+                var searchQuery = $"{track.Name} {string.Join(" ", track.Artists.Select(a => a.Name))}";
+                var ytTrack = await service.Tracks.LoadTrackAsync(searchQuery, TrackSearchMode.YouTube);
+                if (ytTrack != null) tracks.Add(ytTrack);
+            }
+            else if (url.Contains("/album/"))
+            {
+                var id = url.Split("/album/")[1].Split("?")[0];
+                var album = await spotify.Albums.Get(id);
+
+                // Show loading message for long albums
+                if (album.Tracks.Total > 10)
+                {
+                    await ModifyOriginalResponseAsync(x =>
+                    {
+                        x.Embed = new EmbedBuilder()
+                            .WithTitle($"{album.Name}")
+                            .WithDescription(
+                                $"Loading {album.Tracks.Total} tracks...\n{album.Artists.FirstOrDefault()?.Name ?? "Unknown"}")
+                            .WithColor(new Color(30, 215, 96))
+                            .WithThumbnailUrl(album.Images.FirstOrDefault()?.Url)
+                            .WithFooter($"Processing tracks {tracks.Count}/{album.Tracks.Total}")
+                            .Build();
+                    });
+                }
+
+                foreach (var searchQuery in album.Tracks.Items.Select(track => $"{track.Name} {string.Join(" ", track.Artists.Select(a => a.Name))}"))
+                {
+                    var ytTrack = await service.Tracks.LoadTrackAsync(searchQuery, TrackSearchMode.YouTube);
+                    if (ytTrack == null) continue;
+                    tracks.Add(ytTrack);
+
+                    // Play first track immediately if queue is empty
+                    if (shouldPlayFirst && tracks.Count == 1)
+                    {
+                        var mewdekoTrack = new MewdekoTrack(1, ytTrack, new PartialUser
+                        {
+                            Id = Context.User.Id,
+                            Username = Context.User.Username,
+                            AvatarUrl = Context.User.GetAvatarUrl()
+                        });
+                        await cache.SetCurrentTrack(Context.Guild.Id, mewdekoTrack);
+                        await player.PlayAsync(ytTrack);
+
+                        // Update embed to show now playing
+                        await ModifyOriginalResponseAsync(x =>
+                        {
+                            x.Embed = x.Embed.GetValueOrDefault().ToEmbedBuilder()
+                                .WithDescription(
+                                    $"Loading {album.Tracks.Total} tracks...\n{album.Artists.FirstOrDefault()?.Name ?? "Unknown"}\n\n" +
+                                    $"▶️ Now Playing: {ytTrack.Title}")
+                                .Build();
+                        });
+                    }
+
+                    // Update loading message every 5 tracks
+                    if (album.Tracks.Total > 10 && tracks.Count % 5 == 0)
+                    {
+                        await ModifyOriginalResponseAsync(x =>
+                        {
+                            x.Embed = x.Embed.GetValueOrDefault().ToEmbedBuilder()
+                                .WithFooter($"Processing tracks {tracks.Count}/{album.Tracks.Total}")
+                                .Build();
+                        });
+                    }
+                }
+            }
+            else if (url.Contains("/playlist/"))
+            {
+                var id = url.Split("/playlist/")[1].Split("?")[0];
+                var playlist = await spotify.Playlists.Get(id);
+
+                // Show loading message for long playlists
+                if (playlist.Tracks.Total > 10)
+                {
+                    await ModifyOriginalResponseAsync(x =>
+                    {
+                        x.Embed = new EmbedBuilder()
+                            .WithTitle($"{playlist.Name}")
+                            .WithDescription(
+                                $"Loading {playlist.Tracks.Total} tracks...\nPlaylist by {playlist.Owner.DisplayName}")
+                            .WithColor(new Color(30, 215, 96))
+                            .WithThumbnailUrl(playlist.Images.FirstOrDefault()?.Url)
+                            .WithFooter($"Processing tracks {tracks.Count}/{playlist.Tracks.Total}")
+                            .Build();
+                    });
+                }
+
+                foreach (var item in playlist.Tracks.Items)
+                {
+                    if (item.Track is not FullTrack track) continue;
+
+                    var searchQuery = $"{track.Name} {string.Join(" ", track.Artists.Select(a => a.Name))}";
+                    var ytTrack = await service.Tracks.LoadTrackAsync(searchQuery, TrackSearchMode.YouTube);
+                    if (ytTrack == null) continue;
+                    tracks.Add(ytTrack);
+
+                    // Play first track immediately if queue is empty
+                    if (shouldPlayFirst && tracks.Count == 1)
+                    {
+                        var mewdekoTrack = new MewdekoTrack(1, ytTrack, new PartialUser
+                        {
+                            Id = Context.User.Id,
+                            Username = Context.User.Username,
+                            AvatarUrl = Context.User.GetAvatarUrl()
+                        });
+                        await cache.SetCurrentTrack(Context.Guild.Id, mewdekoTrack);
+                        await player.PlayAsync(ytTrack);
+
+                        // Update embed to show now playing
+                        await ModifyOriginalResponseAsync(x =>
+                        {
+                            x.Embed = x.Embed.GetValueOrDefault().ToEmbedBuilder()
+                                .WithDescription(
+                                    $"Loading {playlist.Tracks.Total} tracks...\nPlaylist by {playlist.Owner.DisplayName}\n\n" +
+                                    $"▶️ Now Playing: {ytTrack.Title}")
+                                .Build();
+                        });
+                    }
+
+                    // Update loading message every 5 tracks
+                    if (playlist.Tracks.Total > 10 && tracks.Count % 5 == 0)
+                    {
+                        await ModifyOriginalResponseAsync(x =>
+                        {
+                            x.Embed = x.Embed.GetValueOrDefault().ToEmbedBuilder()
+                                .WithFooter($"Processing tracks {tracks.Count}/{playlist.Tracks.Total}")
+                                .Build();
+                        });
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Error processing Spotify URL: {Url}", url);
+            throw; // Rethrow to be handled by caller
+        }
+
+        return tracks;
+    }
+
+    /// <summary>
+    ///     Processes and adds tracks to the queue
+    /// </summary>
+    private async Task AddTracksToQueue(List<LavalinkTrack> tracks, List<MewdekoTrack> queue, MewdekoPlayer player)
+    {
+        if (!tracks.Any()) return;
+
+        var startIndex = queue.Count + 1;
+        var addedTracks = new List<MewdekoTrack>();
+
+        foreach (var mewdekoTrack in tracks.Select(track => new MewdekoTrack(startIndex++, track, new PartialUser
+                 {
+                     Id = Context.User.Id, Username = Context.User.Username, AvatarUrl = Context.User.GetAvatarUrl()
+                 })))
+        {
+            queue.Add(mewdekoTrack);
+            addedTracks.Add(mewdekoTrack);
+        }
+
+        await cache.SetMusicQueue(Context.Guild.Id, queue);
+
+        // Start playback if nothing is currently playing
+        if (player.CurrentItem is null && queue.Any())
+        {
+            await player.PlayAsync(queue[0].Track);
+            await cache.SetCurrentTrack(Context.Guild.Id, queue[0]);
+        }
+
+        // Create response embed
+        var embed = new EmbedBuilder()
+            .WithTitle("Added to Queue")
+            .WithDescription(CreateAddedTracksDescription(addedTracks))
+            .WithOkColor()
+            .Build();
+
+        await ModifyOriginalResponseAsync(x => x.Embed = embed);
+    }
+
+    /// <summary>
+    ///     Creates a formatted description of added tracks
+    /// </summary>
+    private static string CreateAddedTracksDescription(List<MewdekoTrack> tracks)
+    {
+        var sb = new StringBuilder();
+
+        if (tracks.Count == 1)
+        {
+            var track = tracks[0];
+            sb.AppendLine($"🎵 [{track.Track.Title}]({track.Track.Uri})");
+            sb.AppendLine($"Duration: `{track.Track.Duration}`");
+            sb.AppendLine($"Position in queue: `#{track.Index}`");
+        }
+        else
+        {
+            sb.AppendLine($"Added {tracks.Count} tracks to the queue");
+            var totalDuration = TimeSpan.FromMilliseconds(tracks.Sum(t => t.Track.Duration.TotalMilliseconds));
+            sb.AppendLine($"Total Duration: `{totalDuration}`");
+
+            // Show first few tracks as preview
+            const int previewCount = 3;
+            foreach (var track in tracks.Take(previewCount))
+            {
+                sb.AppendLine($"• [{track.Track.Title}]({track.Track.Uri})");
+            }
+
+            if (tracks.Count > previewCount)
+            {
+                sb.AppendLine($"...and {tracks.Count - previewCount} more");
+            }
+        }
+
+        return sb.ToString();
     }
 
     private async ValueTask<(MewdekoPlayer, string?)> GetPlayerAsync(bool connectToVoiceChannel = true)

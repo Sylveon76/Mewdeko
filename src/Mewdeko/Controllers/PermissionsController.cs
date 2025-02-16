@@ -1,11 +1,16 @@
+using System.Text.Json;
 using Discord.Commands;
+using Google.Api;
 using Mewdeko.Common.Attributes.TextCommands;
+using Mewdeko.Common.TypeReaders.Models;
+using Mewdeko.Database.DbContextStuff;
 using Mewdeko.Modules.Administration.Services;
 using Mewdeko.Modules.Help;
 using Mewdeko.Modules.Permissions.Services;
 using Mewdeko.Services.Impl;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.VisualBasic;
 using Serilog;
 
 namespace Mewdeko.Controllers;
@@ -19,7 +24,7 @@ namespace Mewdeko.Controllers;
 public class PermissionsController(
     PermissionService permissionService,
     DiscordPermOverrideService dpoService,
-    CommandService cmdServ) : Controller
+    CommandService cmdServ, DbContextProvider dbContextProvider) : Controller
 {
     /// <summary>
     ///     Gets all dpos for a guild
@@ -137,13 +142,15 @@ public class PermissionsController(
     /// <param name="verbose">Whether to enable verbose mode</param>
     /// <returns>Success response when updated</returns>
     [HttpPost("regular/{guildId}/verbose")]
-    public async Task<IActionResult> SetVerbose(ulong guildId, [FromBody] bool verbose)
+    public async Task<IActionResult> SetVerbose(ulong guildId, [FromBody] JsonElement request)
     {
-        permissionService.UpdateCache(new GuildConfig
-        {
-            GuildId = guildId,
-            VerbosePermissions = verbose
-        });
+        var verbose = request.GetProperty("verbose").GetBoolean();
+        await using var dbContext = await dbContextProvider.GetContextAsync();
+        var config = await dbContext.GcWithPermissionsv2For(guildId);
+        config.VerbosePermissions = verbose;
+        await dbContext.SaveChangesAsync().ConfigureAwait(false);
+        permissionService.UpdateCache(config);
+
         return Ok();
     }
 
@@ -156,11 +163,14 @@ public class PermissionsController(
     [HttpPost("regular/{guildId}/role")]
     public async Task<IActionResult> SetPermissionRole(ulong guildId, [FromBody] string roleId)
     {
-        permissionService.UpdateCache(new GuildConfig
+        await using var dbContext = await dbContextProvider.GetContextAsync();
+
         {
-            GuildId = guildId,
-            PermissionRole = roleId
-        });
+            var config = await dbContext.GcWithPermissionsv2For(guildId);
+            config.PermissionRole = roleId;
+            await dbContext.SaveChangesAsync().ConfigureAwait(false);
+            permissionService.UpdateCache(config);
+        }
         return Ok();
     }
 

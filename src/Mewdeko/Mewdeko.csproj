@@ -177,6 +177,9 @@
     <Content Update="gcreds.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Update="credentials.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 <!--  <ItemGroup>-->
 <!--    <Reference Include="NHentaiAPI">-->

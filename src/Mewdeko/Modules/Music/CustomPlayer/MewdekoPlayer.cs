@@ -615,7 +615,11 @@ public sealed class MewdekoPlayer : LavalinkPlayer
         await cache.SetMusicPlayerSettings(GuildId, settings);
     }
 
-    private async Task<SpotifyClient> GetSpotifyClient()
+    /// <summary>
+    /// Gets a spotify client for the bot if the spotify api key is valid.
+    /// </summary>
+    /// <returns>A SpotifyClient</returns>
+    public async Task<SpotifyClient> GetSpotifyClient()
     {
         var spotifyClientConfig = SpotifyClientConfig.CreateDefault();
         var request =
