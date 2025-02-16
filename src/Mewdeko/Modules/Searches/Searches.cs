@@ -18,7 +18,6 @@ using Mewdeko.Modules.Searches.Common;
 using Mewdeko.Modules.Searches.Services;
 using Mewdeko.Services.Settings;
 using Microsoft.Extensions.Caching.Memory;
-
 using Newtonsoft.Json.Linq;
 using Refit;
 using Serilog;
@@ -115,8 +114,7 @@ public partial class Searches(
         {
             var emt = new EmbedBuilder
             {
-                Description = Strings.SubredditIsNsfw(ctx.Guild.Id),
-                Color = Mewdeko.ErrorColor
+                Description = Strings.SubredditIsNsfw(ctx.Guild.Id), Color = Mewdeko.ErrorColor
             };
             await msg.ModifyAsync(x => x.Embed = emt.Build()).ConfigureAwait(false);
             return;
@@ -179,7 +177,6 @@ public partial class Searches(
         await using var _ = picStream.ConfigureAwait(false);
         await ctx.Channel.SendFileAsync(picStream, "rip.png",
             Strings.RipMessage(ctx.Guild.Id, Format.Bold(usr.ToString()), Format.Italics(ctx.User.ToString())));
-
     }
 
     /// <summary>
@@ -236,7 +233,8 @@ public partial class Searches(
                     fb.WithName($"😓 {Format.Bold(Strings.Humidity(ctx.Guild.Id))}").WithValue($"{data.Main.Humidity}%")
                         .WithIsInline(true))
                 .AddField(fb =>
-                    fb.WithName($"💨 {Format.Bold(Strings.WindSpeed(ctx.Guild.Id))}").WithValue($"{data.Wind.Speed} m/s")
+                    fb.WithName($"💨 {Format.Bold(Strings.WindSpeed(ctx.Guild.Id))}")
+                        .WithValue($"{data.Wind.Speed} m/s")
                         .WithIsInline(true))
                 .AddField(fb =>
                     fb.WithName($"🌡 {Format.Bold(Strings.Temperature(ctx.Guild.Id))}")
@@ -247,10 +245,12 @@ public partial class Searches(
                             $"{data.Main.TempMin:F1}°C - {data.Main.TempMax:F1}°C\n{f(data.Main.TempMin):F1}°F - {f(data.Main.TempMax):F1}°F")
                         .WithIsInline(true))
                 .AddField(fb =>
-                    fb.WithName($"🌄 {Format.Bold(Strings.Sunrise(ctx.Guild.Id))}").WithValue($"{sunrise:HH:mm} {timezone}")
+                    fb.WithName($"🌄 {Format.Bold(Strings.Sunrise(ctx.Guild.Id))}")
+                        .WithValue($"{sunrise:HH:mm} {timezone}")
                         .WithIsInline(true))
                 .AddField(fb =>
-                    fb.WithName($"🌇 {Format.Bold(Strings.Sunset(ctx.Guild.Id))}").WithValue($"{sunset:HH:mm} {timezone}")
+                    fb.WithName($"🌇 {Format.Bold(Strings.Sunset(ctx.Guild.Id))}")
+                        .WithValue($"{sunset:HH:mm} {timezone}")
                         .WithIsInline(true))
                 .WithOkColor()
                 .WithFooter(efb =>
@@ -529,7 +529,8 @@ public partial class Searches(
     public async Task Image([Remainder] string query)
     {
         // Send a message indicating that images are being checked
-        var checkingMessage = await ctx.Channel.SendConfirmAsync(Strings.ImageChecking(ctx.Guild.Id)).ConfigureAwait(false);
+        var checkingMessage =
+            await ctx.Channel.SendConfirmAsync(Strings.ImageChecking(ctx.Guild.Id)).ConfigureAwait(false);
 
         IEnumerable<IImageResult> images = null;
         string sourceName = null;
@@ -1319,24 +1320,24 @@ public partial class Searches(
 
         await Context.Channel.TriggerTypingAsync().ConfigureAwait(false);
 
-        var appId = await Service.GetSteamGameInfoByName(query).ConfigureAwait(false);
-        if (appId.AppId == -1)
+        var gameInfo = await Service.GetSteamGameInfoByName(query).ConfigureAwait(false);
+        if (gameInfo == null)
         {
             await ReplyErrorAsync(Strings.NotFound(ctx.Guild.Id)).ConfigureAwait(false);
             return;
         }
 
-        //var embed = new EmbedBuilder()
-        //    .WithOkColor()
-        //    .WithDescription(gameData.ShortDescription)
-        //    .WithTitle(gameData.Name)
-        //    .WithUrl(gameData.Link)
-        //    .WithImageUrl(gameData.HeaderImage)
-        //    .AddField(efb => efb.WithName(Strings.Genres(ctx.Guild.Id)).WithValue(gameData.TotalEpisodes.ToString()).WithIsInline(true))
-        //    .AddField(efb => efb.WithName(Strings.Price(ctx.Guild.Id)).WithValue(gameData.IsFree ? Strings.Free(ctx.Guild.Id) : game).WithIsInline(true))
-        //    .AddField(efb => efb.WithName(Strings.Links(ctx.Guild.Id)).WithValue(gameData.GetGenresString()).WithIsInline(true))
-        //    .WithFooter(efb => efb.WithText(Strings.Recommendations(ctx.Guild.Id, gameData.TotalRecommendations)));
-        await ctx.Channel.SendMessageAsync($"https://store.steampowered.com/app/{appId}").ConfigureAwait(false);
+        var paginator = new LazyPaginatorBuilder()
+            .AddUser(ctx.User)
+            .WithPageFactory(page => CreatePage(page, gameInfo))
+            .WithFooter(PaginatorFooter.PageNumber | PaginatorFooter.Users)
+            .WithMaxPageIndex(gameInfo.Screenshots?.Count ?? 0)
+            .WithDefaultEmotes()
+            .WithActionOnCancellation(ActionOnStop.DeleteMessage)
+            .Build();
+
+        await serv.SendPaginatorAsync(paginator, Context.Channel, TimeSpan.FromMinutes(10))
+            .ConfigureAwait(false);
     }
 
     /// <summary>
@@ -1379,6 +1380,62 @@ public partial class Searches(
                 .WithImageUrl(imgObj.FileUrl)
                 .WithFooter(efb => efb.WithText(type.ToString()))).ConfigureAwait(false);
         }
+    }
+
+    private async Task<PageBuilder> CreatePage(int page, SteamGameInfo gameInfo)
+    {
+        await Task.CompletedTask;
+
+        var priceText = gameInfo.Price == null
+            ? "N/A"
+            : gameInfo.Price.Final == gameInfo.Price.Initial
+                ? $"${gameInfo.Price.Final / 100.0m:F2}"
+                : $"~~${gameInfo.Price.Initial / 100.0m:F2}~~ ${gameInfo.Price.Final / 100.0m:F2}";
+
+        var pageBuilder = new PageBuilder()
+            .WithOkColor()
+            .WithTitle(gameInfo.Name)
+            .WithUrl($"https://store.steampowered.com/app/{gameInfo.SteamAppid}")
+            .WithDescription(gameInfo.ShortDescription)
+            .AddField("💰 Price", priceText, true)
+            .AddField("🎮 Platforms", GetPlatforms(gameInfo), true)
+            .AddField("📅 Release Date", gameInfo.ReleaseDate?.Date ?? "N/A", true)
+            .AddField("👥 Developer", string.Join(", ", gameInfo.Developers), true)
+            .AddField("🏷️ Categories", string.Join(", ", gameInfo.Categories?.Take(3).Select(c => c.Description)),
+                true);
+
+        // Add Metacritic score if available
+        if (gameInfo.Metacritic?.Score > 0)
+        {
+            pageBuilder.AddField("📊 Metacritic", $"{gameInfo.Metacritic.Score}/100", true);
+        }
+
+        // Set image based on page number
+        if (gameInfo.Screenshots != null && gameInfo.Screenshots.Count > page)
+        {
+            pageBuilder.WithImageUrl(gameInfo.Screenshots[page].PathFull);
+        }
+        else
+        {
+            pageBuilder.WithImageUrl(gameInfo.HeaderImage);
+        }
+
+        if (gameInfo.Recommendations?.Total > 0)
+        {
+            pageBuilder.WithFooter($"💭 {gameInfo.Recommendations.Total:N0} recommendations");
+        }
+
+        return pageBuilder;
+    }
+
+    private string GetPlatforms(SteamGameInfo gameInfo)
+    {
+        var platforms = new List<string>();
+        if (gameInfo.Platforms["windows"]) platforms.Add("Windows");
+        if (gameInfo.Platforms["mac"]) platforms.Add("macOS");
+        if (gameInfo.Platforms["linux"]) platforms.Add("Linux");
+
+        return platforms.Any() ? string.Join(", ", platforms) : "N/A";
     }
 
     /// <summary>

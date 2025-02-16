@@ -21,8 +21,10 @@ public class TrovoProvider : Provider
 
         if (string.IsNullOrWhiteSpace(creds.TrovoClientId))
         {
-            Log.Warning(@"Trovo streams are using a default clientId.
-If you are experiencing ratelimits, you should create your own application at: https://developer.trovo.live/");
+            Log.Warning("""
+                        Trovo streams are using a default clientId.
+                        If you are experiencing ratelimits, you should create your own application at: https://developer.trovo.live/
+                        """);
         }
     }
 

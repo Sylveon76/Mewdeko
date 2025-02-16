@@ -14,18 +14,15 @@ namespace Mewdeko.Modules.Afk;
 [Group("afk", "Set or Manage AFK")]
 public class SlashAfk : MewdekoSlashModuleBase<AfkService>
 {
-    private readonly DiscordShardedClient client;
     private readonly InteractiveService interactivity;
 
     /// <summary>
     ///     Initializes a new instance of <see cref="SlashAfk" />.
     /// </summary>
     /// <param name="serv">The interactivity service used for embed pagination.</param>
-    /// <param name="client">The discord client.</param>
-    public SlashAfk(InteractiveService serv, DiscordShardedClient client)
+    public SlashAfk(InteractiveService serv)
     {
         interactivity = serv;
-        this.client = client;
     }
 
     /// <summary>

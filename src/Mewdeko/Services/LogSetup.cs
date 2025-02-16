@@ -44,14 +44,7 @@ public static class LogSetup
                 restrictedToMinimumLevel: LogEventLevel.Information,
                 theme: AnsiConsoleTheme.Code,
                 outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] | #{LogSource} | " +
-                              "{Message:lj}{NewLine}{Exception}" +
-                              "{Properties:j}{NewLine}")
-            .WriteTo.File("logs/sql-.log",
-                restrictedToMinimumLevel: LogEventLevel.Information,
-                rollingInterval: RollingInterval.Day,
-                outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] {Message:lj}{NewLine}{Exception}" +
-                              "{Properties:j}{NewLine}",
-                retainedFileCountLimit: 7)
+                              "{Message:lj}{NewLine}")
             .CreateBootstrapLogger();
 
         Console.OutputEncoding = Encoding.UTF8;

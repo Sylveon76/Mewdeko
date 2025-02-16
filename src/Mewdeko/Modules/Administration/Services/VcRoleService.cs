@@ -301,7 +301,6 @@ public class VcRoleService : INService, IReadyExecutor
             {
                 await using var db = await dbProvider.GetContextAsync();
                 var conf = await db.VcRoles.Where(x => x.GuildId == guild.Id).ToArrayAsync();
-                Log.Information($"{guild} has {conf.Length} VCRs");
                 if (conf.Length==0)
                     continue;
                 await InitializeVcRole(conf);

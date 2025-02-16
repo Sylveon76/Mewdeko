@@ -57,11 +57,13 @@ public sealed class EventHandler : IDisposable
         _client.ThreadMemberLeft += ClientOnThreadMemberLeft;
         _client.AuditLogCreated += ClientOnAuditLogCreated;
         _client.GuildAvailable += ClientOnGuildAvailable;
+        _client.GuildUnavailable += ClientOnGuildUnavailable;
         _client.LeftGuild += ClientOnLeftGuild;
         _client.InviteCreated += ClientOnInviteCreated;
         _client.InviteDeleted += ClientOnInviteDeleted;
         _client.ModalSubmitted += ClientOnModalSubmitted;
     }
+
 
     #region Delegates
 
@@ -302,6 +304,11 @@ public sealed class EventHandler : IDisposable
     public event AsyncEventHandler<SocketGuild>? GuildAvailable;
 
     /// <summary>
+    ///     Occurs when a guild becomes unavailable.
+    /// </summary>
+    public event AsyncEventHandler<SocketGuild>? GuildUnavailable;
+
+    /// <summary>
     ///     Occurs when the bot leaves or is removed from a guild.
     /// </summary>
     public event AsyncEventHandler<SocketGuild>? LeftGuild;
@@ -341,6 +348,13 @@ public sealed class EventHandler : IDisposable
     {
         if (GuildAvailable is not null)
             _ = SafeExecuteHandler(() => GuildAvailable(arg), nameof(GuildAvailable));
+        return Task.CompletedTask;
+    }
+
+    private Task ClientOnGuildUnavailable(SocketGuild arg)
+    {
+        if (GuildUnavailable is not null)
+            _ = SafeExecuteHandler(() => GuildUnavailable(arg), nameof(GuildUnavailable));
         return Task.CompletedTask;
     }
 
@@ -648,6 +662,7 @@ public sealed class EventHandler : IDisposable
             _client.ThreadMemberLeft -= ClientOnThreadMemberLeft;
             _client.AuditLogCreated -= ClientOnAuditLogCreated;
             _client.GuildAvailable -= ClientOnGuildAvailable;
+            _client.GuildUnavailable -= ClientOnGuildUnavailable;
             _client.LeftGuild -= ClientOnLeftGuild;
             _client.InviteCreated -= ClientOnInviteCreated;
             _client.InviteDeleted -= ClientOnInviteDeleted;

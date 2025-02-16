@@ -14,7 +14,6 @@ using MartineApiNet;
 using MartineApiNet.Enums;
 using MartineApiNet.Models.Images;
 using Mewdeko.Modules.Searches.Common;
-
 using Newtonsoft.Json.Linq;
 using Refit;
 using Serilog;
@@ -68,6 +67,11 @@ public class SearchesService : INService, IUnloadableService
     private readonly IGoogleApiService google;
     private readonly GuildSettingsService gss;
     private readonly IHttpClientFactory httpFactory;
+
+    private readonly JsonSerializerOptions jsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
 
     private readonly ConcurrentDictionary<ulong, SearchImageCacher> imageCacher = new();
     private readonly IImageCache imgs;
@@ -475,69 +479,69 @@ public class SearchesService : INService, IUnloadableService
     }
 
     /// <summary>
-///     Gets a random image from a specified category using the Martine API.
-/// </summary>
-/// <param name="tag">The category of image to fetch.</param>
-/// <returns>A task that represents the asynchronous operation. The task result contains the image data.</returns>
-/// <exception cref="ApiException">Thrown when the API request fails.</exception>
-/// <remarks>
-///     This method fetches random images using the Martine API, selecting from multiple themed subreddits per category.
-/// </remarks>
-public async Task<RedditPost> GetRandomImageAsync(ImageTag tag)
-{
-    var subreddit = tag switch
+    ///     Gets a random image from a specified category using the Martine API.
+    /// </summary>
+    /// <param name="tag">The category of image to fetch.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the image data.</returns>
+    /// <exception cref="ApiException">Thrown when the API request fails.</exception>
+    /// <remarks>
+    ///     This method fetches random images using the Martine API, selecting from multiple themed subreddits per category.
+    /// </remarks>
+    public async Task<RedditPost> GetRandomImageAsync(ImageTag tag)
     {
-        ImageTag.Food => rng.Next() switch
+        var subreddit = tag switch
         {
-            var n when n % 5 == 0 => "FoodPorn",
-            var n when n % 5 == 1 => "food",
-            var n when n % 5 == 2 => "cooking",
-            var n when n % 5 == 3 => "recipes",
-            _ => "culinary"
-        },
-        ImageTag.Dogs => rng.Next() switch
-        {
-            var n when n % 6 == 0 => "dogpictures",
-            var n when n % 6 == 1 => "rarepuppers",
-            var n when n % 6 == 2 => "puppies",
-            var n when n % 6 == 3 => "dogs",
-            var n when n % 6 == 4 => "dogswithjobs",
-            _ => "WhatsWrongWithYourDog"
-        },
-        ImageTag.Cats => rng.Next() switch
-        {
-            var n when n % 7 == 0 => "cats",
-            var n when n % 7 == 1 => "CatPictures",
-            var n when n % 7 == 2 => "catpics",
-            var n when n % 7 == 3 => "SupermodelCats",
-            var n when n % 7 == 4 => "CatsStandingUp",
-            var n when n % 7 == 5 => "CatsInSinks",
-            _ => "TheCatTrapIsWorking"
-        },
-        ImageTag.Birds => rng.Next() switch
-        {
-            var n when n % 5 == 0 => "birdpics",
-            var n when n % 5 == 1 => "parrots",
-            var n when n % 5 == 2 => "birding",
-            var n when n % 5 == 3 => "whatsthisbird",
-            _ => "Birbs"
-        },
-        _ => throw new ArgumentException($"Unsupported image tag: {tag}", nameof(tag))
-    };
+            ImageTag.Food => rng.Next() switch
+            {
+                var n when n % 5 == 0 => "FoodPorn",
+                var n when n % 5 == 1 => "food",
+                var n when n % 5 == 2 => "cooking",
+                var n when n % 5 == 3 => "recipes",
+                _ => "culinary"
+            },
+            ImageTag.Dogs => rng.Next() switch
+            {
+                var n when n % 6 == 0 => "dogpictures",
+                var n when n % 6 == 1 => "rarepuppers",
+                var n when n % 6 == 2 => "puppies",
+                var n when n % 6 == 3 => "dogs",
+                var n when n % 6 == 4 => "dogswithjobs",
+                _ => "WhatsWrongWithYourDog"
+            },
+            ImageTag.Cats => rng.Next() switch
+            {
+                var n when n % 7 == 0 => "cats",
+                var n when n % 7 == 1 => "CatPictures",
+                var n when n % 7 == 2 => "catpics",
+                var n when n % 7 == 3 => "SupermodelCats",
+                var n when n % 7 == 4 => "CatsStandingUp",
+                var n when n % 7 == 5 => "CatsInSinks",
+                _ => "TheCatTrapIsWorking"
+            },
+            ImageTag.Birds => rng.Next() switch
+            {
+                var n when n % 5 == 0 => "birdpics",
+                var n when n % 5 == 1 => "parrots",
+                var n when n % 5 == 2 => "birding",
+                var n when n % 5 == 3 => "whatsthisbird",
+                _ => "Birbs"
+            },
+            _ => throw new ArgumentException($"Unsupported image tag: {tag}", nameof(tag))
+        };
 
-    try
-    {
-        return await martineApi.RedditApi.GetRandomFromSubreddit(subreddit, Toptype.month).ConfigureAwait(false);
+        try
+        {
+            return await martineApi.RedditApi.GetRandomFromSubreddit(subreddit, Toptype.month).ConfigureAwait(false);
+        }
+        catch (ApiException ex)
+        {
+            Log.Error("Failed to fetch image from Martine API for tag {Tag} (subreddit: r/{Subreddit}): {Error}",
+                tag,
+                subreddit,
+                ex.HasContent ? ex.Content : "No Content");
+            throw;
+        }
     }
-    catch (ApiException ex)
-    {
-        Log.Error("Failed to fetch image from Martine API for tag {Tag} (subreddit: r/{Subreddit}): {Error}",
-            tag,
-            subreddit,
-            ex.HasContent ? ex.Content : "No Content");
-        throw;
-    }
-}
 
     /// <summary>
     ///     Automatically translates the input string from one language to another.
@@ -865,73 +869,71 @@ public async Task<RedditPost> GetRandomImageAsync(ImageTag tag)
         return firstParagraph.Length > 1000 ? firstParagraph[..1000] + "..." : firstParagraph;
     }
 
-    /// <summary>
-///     Retrieves detailed Steam game information for the specified game name asynchronously.
+   /// <summary>
+/// Retrieves detailed information about a Steam game by its name.
 /// </summary>
 /// <param name="query">The name of the game to search for.</param>
-/// <returns>A task representing the asynchronous operation, returning detailed game information or null if not found.</returns>
+/// <returns>A task that represents the asynchronous operation. The task result contains the SteamGameInfo if found; otherwise, null.</returns>
 public async Task<SteamGameInfo?> GetSteamGameInfoByName(string query)
 {
-    var redis = cache.Redis;
-    var redisDb = redis.GetDatabase();
-    const string steamGameIdsKey = "steam_names_to_appid";
-    await redisDb.KeyExistsAsync(steamGameIdsKey).ConfigureAwait(false);
+    query = query.Trim().ToLowerInvariant();
+    var searchCacheKey = $"steam_game_search_{query}";
 
-    var gamesMap = await cache.GetOrAddCachedDataAsync(steamGameIdsKey, async _ =>
-    {
-        using var http = httpFactory.CreateClient();
-        var gamesStr = await http.GetStringAsync("https://api.steampowered.com/ISteamApps/GetAppList/v2/")
-            .ConfigureAwait(false);
-
-        var options = new JsonSerializerOptions
+    // First try to get the AppId from search
+    var searchResult = await cache.GetOrAddCachedDataAsync(
+        searchCacheKey,
+        async _ =>
         {
-            PropertyNameCaseInsensitive = true
-        };
+            using var http = httpFactory.CreateClient();
+            var response = await http.GetAsync($"https://store.steampowered.com/api/storesearch/?term={Uri.EscapeDataString(query)}&l=en&cc=US");
 
-        var response = JsonSerializer.Deserialize<SteamAppListResponse>(gamesStr, options);
-        var apps = response?.Applist?.Apps ?? new List<SteamGameId>();
+            if (!response.IsSuccessStatusCode)
+                return null;
 
-        return apps
-            .OrderBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
-            .GroupBy(x => x.Name)
-            .ToDictionary(x => x.Key, x => x.First().AppId);
-    }, default(string), TimeSpan.FromHours(24)).ConfigureAwait(false);
+            var content = await response.Content.ReadAsStringAsync();
+            var result = JsonSerializer.Deserialize<StoreSearchResponse>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-    if (!gamesMap.Any())
+            if (result?.Items == null || !result.Items.Any())
+                return null;
+
+            // Return the most relevant match
+            return result.Items[0];
+        },
+        default(string),
+        TimeSpan.FromHours(1)
+    );
+
+    if (searchResult == null)
         return null;
 
-    query = query.Trim();
-    var keyList = gamesMap.Keys.ToList();
-    var key = keyList.Find(x => x.Equals(query, StringComparison.OrdinalIgnoreCase));
+    // Then get detailed info
+    return await cache.GetOrAddCachedDataAsync(
+        $"steam_game_details_{searchResult.Id}",
+        async _ =>
+        {
+            using var http = httpFactory.CreateClient();
+            var detailsStr = await http.GetStringAsync($"https://store.steampowered.com/api/appdetails?appids={searchResult.Id}");
 
-    if (key == default)
-    {
-        key = keyList.Find(x => x.StartsWith(query, StringComparison.OrdinalIgnoreCase));
-        if (key == default)
+            var response = JsonSerializer.Deserialize<Dictionary<string, AppDetailsResponse>>(
+                detailsStr,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+            );
+
+            if (response?.TryGetValue(searchResult.Id.ToString(), out var gameDetails) == true && gameDetails.Success)
+            {
+                var data = gameDetails.Data;
+                data.Price = searchResult.Price; // Include the price from search result as it's more reliable
+                data.Metascore = searchResult.Metascore; // Include metascore from search as it's already parsed
+                return data;
+            }
+
             return null;
-    }
-
-    var appId = gamesMap[key];
-
-    // Get detailed game info
-    using var http = httpFactory.CreateClient();
-    var detailsUrl = $"https://store.steampowered.com/api/appdetails?appids={appId}";
-    var detailsStr = await http.GetStringAsync(detailsUrl).ConfigureAwait(false);
-
-    var options = new JsonSerializerOptions
-    {
-        PropertyNameCaseInsensitive = true
-    };
-
-    var response = JsonSerializer.Deserialize<Dictionary<string, SteamGameDetailsResponse>>(detailsStr, options);
-
-    if (response != null && response.TryGetValue(appId.ToString(), out var gameDetails) && gameDetails.Success)
-    {
-        return gameDetails.Data;
-    }
-
-    return null;
+        },
+        default(string),
+        TimeSpan.FromHours(6)
+    );
 }
+
 
     /// <summary>
     ///     Performs a Google search asynchronously.
@@ -1101,53 +1103,6 @@ public class GoogleSearchResultData
     ///     Gets the total number of search results.
     /// </summary>
     public string TotalResults { get; }
-}
-
-/// <summary>
-///     Represents a Steam game ID and its associated name.
-/// </summary>
-public class SteamGameId
-{
-    /// <summary>
-    ///     Gets or sets the name of the Steam game.
-    /// </summary>
-    [JsonPropertyName("name")]
-    public string Name { get; set; }
-
-    /// <summary>
-    ///     Gets or sets the Steam App ID of the game.
-    /// </summary>
-    [JsonPropertyName("appid")]
-    public int AppId { get; set; }
-}
-
-/// <summary>
-///     Represents data related to a Steam game.
-/// </summary>
-public class SteamGameData
-{
-    /// <summary>
-    ///     Gets or sets the short description of the Steam game.
-    /// </summary>
-    public string ShortDescription { get; set; }
-
-    /// <summary>
-    ///     Represents a container for Steam game data.
-    /// </summary>
-    public class Container
-    {
-        /// <summary>
-        ///     Gets or sets a value indicating whether the operation was successful.
-        /// </summary>
-        [JsonPropertyName("success")]
-        public bool Success { get; set; }
-
-        /// <summary>
-        ///     Gets or sets the Steam game data.
-        /// </summary>
-        [JsonPropertyName("data")]
-        public SteamGameData Data { get; set; }
-    }
 }
 
 /// <summary>

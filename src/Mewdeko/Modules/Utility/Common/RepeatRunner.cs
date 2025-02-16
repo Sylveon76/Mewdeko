@@ -8,66 +8,55 @@ namespace Mewdeko.Modules.Utility.Common;
 /// <summary>
 ///     Manages the repeating execution of a message in a specified Discord channel.
 /// </summary>
-public class RepeatRunner
+public class RepeatRunner : IDisposable
 {
     private readonly DiscordShardedClient client;
-
     private readonly MessageRepeaterService mrs;
-
+    private readonly SemaphoreSlim triggerLock = new(1, 1);
     private TimeSpan initialInterval;
-
-    private Timer t;
+    private Timer? timer;
+    private bool disposed;
 
     /// <summary>
-    ///     Initializes a new instance of the <see cref="RepeatRunner" /> with the specified parameters.
+    ///     Initializes a new instance of the RepeatRunner class with the specified parameters.
     /// </summary>
-    /// <param name="client">The Discord client.</param>
-    /// <param name="guild">The guild in which the message will be repeated.</param>
+    /// <param name="client">The Discord client for sending messages.</param>
+    /// <param name="guild">The guild where messages will be sent.</param>
     /// <param name="repeater">The repeater configuration.</param>
     /// <param name="mrs">The message repeater service.</param>
-    /// <remarks>
-    ///     The runner calculates the initial and subsequent intervals for message repetition,
-    ///     handling daily repetitions or at specific intervals.
-    /// </remarks>
-    public RepeatRunner(DiscordShardedClient client, SocketGuild guild, Repeater repeater,
+    public RepeatRunner(DiscordShardedClient client, IGuild guild, Repeater repeater,
         MessageRepeaterService mrs)
     {
-        Repeater = repeater;
-        Guild = guild;
-        this.mrs = mrs;
-        this.client = client;
+        Repeater = repeater ?? throw new ArgumentNullException(nameof(repeater));
+        Guild = guild ?? throw new ArgumentNullException(nameof(guild));
+        this.mrs = mrs ?? throw new ArgumentNullException(nameof(mrs));
+        this.client = client ?? throw new ArgumentNullException(nameof(client));
 
         InitialInterval = TimeSpan.Parse(Repeater.Interval);
-
         Run();
     }
 
     /// <summary>
-    ///     Gets the repeater configuration associated with this instance.
+    ///     Gets the repeater configuration for this runner.
     /// </summary>
     public Repeater Repeater { get; }
 
     /// <summary>
-    ///     Gets the guild (server) where the message will be repeated.
+    ///     Gets the guild where the repeater operates.
     /// </summary>
-    public SocketGuild Guild { get; }
+    public IGuild Guild { get; }
 
     /// <summary>
-    ///     Gets the text channel where the repeated message is sent.
-    ///     This property is set after the first execution of the repeater.
+    ///     Gets the channel where messages are sent.
     /// </summary>
     public ITextChannel? Channel { get; private set; }
 
     /// <summary>
-    ///     Gets or sets the initial interval before the first message repetition.
-    ///     Subsequent intervals are based on the configured <see cref="Repeater.Interval" />.
+    ///     Gets or sets the initial interval for the repeater.
     /// </summary>
     public TimeSpan InitialInterval
     {
-        get
-        {
-            return initialInterval;
-        }
+        get => initialInterval;
         private set
         {
             initialInterval = value;
@@ -76,21 +65,15 @@ public class RepeatRunner
     }
 
     /// <summary>
-    ///     When's the next time the repeater will run.
-    ///     On bot startup, it will be InitialInterval + StartupDateTime.
-    ///     After first execution, it will be Interval + ExecutionDateTime
+    ///     Gets the next scheduled execution time.
     /// </summary>
-    public DateTime NextDateTime { get; set; }
+    public DateTime NextDateTime { get; private set; }
 
     private void Run()
     {
         if (!string.IsNullOrEmpty(Repeater.StartTimeOfDay))
         {
-            // if there was a start time of day
-            // calculate whats the next time of day repeat should trigger at
-            // based on teh dateadded
-
-            // i know this is not null because of the .Where in the repeat service
+            // if repeater is not running daily, it's initial time is the time it was Added at, plus the interval
             if (Repeater.DateAdded != null)
             {
                 var added = Repeater.DateAdded.Value;
@@ -124,130 +107,77 @@ public class RepeatRunner
                 CalculateInitialInterval(Repeater.DateAdded.Value + TimeSpan.Parse(Repeater.Interval));
         }
 
-        // wait at least a minute for the bot to have all data needed in the cache
-        if (InitialInterval < TimeSpan.FromMinutes(1))
-            InitialInterval = TimeSpan.FromMinutes(1);
-
-        t = new Timer(Callback, null, InitialInterval, TimeSpan.Parse(Repeater.Interval));
+        timer = new Timer(Callback, null, InitialInterval, TimeSpan.Parse(Repeater.Interval));
     }
 
-    private async void Callback(object _)
+    private async void Callback(object? _)
     {
         try
         {
             await Trigger().ConfigureAwait(false);
         }
-        catch
+        catch (Exception ex)
         {
-            // ignored
+            Log.Error(ex, "Error in repeater callback for channel {ChannelId}", Repeater.ChannelId);
+            try
+            {
+                Stop();
+                await mrs.RemoveRepeater(Repeater).ConfigureAwait(false);
+            }
+            catch (Exception innerEx)
+            {
+                Log.Error(innerEx, "Error removing failed repeater");
+            }
         }
     }
 
-    /// <summary>
-    ///     Calculate when is the proper time to run the repeater again based on initial time repeater ran.
-    /// </summary>
-    /// <param name="initialDateTime">Initial time repeater ran at (or should run at).</param>
     private void CalculateInitialInterval(DateTime initialDateTime)
     {
-        // if the initial time is greater than now, that means the repeater didn't still execute a single time.
-        // just schedule it
         if (initialDateTime > DateTime.UtcNow)
         {
             InitialInterval = initialDateTime - DateTime.UtcNow;
+            return;
         }
-        else
-        {
-            // else calculate based on minutes difference
 
-            // get the difference
-            var diff = DateTime.UtcNow - initialDateTime;
-
-            // see how many times the repeater theoretically ran already
-            var triggerCount = diff / TimeSpan.Parse(Repeater.Interval);
-
-            // ok lets say repeater was scheduled to run 10h ago.
-            // we have an interval of 2.4h
-            // repeater should've ran 4 times- that's 9.6h
-            // next time should be in 2h from now exactly
-            // 10/2.4 is 4.166
-            // 4.166 - Math.Truncate(4.166) is 0.166
-            // initial interval multiplier is 1 - 0.166 = 0.834
-            // interval (2.4h) * 0.834 is 2.0016 and that is the initial interval
-
-            var initialIntervalMultiplier = 1 - (triggerCount - Math.Truncate(triggerCount));
-            InitialInterval = TimeSpan.Parse(Repeater.Interval) * initialIntervalMultiplier;
-        }
+        var diff = DateTime.UtcNow - initialDateTime;
+        var interval = TimeSpan.Parse(Repeater.Interval);
+        var triggerCount = diff / interval;
+        var initialIntervalMultiplier = 1 - (triggerCount - Math.Truncate(triggerCount));
+        InitialInterval = interval * initialIntervalMultiplier;
     }
 
-
     /// <summary>
-    ///     Executes the repeater's action, sending the configured message to the specified channel.
+    ///     Triggers the repeater to send its message.
     /// </summary>
     public async Task Trigger()
     {
-        Task ChannelMissingError()
-        {
-            Log.Warning("Channel not found or insufficient permissions. Repeater stopped. ChannelId : {0}",
-                Channel?.Id);
-            Stop();
-            return mrs.RemoveRepeater(Repeater);
-        }
+        if (disposed)
+            return;
 
-        // next execution is interval amount of time after now
-        NextDateTime = DateTime.UtcNow + TimeSpan.Parse(Repeater.Interval);
-
-        var toSend = Repeater.Message;
+        await triggerLock.WaitAsync();
         try
         {
-            Channel ??= Guild.GetTextChannel(Repeater.ChannelId);
+            NextDateTime = DateTime.UtcNow + TimeSpan.Parse(Repeater.Interval);
 
+            Channel ??= await Guild.GetTextChannelAsync(Repeater.ChannelId);
             if (Channel == null)
             {
-                await ChannelMissingError().ConfigureAwait(false);
+                Log.Warning("Channel {ChannelId} not found. Removing repeater.", Repeater.ChannelId);
+                await RemoveRepeater();
                 return;
             }
 
             if (Repeater.NoRedundant)
             {
-                var lastMsgInChannel = (await Channel.GetMessagesAsync(2).FlattenAsync().ConfigureAwait(false))
-                    .FirstOrDefault();
-                if (lastMsgInChannel != null && lastMsgInChannel.Id == Repeater.LastMessageId
-                   ) //don't send if it's the same message in the channel
+                var lastMessage = await GetLastMessageAsync();
+                if (lastMessage?.Id == Repeater.LastMessageId)
                     return;
             }
 
-            // if the message needs to be send
-            // delete previous message if it exists
-            try
-            {
-                if (Repeater.LastMessageId != null)
-                {
-                    var oldMsg = await Channel.GetMessageAsync(Repeater.LastMessageId.Value).ConfigureAwait(false);
-                    if (oldMsg != null) await oldMsg.DeleteAsync().ConfigureAwait(false);
-                }
-            }
-            catch
-            {
-                // ignored
-            }
+            await DeletePreviousMessageAsync();
+            var newMsg = await SendNewMessageAsync();
 
-            var rep = new ReplacementBuilder()
-                .WithDefault(Guild.CurrentUser, Channel, Guild, client)
-                .Build();
-
-            IMessage newMsg;
-            if (SmartEmbed.TryParse(rep.Replace(toSend), Channel.GuildId, out var embed, out var plainText,
-                    out var components))
-            {
-                newMsg = await Channel.SendMessageAsync(plainText ?? "", embeds: embed, components: components?.Build())
-                    .ConfigureAwait(false);
-            }
-            else
-            {
-                newMsg = await Channel.SendMessageAsync(rep.Replace(toSend)).ConfigureAwait(false);
-            }
-
-            if (Repeater.NoRedundant)
+            if (Repeater.NoRedundant && newMsg != null)
             {
                 await mrs.SetRepeaterLastMessage(Repeater.Id, newMsg.Id);
                 Repeater.LastMessageId = newMsg.Id;
@@ -255,19 +185,70 @@ public class RepeatRunner
         }
         catch (HttpException ex)
         {
-            Log.Warning(ex, "Http Exception in repeat trigger");
-            await ChannelMissingError().ConfigureAwait(false);
+            Log.Warning(ex, "HTTP error in repeater for channel {ChannelId}", Repeater.ChannelId);
+            await RemoveRepeater();
         }
         catch (Exception ex)
         {
-            Log.Warning(ex, "Exception in repeat trigger");
-            Stop();
-            await mrs.RemoveRepeater(Repeater).ConfigureAwait(false);
+            Log.Error(ex, "Error in repeater for channel {ChannelId}", Repeater.ChannelId);
+            await RemoveRepeater();
+        }
+        finally
+        {
+            triggerLock.Release();
         }
     }
 
+    private async Task<IMessage?> GetLastMessageAsync()
+    {
+        if (Channel == null) return null;
+        var messages = await Channel.GetMessagesAsync(2).FlattenAsync().ConfigureAwait(false);
+        return messages.FirstOrDefault();
+    }
+
+    private async Task DeletePreviousMessageAsync()
+    {
+        if (Channel == null || Repeater.LastMessageId == null) return;
+
+        try
+        {
+            var oldMsg = await Channel.GetMessageAsync(Repeater.LastMessageId.Value).ConfigureAwait(false);
+            if (oldMsg != null)
+                await oldMsg.DeleteAsync().ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            Log.Warning(ex, "Error deleting previous repeater message");
+        }
+    }
+
+    private async Task<IMessage?> SendNewMessageAsync()
+    {
+        if (Channel == null) return null;
+
+        var rep = new ReplacementBuilder()
+            .WithDefault(await Guild.GetCurrentUserAsync(), Channel, Guild as SocketGuild, client)
+            .Build();
+
+        var message = rep.Replace(Repeater.Message);
+
+        if (SmartEmbed.TryParse(message, Channel.GuildId, out var embed, out var plainText, out var components))
+        {
+            return await Channel.SendMessageAsync(plainText ?? "", embeds: embed, components: components?.Build())
+                .ConfigureAwait(false);
+        }
+
+        return await Channel.SendMessageAsync(message).ConfigureAwait(false);
+    }
+
+    private async Task RemoveRepeater()
+    {
+        Stop();
+        await mrs.RemoveRepeater(Repeater).ConfigureAwait(false);
+    }
+
     /// <summary>
-    ///     Stops and then restarts the repeater, recalculating the initial interval based on current settings.
+    ///     Resets the repeater with new settings.
     /// </summary>
     public void Reset()
     {
@@ -276,21 +257,36 @@ public class RepeatRunner
     }
 
     /// <summary>
-    ///     Stops the repeater, preventing any further executions until reset or restarted.
+    ///     Stops the repeater.
     /// </summary>
     public void Stop()
     {
-        t.Change(Timeout.Infinite, Timeout.Infinite);
+        if (timer != null)
+        {
+            timer.Change(Timeout.Infinite, Timeout.Infinite);
+        }
     }
 
     /// <summary>
-    ///     Provides a string representation of the repeater's current state, including its channel, interval, and message.
+    ///     Returns a string representation of the repeater.
     /// </summary>
-    /// <returns>A string detailing the repeater's configuration and status.</returns>
     public override string ToString()
     {
         TimeSpan.TryParse(Repeater.Interval, out var interval);
-        return
-            $"{Channel?.Mention ?? $"⚠<#{Repeater.ChannelId}>"} {(Repeater.NoRedundant ? "| ✍" : "")}| {interval.TotalHours}:{interval:mm} | {Repeater.Message.TrimTo(33)}";
+        return $"{Channel?.Mention ?? $"⚠<#{Repeater.ChannelId}>"} {(Repeater.NoRedundant ? "| ✍" : "")}| {interval.TotalHours}:{interval:mm} | {Repeater.Message.TrimTo(33)}";
+    }
+
+    /// <summary>
+    ///     Disposes the repeater resources.
+    /// </summary>
+    public void Dispose()
+    {
+        if (disposed) return;
+
+        disposed = true;
+        timer?.Dispose();
+        triggerLock.Dispose();
+
+        GC.SuppressFinalize(this);
     }
 }

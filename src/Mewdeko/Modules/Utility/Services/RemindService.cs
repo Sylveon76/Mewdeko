@@ -1,8 +1,12 @@
 ﻿using System.Text.RegularExpressions;
 using System.Threading;
 using Mewdeko.Database.DbContextStuff;
+using Mewdeko.Modules.Administration.Services;
+using Mewdeko.Services.Strings;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualBasic;
 using Serilog;
+using Swan;
 
 namespace Mewdeko.Modules.Utility.Services;
 
@@ -12,8 +16,9 @@ namespace Mewdeko.Modules.Utility.Services;
 public partial class RemindService : INService
 {
     private readonly DiscordShardedClient client;
-    private readonly IBotCredentials creds;
     private readonly DbContextProvider dbProvider;
+    private readonly GuildTimezoneService tz;
+    private readonly GeneratedBotStrings Strings;
 
     private readonly Regex regex = MyRegex();
     private readonly ConcurrentDictionary<int, Timer> reminderTimers;
@@ -22,13 +27,14 @@ public partial class RemindService : INService
     ///     Initializes the reminder service, starting the background task to check for and execute reminders.
     /// </summary>
     /// <param name="client">The Discord client used for sending reminder notifications.</param>
-    /// <param name="db">The database service for managing reminders.</param>
-    /// <param name="creds">The bot's credentials, used for shard management and distribution of tasks.</param>
-    public RemindService(DiscordShardedClient client, DbContextProvider dbProvider, IBotCredentials creds)
+    /// <param name="dbProvider">The database service for managing reminders.</param>
+    /// <param name="tz">The timezone service for guild timezones.</param>
+    public RemindService(DiscordShardedClient client, DbContextProvider dbProvider, GuildTimezoneService tz, GeneratedBotStrings strings)
     {
         this.client = client;
         this.dbProvider = dbProvider;
-        this.creds = creds;
+        this.tz = tz;
+        Strings = strings;
         reminderTimers = new ConcurrentDictionary<int, Timer>();
         _ = InitializeRemindersAsync();
     }
@@ -38,12 +44,19 @@ public partial class RemindService : INService
     /// </summary>
     private async Task InitializeRemindersAsync()
     {
-        var now = DateTime.UtcNow;
-        var reminders = await GetRemindersBeforeAsync(now);
-
+        var reminders = await GetRemindersAsync();
         foreach (var reminder in reminders)
         {
-            ScheduleReminder(reminder);
+            // Only schedule reminders that haven't occurred yet
+            if (reminder.When > DateTime.UtcNow)
+            {
+                ScheduleReminder(reminder);
+            }
+            else
+            {
+                // For past reminders, either execute them immediately or clean them up
+                await ExecuteReminderAsync(reminder);
+            }
         }
     }
 
@@ -51,7 +64,7 @@ public partial class RemindService : INService
     ///     Schedules a reminder by setting a timer.
     /// </summary>
     /// <param name="reminder">The reminder to be scheduled.</param>
-    private void ScheduleReminder(Reminder reminder)
+    public Task ScheduleReminder(Reminder reminder)
     {
         var timeToGo = reminder.When - DateTime.UtcNow;
         if (timeToGo <= TimeSpan.Zero)
@@ -62,7 +75,17 @@ public partial class RemindService : INService
         var timer = new Timer(async _ => await ExecuteReminderAsync(reminder), null, timeToGo,
             Timeout.InfiniteTimeSpan);
         reminderTimers[reminder.Id] = timer;
+        return Task.CompletedTask;
     }
+
+    private async Task<List<Reminder>> GetRemindersAsync()
+    {
+        await using var dbContext = await dbProvider.GetContextAsync();
+        var reminders = await dbContext.Reminders.ToListAsync();
+        return reminders;
+    }
+
+
 
     /// <summary>
     ///     Executes the reminder action.
@@ -113,7 +136,7 @@ public partial class RemindService : INService
     {
         if (reminderTimers.TryRemove(reminder.Id, out var timer))
         {
-            timer.Dispose();
+            await timer.DisposeAsync();
         }
 
         await using var dbContext = await dbProvider.GetContextAsync();
@@ -123,18 +146,105 @@ public partial class RemindService : INService
     }
 
     /// <summary>
-    ///     Retrieves reminders that are scheduled to be executed before the specified time.
+    /// Creates a new reminder and schedules it for execution.
     /// </summary>
-    /// <param name="now">The current time.</param>
-    /// <returns>A list of reminders scheduled before the specified time.</returns>
-    private async Task<List<Reminder>> GetRemindersBeforeAsync(DateTime now)
+    /// <param name="targetId">The ID of the target channel or user.</param>
+    /// <param name="isPrivate">Whether the reminder should be sent as a private message.</param>
+    /// <param name="ts">The time span until the reminder should be triggered.</param>
+    /// <param name="message">The reminder message content.</param>
+    /// <param name="userId">The ID of the user who created the reminder.</param>
+    /// <param name="serverId">The ID of the server where the reminder was created, or null for private reminders.</param>
+    /// <param name="sanitizeMentions">Whether to sanitize mentions in the message.</param>
+    /// <returns>A tuple containing success status and response message.</returns>
+    public async Task<(bool success, string message)> CreateReminderAsync(
+        ulong targetId,
+        bool isPrivate,
+        TimeSpan ts,
+        string message,
+        ulong userId,
+        ulong? serverId,
+        bool sanitizeMentions)
+    {
+        if (ts > TimeSpan.FromDays(60))
+            return (false, string.Empty);
+
+        var time = DateTime.UtcNow + ts;
+
+        if (sanitizeMentions)
+        {
+            message = message.SanitizeAllMentions();
+        }
+
+        var rem = new Reminder
+        {
+            ChannelId = targetId,
+            IsPrivate = isPrivate,
+            When = time,
+            Message = message,
+            UserId = userId,
+            ServerId = serverId ?? 0
+        };
+
+        await using var dbContext = await dbProvider.GetContextAsync();
+        dbContext.Reminders.Add(rem);
+        await dbContext.SaveChangesAsync().ConfigureAwait(false);
+        await ScheduleReminder(rem);
+
+        var gTime = serverId == null
+            ? time
+            : TimeZoneInfo.ConvertTime(time, tz.GetTimeZoneOrUtc(serverId.Value));
+
+        var unixTime = gTime.ToUnixEpochDate();
+        var response = $"⏰ {Strings.Remind(serverId ?? 0,
+            Format.Bold(!isPrivate ? $"<#{targetId}>" : userId.ToString()),
+            Format.Bold(message),
+            $"<t:{unixTime}:R>")}";
+
+        return (true, response);
+    }
+
+    /// <summary>
+    /// Retrieves all reminders for a specific user.
+    /// </summary>
+    /// <param name="userId">The ID of the user whose reminders to retrieve.</param>
+    /// <returns>A list of all reminders for the specified user.</returns>
+    public async Task<List<Reminder>> GetUserRemindersAsync(ulong userId)
     {
         await using var dbContext = await dbProvider.GetContextAsync();
-
-        var reminders = await dbContext.Reminders
-            .Where(x => x.When < now)
+        return await dbContext.Reminders
+            .Where(x => x.UserId == userId)
+            .OrderBy(x => x.When)
             .ToListAsync();
-        return reminders;
+    }
+
+    /// <summary>
+    /// Deletes a specific reminder for a user.
+    /// </summary>
+    /// <param name="userId">The ID of the user who owns the reminder.</param>
+    /// <param name="index">The index of the reminder to delete.</param>
+    /// <returns>True if the reminder was deleted successfully, false if it wasn't found.</returns>
+    public async Task<bool> DeleteReminderAsync(ulong userId, int index)
+    {
+        if (index < 0)
+            return false;
+
+        await using var dbContext = await dbProvider.GetContextAsync();
+        var rems = await GetUserRemindersAsync(userId);
+
+        var pageIndex = index % 10;
+        if (rems.Count <= pageIndex)
+            return false;
+
+        var rem = rems[pageIndex];
+        dbContext.Reminders.Remove(rem);
+        await dbContext.SaveChangesAsync().ConfigureAwait(false);
+
+        if (reminderTimers.TryRemove(rem.Id, out var timer))
+        {
+            await timer.DisposeAsync();
+        }
+
+        return true;
     }
 
     /// <summary>
@@ -148,7 +258,7 @@ public partial class RemindService : INService
     /// </remarks>
     public bool TryParseRemindMessage(string input, out RemindObject obj)
     {
-        var m = regex.Match(input);
+        var m = MyRegex().Match(input);
 
         obj = default;
         if (m.Length == 0) return false;
@@ -192,7 +302,7 @@ public partial class RemindService : INService
             30 * values["mo"] + 7 * values["w"] + values["d"],
             values["h"],
             values["m"],
-            0
+            values["s"]
         );
 
         obj = new RemindObject
@@ -204,7 +314,7 @@ public partial class RemindService : INService
     }
 
     [GeneratedRegex(
-        @"^(?:in\s?)?\s*(?:(?<mo>\d+)(?:\s?(?:months?|mos?),?))?(?:(?:\sand\s|\s*)?(?<w>\d+)(?:\s?(?:weeks?|w),?))?(?:(?:\sand\s|\s*)?(?<d>\d+)(?:\s?(?:days?|d),?))?(?:(?:\sand\s|\s*)?(?<h>\d+)(?:\s?(?:hours?|h),?))?(?:(?:\sand\s|\s*)?(?<m>\d+)(?:\s?(?:minutes?|mins?|m),?))?\s+(?:to:?\s+)?(?<what>(?:\r\n|[\r\n]|.)+)",
+        @"^(?:in\s?)?\s*(?:(?<mo>\d+)(?:\s?(?:months?|mos?),?))?(?:(?:\sand\s|\s*)?(?<w>\d+)(?:\s?(?:weeks?|w),?))?(?:(?:\sand\s|\s*)?(?<d>\d+)(?:\s?(?:days?|d),?))?(?:(?:\sand\s|\s*)?(?<h>\d+)(?:\s?(?:hours?|h),?))?(?:(?:\sand\s|\s*)?(?<m>\d+)(?:\s?(?:minutes?|mins?|m),?))?(?:(?:\sand\s|\s*)?(?<s>\d+)(?:\s?(?:seconds?|secs?|s),?))?\s+(?:to:?\s+)?(?<what>(?:\r\n|[\r\n]|.)+)",
         RegexOptions.Multiline | RegexOptions.Compiled)]
     private static partial Regex MyRegex();
 
