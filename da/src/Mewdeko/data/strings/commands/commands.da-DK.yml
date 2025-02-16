@@ -2102,10 +2102,14 @@ liftlockdown:
   desc: "Lifts the specified lockdown (joins, readonly, full)."
 log:
   args:
-    - userpresence
-    - userbanned
+    - "<channel> <type1> [type2] [type3]..."
+    - "<\"#channel1:type1,type2\" \"#channel2:type3,type4\"...>"
   desc: >-
-    Toggles logging event. Disables it if it is active anywhere on the server. Enables if it isn't active. Use `{0}logevents` to see a list of all events you can subscribe to.
+    Sets up logging events for channels. Multiple formats available: 
+    1. Single channel, multiple types: `.log #mod-logs UserBanned UserJoined UserLeft` 
+    2. Multiple channels with their types: `.log "#mod-logs:UserBanned,UserJoined" "#thread-logs:ThreadCreated,ThreadDeleted"` 
+    Use `.logevents` to see a list of all available event types. 
+    If no channel is specified, logging for that event type will be disabled.
 logcategory:
   args:
     - Users
