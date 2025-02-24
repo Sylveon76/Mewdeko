@@ -242,7 +242,7 @@ public class Program
                 .ConfigureServices((context, services) =>
                 {
                     // Configure services without web-specific services
-                    _ = ConfigureServices(services, credentials, Cache);
+                    ConfigureServices(services, credentials, Cache);
                 })
                 .Build();
 
@@ -251,13 +251,13 @@ public class Program
         }
     }
 
-    private async static Task ConfigureServices(IServiceCollection services, BotCredentials credentials, IDataCache cache)
+    private static void ConfigureServices(IServiceCollection services, BotCredentials credentials, IDataCache cache)
     {
 
         var discordRestClient = new DiscordRestClient();
-        await discordRestClient.LoginAsync(TokenType.Bot, credentials.Token);
-        var botGatewayInfo = await discordRestClient.GetBotGatewayAsync();
-        await discordRestClient.LogoutAsync();
+        discordRestClient.LoginAsync(TokenType.Bot, credentials.Token).GetAwaiter().GetResult();
+        var botGatewayInfo = discordRestClient.GetBotGatewayAsync().GetAwaiter().GetResult();
+        discordRestClient.LogoutAsync().GetAwaiter().GetResult();
 
         Log.Information("Discord recommends {0} shards with {1} max concurrency",
             botGatewayInfo.Shards,
@@ -272,8 +272,7 @@ public class Program
             GatewayIntents = GatewayIntents.All,
             FormatUsersInBidirectionalUnicode = false,
             LogGatewayIntentWarnings = false,
-            DefaultRetryMode = RetryMode.RetryRatelimit,
-            TotalShards = credentials.TotalShards
+            DefaultRetryMode = RetryMode.RetryRatelimit
         });
 
         services.AddSerilog(LogSetup.SetupLogger("Mewdeko"));
