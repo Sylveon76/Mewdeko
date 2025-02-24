@@ -52,10 +52,10 @@ public class GuildAiConfig : DbEntity
     /// <summary>
     ///     Gets or sets the custom embed used for the ai model.
     /// </summary>
-    public string CustomEmbed { get; set; }
+    public string? CustomEmbed { get; set; }
 
     /// <summary>
     ///     Gets or sets the webhook url used for sending ai messages.
     /// </summary>
-    public string WebhookUrl { get; set; }
+    public string? WebhookUrl { get; set; }
 }
