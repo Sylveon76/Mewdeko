@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using Discord.Commands;
 using Discord.Interactions;
+using Discord.Rest;
 using Fergun.Interactive;
 using Lavalink4NET.Extensions;
 using MartineApiNet;
@@ -241,7 +242,7 @@ public class Program
                 .ConfigureServices((context, services) =>
                 {
                     // Configure services without web-specific services
-                    ConfigureServices(services, credentials, Cache);
+                    _ = ConfigureServices(services, credentials, Cache);
                 })
                 .Build();
 
@@ -250,8 +251,18 @@ public class Program
         }
     }
 
-    private static void ConfigureServices(IServiceCollection services, BotCredentials credentials, IDataCache cache)
+    private async static Task ConfigureServices(IServiceCollection services, BotCredentials credentials, IDataCache cache)
     {
+
+        var discordRestClient = new DiscordRestClient();
+        await discordRestClient.LoginAsync(TokenType.Bot, credentials.Token);
+        var botGatewayInfo = await discordRestClient.GetBotGatewayAsync();
+        await discordRestClient.LogoutAsync();
+
+        Log.Information("Discord recommends {0} shards with {1} max concurrency",
+            botGatewayInfo.Shards,
+            botGatewayInfo.SessionStartLimit.MaxConcurrency);
+
         var client = new DiscordShardedClient(new DiscordSocketConfig
         {
             MessageCacheSize = 15,
@@ -261,8 +272,10 @@ public class Program
             GatewayIntents = GatewayIntents.All,
             FormatUsersInBidirectionalUnicode = false,
             LogGatewayIntentWarnings = false,
-            DefaultRetryMode = RetryMode.RetryRatelimit
+            DefaultRetryMode = RetryMode.RetryRatelimit,
+            TotalShards = credentials.TotalShards
         });
+
         services.AddSerilog(LogSetup.SetupLogger("Mewdeko"));
         services.AddSingleton(client);
         services.AddSingleton(credentials);

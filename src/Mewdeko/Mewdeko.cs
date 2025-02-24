@@ -130,47 +130,72 @@ public class Mewdeko
     }
 
     private async Task LoginAsync(string token)
+{
+    Client.Log += Client_Log;
+    var clientReady = new TaskCompletionSource<bool>();
+
+    Task SetClientReady(DiscordSocketClient unused)
     {
-        Client.Log += Client_Log;
-        var clientReady = new TaskCompletionSource<bool>();
-
-        Task SetClientReady(DiscordSocketClient unused)
-        {
-            ReadyCount++;
-            Log.Information($"Shard {unused.ShardId} is ready");
-            Log.Information($"{ReadyCount}/{Client.Shards.Count} shards connected");
-            if (ReadyCount != Client.Shards.Count)
-                return Task.CompletedTask;
-            _ = Task.Run(() => clientReady.TrySetResult(true));
+        ReadyCount++;
+        Log.Information($"Shard {unused.ShardId} is ready");
+        Log.Information($"{ReadyCount}/{Client.Shards.Count} shards connected");
+        if (ReadyCount != Client.Shards.Count)
             return Task.CompletedTask;
-        }
-
-        Log.Information("Logging in...");
-        try
-        {
-            await Client.LoginAsync(TokenType.Bot, token.Trim()).ConfigureAwait(false);
-            await Client.StartAsync().ConfigureAwait(false);
-        }
-        catch (HttpException ex)
-        {
-            LoginErrorHandler.Handle(ex);
-            Helpers.ReadErrorAndExit(3);
-        }
-        catch (Exception ex)
-        {
-            LoginErrorHandler.Handle(ex);
-            Helpers.ReadErrorAndExit(4);
-        }
-
-        Client.ShardReady += SetClientReady;
-        await clientReady.Task.ConfigureAwait(false);
-        Client.ShardReady -= SetClientReady;
-        Client.JoinedGuild += Client_JoinedGuild;
-        Client.LeftGuild += Client_LeftGuild;
-        Log.Information("Logged in.");
-        Log.Information("Logged in as:");
-        Console.WriteLine(FiggleFonts.Digital.Render(Client.CurrentUser.Username));
+        _ = Task.Run(() => clientReady.TrySetResult(true));
+        return Task.CompletedTask;
     }
+
+    Log.Information("Logging in...");
+    try
+    {
+        // Login but don't start shards yet
+        await Client.LoginAsync(TokenType.Bot, token.Trim()).ConfigureAwait(false);
+        var gw = await Client.GetBotGatewayAsync();
+
+        var maxConcurrency = gw.SessionStartLimit.MaxConcurrency;
+
+        // Start shards in rate-limited batches according to max concurrency
+        var totalShards = Client.Shards.Count;
+        Log.Information($"Starting {totalShards} shards with max concurrency of {maxConcurrency}");
+
+        // Group shards by their rate limit bucket using the formula from Discord docs
+        var shardGroups = Client.Shards
+            .GroupBy(shard => shard.ShardId % maxConcurrency)
+            .OrderBy(group => group.Key)
+            .ToList();
+
+        // Start each batch of shards
+        foreach (var group in shardGroups)
+        {
+            var tasks = group.Select(shard => shard.StartAsync()).ToList();
+            Log.Information($"Starting shard bucket {group.Key} with {tasks.Count} shards");
+            await Task.WhenAll(tasks);
+
+            // If not the last group, add a small delay between buckets
+            if (group != shardGroups.Last())
+                await Task.Delay(5000);
+        }
+    }
+    catch (HttpException ex)
+    {
+        LoginErrorHandler.Handle(ex);
+        Helpers.ReadErrorAndExit(3);
+    }
+    catch (Exception ex)
+    {
+        LoginErrorHandler.Handle(ex);
+        Helpers.ReadErrorAndExit(4);
+    }
+
+    Client.ShardReady += SetClientReady;
+    await clientReady.Task.ConfigureAwait(false);
+    Client.ShardReady -= SetClientReady;
+    Client.JoinedGuild += Client_JoinedGuild;
+    Client.LeftGuild += Client_LeftGuild;
+    Log.Information("Logged in.");
+    Log.Information("Logged in as:");
+    Console.WriteLine(FiggleFonts.Digital.Render(Client.CurrentUser.Username));
+}
 
     private Task Client_LeftGuild(SocketGuild arg)
     {
