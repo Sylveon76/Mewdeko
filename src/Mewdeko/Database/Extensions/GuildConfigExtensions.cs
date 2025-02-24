@@ -1,6 +1,9 @@
-﻿using LinqToDB.EntityFrameworkCore;
+﻿using System.Data;
+using LinqToDB.EntityFrameworkCore;
 using Mewdeko.Database.Common;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
+using Serilog;
 
 namespace Mewdeko.Database.Extensions;
 
@@ -44,46 +47,104 @@ public static class GuildConfigExtensions
     }
 
     /// <summary>
-    ///     Retrieves or creates a GuildConfig for a specific guild.
+    ///     Retrieves or creates a GuildConfig for a specific guild in a thread-safe manner.
     /// </summary>
     /// <param name="ctx">The database context.</param>
     /// <param name="guildId">The ID of the guild.</param>
     /// <param name="includes">Optional function to include related entities.</param>
     /// <returns>The GuildConfig for the guild.</returns>
+    /// <remarks>
+    ///     This method uses a serializable transaction to prevent duplicate entries when
+    ///     multiple threads simultaneously attempt to create configurations for the same guild.
+    ///     If a duplicate entry is detected, it rolls back and retrieves the existing config.
+    /// </remarks>
+    /// <exception cref="DbUpdateException">Thrown when a database error occurs other than a duplicate key violation.</exception>
+    /// <exception cref="Exception">Thrown when unable to retrieve guild configuration after conflict resolution.</exception>
     public static async Task<GuildConfig> ForGuildId(this MewdekoContext ctx, ulong guildId,
         Func<DbSet<GuildConfig>, IQueryable<GuildConfig>>? includes = null)
     {
-        GuildConfig config;
+        // Create execution strategy that will handle retries
+        var strategy = ctx.Database.CreateExecutionStrategy();
 
-        if (includes is null)
+        // Execute with retry capability
+        return await strategy.ExecuteAsync(async () =>
         {
-            config = await ctx
-                .GuildConfigs
-                .FirstOrDefaultAsync(c => c.GuildId == guildId);
-        }
-        else
-        {
-            var set = includes(ctx.GuildConfigs);
-            config = await set.FirstOrDefaultAsync(c => c.GuildId == guildId);
-        }
+            // Work done within this lambda will be retried if necessary
 
-        if (config is null)
-        {
-            await ctx.GuildConfigs.AddAsync(config = new GuildConfig
+            GuildConfig config;
+
+            if (includes is null)
             {
-                GuildId = guildId,
-                Permissions = Permissionv2.GetDefaultPermlist,
-                WarningsInitialized = true,
-                WarnPunishments = DefaultWarnPunishments
-            });
-            await ctx.SaveChangesAsync();
-        }
+                config = await ctx
+                    .GuildConfigs
+                    .FirstOrDefaultAsync(c => c.GuildId == guildId);
+            }
+            else
+            {
+                var set = includes(ctx.GuildConfigs);
+                config = await set.FirstOrDefaultAsync(c => c.GuildId == guildId);
+            }
 
-        if (config.WarningsInitialized) return config;
-        config.WarningsInitialized = true;
-        config.WarnPunishments = DefaultWarnPunishments;
+            if (config is null)
+            {
+                // Start a new transaction with serializable isolation level
+                using var transaction = await ctx.Database.BeginTransactionAsync(IsolationLevel.Serializable);
 
-        return config;
+                try
+                {
+                    // Check again inside the transaction to avoid race conditions
+                    config = await ctx.GuildConfigs.FirstOrDefaultAsync(c => c.GuildId == guildId);
+
+                    if (config is null)
+                    {
+                        // Only create new if it's still not found
+                        await ctx.GuildConfigs.AddAsync(config = new GuildConfig
+                        {
+                            GuildId = guildId,
+                            Permissions = Permissionv2.GetDefaultPermlist,
+                            WarningsInitialized = true,
+                            WarnPunishments = DefaultWarnPunishments
+                        });
+
+                        // Save changes inside the transaction
+                        await ctx.SaveChangesAsync();
+                    }
+
+                    // Commit the transaction
+                    await transaction.CommitAsync();
+                }
+                catch (Exception ex) when (ex is DbUpdateException ||
+                                           ex.InnerException is PostgresException pgEx &&
+                                           pgEx.SqlState == "40001") // Serialization failure
+                {
+                    // For serialization failures, rollback and let the execution strategy retry
+                    await transaction.RollbackAsync();
+                    throw; // Rethrow to allow the execution strategy to retry
+                }
+
+                // If we got here without a config, try one more lookup outside the transaction
+                if (config is null)
+                {
+                    config = await ctx.GuildConfigs.FirstOrDefaultAsync(c => c.GuildId == guildId);
+
+                    if (config is null)
+                    {
+                        Log.Error("Failed to get guild config after transaction attempt");
+                        throw new Exception("Could not retrieve or create guild configuration");
+                    }
+                }
+            }
+
+            // Update the warnings if needed (outside transaction)
+            if (!config.WarningsInitialized)
+            {
+                config.WarningsInitialized = true;
+                config.WarnPunishments = DefaultWarnPunishments;
+                await ctx.SaveChangesAsync();
+            }
+
+            return config;
+        });
     }
 
     /// <summary>
@@ -178,11 +239,11 @@ public static class GuildConfigExtensions
     /// <returns>The GuildConfig for the guild.</returns>
     public static async Task<LoggingV2> LogSettingsFor(this MewdekoContext ctx, ulong guildId)
     {
-       var log = await ctx.LoggingV2.FirstOrDefaultAsync(x => x.GuildId == guildId) ?? new LoggingV2()
-       {
-           GuildId = guildId
-       };
-       return log;
+        var log = await ctx.LoggingV2.FirstOrDefaultAsync(x => x.GuildId == guildId) ?? new LoggingV2
+        {
+            GuildId = guildId
+        };
+        return log;
     }
 
     /// <summary>

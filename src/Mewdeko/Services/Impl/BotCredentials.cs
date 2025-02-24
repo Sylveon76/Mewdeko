@@ -90,6 +90,11 @@ public class BotCredentials : IBotCredentials
     public bool IsMasterInstance { get; set; } = false;
 
     /// <summary>
+    /// Gets or sets the url used for libretranslate.
+    /// </summary>
+    public string LibreTranslateUrl { get; set; } = "http://localhost:5000";
+
+    /// <summary>
     ///     Gets or sets a value indicating whether to use global currency.
     /// </summary>
     public bool UseGlobalCurrency { get; set; }
@@ -125,6 +130,15 @@ public class BotCredentials : IBotCredentials
     /// </summary>
     public ulong GlobalBanReportChannelId { get; set; }
 
+    /// <summary>
+    /// Gets or sets whether grafana metrics are enabled.
+    /// </summary>
+    public bool EnableMetrics { get; set; } = true;
+
+    /// <summary>
+    /// Sets the port used for grafana metrics.
+    /// </summary>
+    public int MetricsPort { get; set; } = 9090;
     /// <summary>
     ///     Gets or sets the ID of the channel where pronoun abuse reports are sent.
     /// </summary>
@@ -430,8 +444,10 @@ public class BotCredentials : IBotCredentials
             }
 
             TotalShards = int.TryParse(data[nameof(TotalShards)], out var ts) && ts > 0 ? ts : 1;
-
-            TwitchClientId = data[nameof(TwitchClientId)] ?? "67w6z9i09xv2uoojdm9l0wsyph4hxo6";
+            LibreTranslateUrl = data[nameof(LibreTranslateUrl)] ?? LibreTranslateUrl;
+            EnableMetrics = !bool.TryParse(data[nameof(EnableMetrics)], out var metricsEnabled) || metricsEnabled;
+            MetricsPort = int.TryParse(data[nameof(MetricsPort)], out var metricsPort) ? metricsPort : 0;
+            TwitchClientId = data[nameof(TwitchClientId)] ?? "http://localhost:5000";
             RedisConnections = data[nameof(RedisConnections)];
 
             DebugGuildId = ulong.TryParse(data[nameof(DebugGuildId)], out var dgid) ? dgid : 843489716674494475;
@@ -556,6 +572,7 @@ public class BotCredentials : IBotCredentials
         public string SpotifyClientSecret { get; } = "";
         public string StatcordKey { get; } = "";
         public string GoogleApiKey { get; } = "";
+        public string LibreTranslateUrl { get; } = "http://localhost:5000";
         public string MashapeKey { get; } = "";
         public string OsuApiKey { get; } = "";
         public string TrovoClientId { get; } = "";
