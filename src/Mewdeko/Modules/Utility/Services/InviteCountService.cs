@@ -196,6 +196,7 @@ public class InviteCountService : INService, IReadyExecutor
         catch (Exception ex)
         {
             Console.WriteLine($"Failed to update invites for guild {guild.Id}: {ex.Message}");
+
         }
     }
 
@@ -371,7 +372,7 @@ public class InviteCountService : INService, IReadyExecutor
         var newSettings = mergedSettings.Values.Where(s => !allSettings.ContainsKey(s.GuildId));
         uow.InviteCountSettings.AddRange(newSettings);
         await uow.SaveChangesAsync();
-        foreach (var i in guilds)
+        foreach (var i in from i in guilds let user = i.Users.FirstOrDefault(x => x.Id == client.CurrentUser.Id) where user.GuildPermissions.Has(GuildPermission.ManageGuild) select i)
         {
             await UpdateGuildInvites(i);
         }
