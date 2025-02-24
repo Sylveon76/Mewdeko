@@ -1,4 +1,5 @@
-﻿using Mewdeko.Common.ModuleBehaviors;
+﻿using System.Threading;
+using Mewdeko.Common.ModuleBehaviors;
 using Mewdeko.Database.DbContextStuff;
 using Microsoft.EntityFrameworkCore;
 
@@ -372,9 +373,32 @@ public class InviteCountService : INService, IReadyExecutor
         var newSettings = mergedSettings.Values.Where(s => !allSettings.ContainsKey(s.GuildId));
         uow.InviteCountSettings.AddRange(newSettings);
         await uow.SaveChangesAsync();
-        foreach (var i in from i in guilds let user = i.Users.FirstOrDefault(x => x.Id == client.CurrentUser.Id) where user.GuildPermissions.Has(GuildPermission.ManageGuild) select i)
+
+        var guildsToUpdate = guilds
+            .Where(i => i.Users.FirstOrDefault(x => x.Id == client.CurrentUser.Id)?.GuildPermissions.Has(GuildPermission.ManageGuild) == true)
+            .ToList();
+
+        var semaphore = new SemaphoreSlim(10);
+        var tasks = guildsToUpdate.Select(guild => ProcessGuildWithRateLimiting(guild, semaphore)).ToList();
+
+        await Task.WhenAll(tasks);
+    }
+
+    private async Task ProcessGuildWithRateLimiting(IGuild guild, SemaphoreSlim semaphore)
+    {
+        try
         {
-            await UpdateGuildInvites(i);
+            await semaphore.WaitAsync();
+            await UpdateGuildInvites(guild);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error updating invites for guild {guild.Id}: {ex.Message}");
+        }
+        finally
+        {
+            semaphore.Release();
+            await Task.Delay(100);
         }
     }
 }
