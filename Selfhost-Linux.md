@@ -68,28 +68,25 @@ sudo apt update && sudo apt install postgres postgres-contrib dotnet-sdk-8.0 git
 
 **5. Copy the URL and paste it into the browser and invite the bot to your server.**
 
-**6. To allow the update command to work run the following commands in the directory where Mewdeko, is stored.**
-```
-cd /path/to/mewdeko
-git init
-git remote add origin https://github.com/SylveonDeko/Mewdeko.git
-```
-Optional systemd service example:
+# (optional) Systemd service setup.
+**1. Run `dotnet publish -c release` in the directory where Mewdeko.csproj is located.**
+**2. Run `sudo nano /etc/systemd/system/mewdeko.service` and paste the service file shown below.**
+**3. To start Mewdeko, run `sudo systemctl start mewdeko`, to restart run `sudo systemctl restart mewdeko`, and to stop run `sudo systemctl stop mewdeko`>**
+
+
 ```
 [Unit]
 Description=Mewdeko
 After=network.target
 
 [Service]
-WorkingDirectory=/srv/Mewdeko/src/Mewdeko
-ExecStart=/usr/bin/dotnet run -c release
-ExecStop=/bin/bash -c "kill -SIGINT 3687"
-Restart=on-failure
+WorkingDirectory=/path/to/mewdeko
+ExecStart=/usr/bin/dotnet /path/to/Mewdeko.dll 
+ExecStop=/bin/kill $MAINPID
 Killsignal=SIGINT
 TimeoutStopSec=10
 User=<yourUsername>
-Group=<sameAsUsername>
-Environment=ASPNETCORE_ENVIRONMENT=Production
+Group=<yourGroup>
 
 [Install]
 WantedBy=multi-user.target
