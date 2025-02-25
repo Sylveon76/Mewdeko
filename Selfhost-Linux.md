@@ -13,9 +13,7 @@
 ```
 sudo apt update && sudo apt install postgres postgres-contrib dotnet-sdk-8.0 git
 ```
-**2. Download Mewdeko from the [releases page](https://github.com/SylveonDeko/Mewdeko/releases).**
-**3. Unzip the file with `tar -xvf /path/to/mewdeko.tar.gz` **
-**4. Move the folder you just unzipped to a different directory such as say /srv.**
+**2. Download Mewdeko via `git clone -b psqldeko https://gitub.com/sylveondeko/mewdeko.git`.**
 # Database setup
 **1. Switch to the postgres user**
    ```
