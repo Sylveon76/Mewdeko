@@ -1,3 +1,10 @@
+# Prerequisites 
+- A Linux operating system or virtualized environment.
+- PostgreSQL
+- Dotnet
+- Git
+- Ability to properly use a terminal.
+
 # Creating the Bot
 **1. Go to [Discord Developer Portal](https://discord.dev) and login.**
 
