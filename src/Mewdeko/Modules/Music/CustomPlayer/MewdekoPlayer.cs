@@ -251,7 +251,7 @@ public sealed class MewdekoPlayer : LavalinkPlayer
         var position = Position.Value.Position;
         var duration = CurrentTrack.Duration;
         var (progressBar, percentage) = CreateProgressBar(position, duration);
-        var settings = await GetMusicSettings();
+        await GetMusicSettings();
 
         var description = new StringBuilder()
             .AppendLine("## 📀 Track Info")

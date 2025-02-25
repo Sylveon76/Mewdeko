@@ -1627,7 +1627,7 @@ public class SuggestionsService : INService
             .Build();
 
         var content = replacer.Replace(statusConfig.Message);
-        return SmartEmbed.TryParse(content, guild.Id, out var embed, out var plainText, out _)
+        return SmartEmbed.TryParse(content, guild.Id, out var embed, out _, out _)
             ? embed.FirstOrDefault()
             : new EmbedBuilder().WithDescription(content).Build();
     }

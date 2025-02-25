@@ -75,7 +75,7 @@ public class Starboard(GuildSettingsService guildSettings, InteractiveService in
             return;
         }
 
-        var starboardId = await Service.CreateStarboard(ctx.Guild, channel.Id, emote.ToString(), threshold);
+        await Service.CreateStarboard(ctx.Guild, channel.Id, emote.ToString(), threshold);
         await ctx.Channel.SendConfirmAsync(Strings.StarboardCreated(ctx.Guild.Id, channel.Mention, emote.ToString(), threshold));
     }
 

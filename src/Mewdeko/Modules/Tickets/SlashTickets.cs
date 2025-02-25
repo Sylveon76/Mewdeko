@@ -820,7 +820,7 @@ public class TicketCommands : MewdekoSlashModuleBase<TicketService>
     public async Task HandlePanelCreation(string channelId, PanelCreationModal modal)
     {
         var channel = await ctx.Guild.GetTextChannelAsync(ulong.Parse(channelId));
-        var panel = await Service.CreatePanelAsync(channel, modal.EmbedJson);
+        await Service.CreatePanelAsync(channel, modal.EmbedJson);
         await RespondAsync("Panel created successfully!", ephemeral: true);
     }
 
@@ -1362,7 +1362,7 @@ public class TicketCommands : MewdekoSlashModuleBase<TicketService>
                 }
             }
 
-            var button = await Service.AddButtonAsync(
+            await Service.AddButtonAsync(
                 panel,
                 label.HasValue ? label.ToString() : null,
                 emoji.HasValue ? emoji.ToString() : null,

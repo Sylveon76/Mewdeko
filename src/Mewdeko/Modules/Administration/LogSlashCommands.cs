@@ -293,7 +293,7 @@ public class LogSlashCommands : MewdekoSlashModuleBase<LogCommandService>
             }
 
             // Clean up the select menu message
-            if (LogSelectMessages.TryGetValue(Context.Channel.Id, out var msg))
+            if (LogSelectMessages.TryGetValue(Context.Channel.Id, out _))
             {
                 try
                 {

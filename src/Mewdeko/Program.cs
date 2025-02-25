@@ -178,7 +178,6 @@ public class Program
                     "HTTP {RequestMethod} {RequestPath} responded {StatusCode} in {Elapsed:0.0000} ms\n{RequestBody}";
                 options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
                 {
-                    var originalBody = httpContext.Request.Body;
                     try
                     {
                         var requestBody = string.Empty;

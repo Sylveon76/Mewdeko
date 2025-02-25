@@ -349,7 +349,7 @@ public class SlashMusic(
     [CheckPermissions]
     public async Task MoveSong(int from, int to)
     {
-        var (player, result) = await GetPlayerAsync(false);
+        var (_, result) = await GetPlayerAsync(false);
         if (result is not null)
         {
             var eb = new EmbedBuilder()
@@ -464,7 +464,7 @@ public class SlashMusic(
     [CheckPermissions]
     public async Task Queue()
     {
-        var (player, result) = await GetPlayerAsync(false);
+        var (_, result) = await GetPlayerAsync(false);
         if (result is not null)
         {
             var eb = new EmbedBuilder()
@@ -660,7 +660,7 @@ public class SlashMusic(
 
         var componentInteraction = ctx.Interaction as IComponentInteraction;
 
-        var (player, result) = await GetPlayerAsync(false);
+        var (player, _) = await GetPlayerAsync(false);
 
         var tracks = await cache.Redis.GetDatabase()
             .StringGetAsync($"{ctx.User.Id}_{componentInteraction.Message.Id}_tracks");

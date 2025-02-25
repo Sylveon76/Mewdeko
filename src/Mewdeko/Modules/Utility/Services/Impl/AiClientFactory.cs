@@ -8,7 +8,7 @@ public class AiClientFactory : IAiClientFactory
     private readonly Dictionary<AiService.AiProvider, (IAiClient Client, IAiStreamParser Parser)> clients = new()
     {
         [AiService.AiProvider.Claude] = (new ClaudeClient(), new ClaudeStreamParser()),
-        // Add other providers here
+        [AiService.AiProvider.Groq] = (new GroqClient(), new GroqStreamParser())
     };
 
     /// <inheritdoc />

@@ -46,7 +46,7 @@ public class StarboardSlash(GuildSettingsService guildSettings, InteractiveServi
             return;
         }
 
-        var starboardId = await Service.CreateStarboard(ctx.Guild, channel.Id, emote.ToString(), threshold);
+        await Service.CreateStarboard(ctx.Guild, channel.Id, emote.ToString(), threshold);
         await msg.DeleteAsync();
         await ctx.Interaction.SendConfirmAsync(Strings.StarboardCreated(ctx.Guild.Id, channel.Mention, emote.ToString(), threshold));
     }

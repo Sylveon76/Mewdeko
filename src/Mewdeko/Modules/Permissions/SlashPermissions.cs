@@ -1361,9 +1361,6 @@ public class SlashPermissions : MewdekoSlashModuleBase<PermissionService>
         var userPerm = ((TextUserPermAttribute)info.Preconditions.FirstOrDefault(ca => ca is TextUserPermAttribute))
             ?.UserPermissionAttribute.GuildPermission;
 
-        var basePerms = userPerm is not null
-            ? perms.Where(x => (userPerm & x) == x).ToList()
-            : [];
         var truePerms = perms.Where(x => (effecting & x) == x).ToList();
         // get list of selectable perms
         var selectable = perms.Skip(25 * index).Take(25).ToList();

@@ -267,7 +267,7 @@ public partial class Tickets : MewdekoModuleBase<TicketService>
 
             try
             {
-                var option = await Service.AddSelectOptionAsync(
+                await Service.AddSelectOptionAsync(
                     menu,
                     label,
                     $"option_{Guid.NewGuid():N}", // Generate unique value

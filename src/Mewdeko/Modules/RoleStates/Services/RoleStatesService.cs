@@ -240,7 +240,6 @@ public class RoleStatesService : INService
     {
         await using var dbContext = await dbProvider.GetContextAsync();
 
-        var previousClearOnBanValue = roleStateSettings.ClearOnBan;
         roleStateSettings.ClearOnBan = !roleStateSettings.ClearOnBan;
 
         dbContext.RoleStateSettings.Update(roleStateSettings);

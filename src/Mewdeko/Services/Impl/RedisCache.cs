@@ -235,7 +235,7 @@ public class RedisCache : IDataCache
             JsonSerializer.Serialize(playlist, options));
 
         // Update the list of playlists for this guild
-        var playlistNames = await db.SetMembersAsync($"{redisKey}_playlists_{userId}");
+        await db.SetMembersAsync($"{redisKey}_playlists_{userId}");
         await db.SetAddAsync(
             $"{redisKey}_playlists_{userId}",
             playlist.Name.ToLower());

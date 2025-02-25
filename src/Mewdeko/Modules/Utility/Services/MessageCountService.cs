@@ -311,7 +311,7 @@ public class MessageCountService : INService
                 minCounts.TryRemove(guildId, out _);
 
                 // Clear cache for this guild
-                var cachePattern = $"msgcount:{guildId}:*";
+                _ = $"msgcount:{guildId}:*";
                 // Note: Implementation of cache pattern removal depends on your cache provider
                 // You may need to track keys separately if your cache doesn't support pattern matching
             }

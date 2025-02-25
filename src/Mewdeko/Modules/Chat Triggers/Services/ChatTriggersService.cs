@@ -692,7 +692,7 @@ public sealed class ChatTriggersService : IEarlyBehavior, INService, IReadyExecu
 
             // Initialize a list to store CTModel objects representing chat triggers
             List<CTModel> triggers = [];
-            foreach (var (trigger, value) in data)
+            foreach (var (_, value) in data)
             {
                 // Convert exported triggers to CTModel objects and add them to the list
                 triggers.AddRange(value

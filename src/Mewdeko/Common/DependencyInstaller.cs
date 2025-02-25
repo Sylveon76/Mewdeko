@@ -383,7 +383,7 @@ public static class DependencyInstaller
                 };
 
                 process.Start();
-                var output = process.StandardOutput.ReadToEnd();
+                process.StandardOutput.ReadToEnd();
                 var error = process.StandardError.ReadToEnd();
                 process.WaitForExit();
 
@@ -474,7 +474,7 @@ public static class DependencyInstaller
                 };
 
                 process.Start();
-                var output = process.StandardOutput.ReadToEnd();
+                process.StandardOutput.ReadToEnd();
                 var error = process.StandardError.ReadToEnd();
                 process.WaitForExit();
 

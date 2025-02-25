@@ -743,7 +743,6 @@ public class OwnerOnlyService : ILateExecutor, IReadyExecutor, INService
         {
             if (cmd.GuildId is null)
                 return;
-            var guildShard = (int)((cmd.GuildId.Value >> 22) % (ulong)creds.TotalShards);
             var guild = client.GetGuild(cmd.GuildId.Value);
             var prefix = await guildSettings.GetPrefix(guild);
             //if someone already has .die as their startup command, ignore it

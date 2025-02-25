@@ -215,7 +215,6 @@ public class JoinLeaveLoggerService : INService, IDisposable
         string title, string totalLabel)
     {
         await using var dbContext = await dbProvider.GetContextAsync();
-        var config = await dbContext.ForGuildId(guildId);
 
         const int width = 1000;
         const int height = 500;

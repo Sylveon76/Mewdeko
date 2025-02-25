@@ -54,7 +54,6 @@ public partial class Utility
 
             if (string.IsNullOrWhiteSpace(mapping))
             {
-                var cachedConfig = await service.GetGuildConfig(ctx.Guild.Id);
                 var gottenMaps = await Service.GetCommandMap(ctx.Guild.Id);
                 if (gottenMaps != null && (gottenMaps.Count != 0 ||
                                            !gottenMaps.Remove(trigger, out _)))

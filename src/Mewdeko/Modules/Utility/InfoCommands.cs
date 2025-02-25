@@ -186,8 +186,6 @@ public partial class Utility
             if (guild == null)
                 return;
             var ownername = guild.GetUser(guild.OwnerId);
-            var textchn = guild.TextChannels.Count;
-            var voicechn = guild.VoiceChannels.Count;
 
             var component = new ComponentBuilder().WithButton("More Info", "moresinfo");
             var embed = new EmbedBuilder()

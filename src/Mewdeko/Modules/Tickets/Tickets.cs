@@ -52,7 +52,7 @@ public partial class Tickets : MewdekoModuleBase<TicketService>
                         return;
 
                     case "create":
-                        var panel = await Service.CreatePanelAsync(channel);
+                        await Service.CreatePanelAsync(channel);
                         await ctx.Channel.SendConfirmAsync($"Panel created in {channel.Mention}!");
                         return;
                 }
@@ -79,7 +79,7 @@ public partial class Tickets : MewdekoModuleBase<TicketService>
                         return;
 
                     case "create":
-                        var panel = await Service.CreatePanelAsync(channel, embedJson);
+                        await Service.CreatePanelAsync(channel, embedJson);
                         await ctx.Channel.SendConfirmAsync($"Panel created in {channel.Mention}!");
                         return;
                 }
