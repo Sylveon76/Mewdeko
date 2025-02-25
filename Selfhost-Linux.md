@@ -13,7 +13,7 @@
 ```
 sudo apt update && sudo apt install postgres postgres-contrib dotnet-sdk-8.0 git
 ```
-**2. Download Mewdeko via `git clone -b psqldeko https://gitub.com/sylveondeko/mewdeko.git`.**
+**2. Download Mewdeko via `git clone -b psqldeko https://github.com/sylveondeko/mewdeko.git`.**
 # Database setup
 **1. Switch to the postgres user**
    ```
