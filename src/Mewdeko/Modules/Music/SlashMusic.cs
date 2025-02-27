@@ -902,7 +902,8 @@ public class SlashMusic(
                     });
                 }
 
-                foreach (var searchQuery in album.Tracks.Items.Select(track => $"{track.Name} {string.Join(" ", track.Artists.Select(a => a.Name))}"))
+                foreach (var searchQuery in album.Tracks.Items.Select(track =>
+                             $"{track.Name} {string.Join(" ", track.Artists.Select(a => a.Name))}"))
                 {
                     var ytTrack = await service.Tracks.LoadTrackAsync(searchQuery, TrackSearchMode.YouTube);
                     if (ytTrack == null) continue;
@@ -1090,6 +1091,149 @@ public class SlashMusic(
         }
 
         return sb.ToString();
+    }
+
+    /// <summary>
+    ///     Handles music control button interactions
+    /// </summary>
+    /// <param name="guildId">Guild ID from the button</param>
+    /// <param name="action">Button action type</param>
+    [ComponentInteraction("music:*:*", true)]
+    public async Task HandleMusicControls(string action, string guildId)
+    {
+        // Verify the interaction is for the correct guild
+        if (ctx.Guild.Id.ToString() != guildId)
+        {
+            await RespondAsync(Strings.MusicControlsWrongServer(ctx.Guild.Id));
+            return;
+        }
+
+        var (player, result) = await GetPlayerAsync(false);
+        if (result is not null)
+        {
+            await RespondAsync(embed: new EmbedBuilder()
+                .WithErrorColor()
+                .WithTitle(Strings.MusicPlayerError(ctx.Guild.Id))
+                .WithDescription(result)
+                .Build());
+            return;
+        }
+
+        // Defer the response to avoid interaction timeout
+        await DeferAsync();
+
+        try
+        {
+            switch (action)
+            {
+                case "playpause":
+                    if (player.State == PlayerState.Paused)
+                    {
+                        await player.ResumeAsync();
+                        await ctx.Interaction.SendEphemeralFollowupConfirmAsync(Strings.MusicResume(ctx.Guild.Id));
+                    }
+                    else
+                    {
+                        await player.PauseAsync();
+                        await ctx.Interaction.SendEphemeralFollowupConfirmAsync(Strings.MusicPause(ctx.Guild.Id));
+                    }
+
+                    break;
+
+                case "next":
+                    if (player.CurrentItem != null)
+                    {
+                        await player.SeekAsync(player.CurrentItem.Track.Duration);
+                        await ctx.Interaction.SendEphemeralFollowupConfirmAsync(Strings.MusicSkippedTrack(ctx.Guild.Id));
+                    }
+                    else
+                    {
+                        await ctx.Interaction.SendEphemeralFollowupConfirmAsync(Strings.MusicNoCurrentTrack(ctx.Guild.Id));
+                    }
+
+                    break;
+
+                case "prev":
+                    var queue = await cache.GetMusicQueue(ctx.Guild.Id);
+                    var currentTrack = await cache.GetCurrentTrack(ctx.Guild.Id);
+                    if (currentTrack != null && currentTrack.Index > 1)
+                    {
+                        var prevTrack = queue.FirstOrDefault(x => x.Index == currentTrack.Index - 1);
+                        if (prevTrack != null)
+                        {
+                            await player.PlayAsync(prevTrack.Track);
+                            await cache.SetCurrentTrack(ctx.Guild.Id, prevTrack);
+                            await ctx.Interaction.SendEphemeralFollowupConfirmAsync(Strings.MusicPlayingPrevious(ctx.Guild.Id));
+                        }
+                    }
+                    else
+                    {
+                        await ctx.Interaction.SendEphemeralFollowupConfirmAsync(Strings.MusicNoPreviousTrack(ctx.Guild.Id));
+                    }
+
+                    break;
+
+                case "stop":
+                    await player.StopAsync();
+                    await cache.SetCurrentTrack(ctx.Guild.Id, null);
+                    await ctx.Interaction.SendEphemeralFollowupConfirmAsync(Strings.MusicPlayerStopped(ctx.Guild.Id));
+                    break;
+
+                case "loop":
+                    var currentRepeatType = await player.GetRepeatType();
+                    var newRepeatType = currentRepeatType switch
+                    {
+                        PlayerRepeatType.None => PlayerRepeatType.Queue,
+                        PlayerRepeatType.Queue => PlayerRepeatType.Track,
+                        PlayerRepeatType.Track => PlayerRepeatType.None,
+                        _ => PlayerRepeatType.None
+                    };
+                    await player.SetRepeatTypeAsync(newRepeatType);
+                    await ctx.Interaction.SendEphemeralFollowupConfirmAsync(Strings.MusicRepeatType(ctx.Guild.Id, newRepeatType));
+                    break;
+
+                case "volume_up":
+                    var currentVolumeUp = await player.GetVolume();
+                    if (currentVolumeUp < 100)
+                    {
+                        var newVolumeUp = Math.Min(currentVolumeUp + 10, 100);
+                        await player.SetVolumeAsync(newVolumeUp / 100f);
+                        await player.SetGuildVolumeAsync(newVolumeUp);
+                        await ctx.Interaction.SendEphemeralFollowupConfirmAsync(Strings.MusicVolumeSet(ctx.Guild.Id, newVolumeUp));
+                    }
+                    else
+                    {
+                        await ctx.Interaction.SendEphemeralFollowupConfirmAsync(Strings.MusicVolumeMaximum(ctx.Guild.Id));
+                    }
+
+                    break;
+
+                case "volume_down":
+                    var currentVolumeDown = await player.GetVolume();
+                    if (currentVolumeDown > 0)
+                    {
+                        var newVolumeDown = Math.Max(currentVolumeDown - 10, 0);
+                        await player.SetVolumeAsync(newVolumeDown / 100f);
+                        await player.SetGuildVolumeAsync(newVolumeDown);
+                        await ctx.Interaction.SendEphemeralFollowupConfirmAsync(Strings.MusicVolumeSet(ctx.Guild.Id, newVolumeDown));
+                    }
+                    else
+                    {
+                        await ctx.Interaction.SendEphemeralFollowupConfirmAsync(Strings.MusicVolumeMinimum(ctx.Guild.Id));
+                    }
+
+                    break;
+
+                case "queue":
+                    await Queue();
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error($"Error in music control button handler {ex}");
+            await FollowupAsync(Strings.MusicControlError(ctx.Guild.Id));
+        }
     }
 
     private async ValueTask<(MewdekoPlayer, string?)> GetPlayerAsync(bool connectToVoiceChannel = true)

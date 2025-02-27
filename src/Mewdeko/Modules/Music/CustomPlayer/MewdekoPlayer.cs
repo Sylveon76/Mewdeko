@@ -135,13 +135,21 @@ public sealed class MewdekoPlayer : LavalinkPlayer
     /// <param name="track">The track that started playing.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     protected override async ValueTask NotifyTrackStartedAsync(ITrackQueueItem track,
-        CancellationToken cancellationToken = new())
+        CancellationToken cancellationToken = default)
     {
         var queue = await cache.GetMusicQueue(GuildId);
         var currentTrack = await cache.GetCurrentTrack(GuildId);
         var musicChannel = await GetMusicChannel();
-        await musicChannel.SendMessageAsync(embed: await PrettyNowPlayingAsync(queue));
-        if (currentTrack.Index == queue.Count)
+
+        // Create embed and component buttons
+        var embed = await PrettyNowPlayingAsync(queue);
+        var components = CreatePlayerControls();
+
+        // Send message with both embed and components
+        var message = await musicChannel.SendMessageAsync(embed: embed, components: components);
+
+        // Continue with auto play logic
+        if (currentTrack?.Index == queue.Count)
         {
             var success = await AutoPlay();
             if (!success)
@@ -151,6 +159,29 @@ public sealed class MewdekoPlayer : LavalinkPlayer
             }
         }
     }
+
+    /// <summary>
+    ///     Creates the player control buttons.
+    /// </summary>
+    /// <returns>Built component collection.</returns>
+    private MessageComponent CreatePlayerControls()
+    {
+        var isPaused = State == PlayerState.Paused;
+
+        return new ComponentBuilder()
+            // Row 1 - Main controls
+            .WithButton(customId: $"music:prev:{GuildId}", emote: new Emoji("⏮️"), style: ButtonStyle.Secondary)
+            .WithButton(customId: $"music:playpause:{GuildId}", emote: new Emoji(isPaused ? "▶️" : "⏸️"), style: ButtonStyle.Primary)
+            .WithButton(customId: $"music:next:{GuildId}", emote: new Emoji("⏭️"), style: ButtonStyle.Secondary)
+            .WithButton(customId: $"music:stop:{GuildId}", emote: new Emoji("⏹️"), style: ButtonStyle.Danger)
+            // Row 2 - Additional controls
+            .WithButton(customId: $"music:loop:{GuildId}", emote: new Emoji("🔁"), style: ButtonStyle.Secondary, row: 1)
+            .WithButton(customId: $"music:volume_down:{GuildId}", emote: new Emoji("🔉"), style: ButtonStyle.Secondary, row: 1)
+            .WithButton(customId: $"music:volume_up:{GuildId}", emote: new Emoji("🔊"), style: ButtonStyle.Secondary, row: 1)
+            .WithButton(customId: $"music:queue:{GuildId}", label: "Queue", style: ButtonStyle.Secondary, row: 1)
+            .Build();
+    }
+
 
     /// <summary>
     ///     Gets the music channel for the player.
