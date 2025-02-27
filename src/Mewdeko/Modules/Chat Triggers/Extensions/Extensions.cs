@@ -148,6 +148,25 @@ public static class Extensions
                     return "";
                 return !mention.Any() ? "" : string.Join(", ", mention);
             })
+            .WithOverride("%replied.content%", () =>
+            {
+                var reference = ctx.Reference;
+                if (reference == null)
+                    return "";
+
+                // Get the message being replied to
+                var repliedMsg = ctx.Channel.GetMessageAsync(reference.MessageId.Value).GetAwaiter().GetResult();
+                return repliedMsg?.Content ?? "";
+            })
+            .WithOverride("%replied.author%", () =>
+            {
+                var reference = ctx.Reference;
+                if (reference == null)
+                    return "";
+
+                var repliedMsg = ctx.Channel.GetMessageAsync(reference.MessageId.Value).GetAwaiter().GetResult();
+                return repliedMsg?.Author.Mention ?? "";
+            })
             .Build();
 
         // Replace placeholders with dynamic values
@@ -242,6 +261,25 @@ public static class Extensions
                         return "";
                     var user = client.GetUser(mention);
                     return user is null ? "" : user.RealAvatarUrl().ToString();
+                })
+                .WithOverride("%replied.content%", () =>
+                {
+                    var reference = ctx.Reference;
+                    if (reference == null)
+                        return "";
+
+                    // Get the message being replied to
+                    var repliedMsg = ctx.Channel.GetMessageAsync(reference.MessageId.Value).GetAwaiter().GetResult();
+                    return repliedMsg?.Content ?? "";
+                })
+                .WithOverride("%replied.author%", () =>
+                {
+                    var reference = ctx.Reference;
+                    if (reference == null)
+                        return "";
+
+                    var repliedMsg = ctx.Channel.GetMessageAsync(reference.MessageId.Value).GetAwaiter().GetResult();
+                    return repliedMsg?.Author.Mention ?? "";
                 })
                 .Build();
 

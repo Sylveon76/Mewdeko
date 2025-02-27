@@ -35,6 +35,21 @@ public class MewdekoContext : DbContext
     public DbSet<Ticket> Tickets { get; set; }
 
     /// <summary>
+    /// Gets or sets the custom voice channels.
+    /// </summary>
+    public DbSet<CustomVoiceChannel> CustomVoiceChannels { get; set; }
+
+    /// <summary>
+    /// Gets or sets the custom voice configs.
+    /// </summary>
+    public DbSet<CustomVoiceConfig> CustomVoiceConfigs { get; set; }
+
+    /// <summary>
+    /// Gets or sets the User Voice Preferences.
+    /// </summary>
+    public DbSet<UserVoicePreference> UserVoicePreferences { get; set; }
+
+    /// <summary>
     /// Gets or sets case notes
     /// </summary>
     public DbSet<CaseNote> CaseNotes { get; set; }

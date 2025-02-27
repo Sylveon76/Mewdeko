@@ -69,7 +69,7 @@ public class GroqClient : IAiClient
             var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
 
             // Create a channel to stream the responses
-            var channel = System.Threading.Channels.Channel.CreateUnbounded<string>();
+            var channel = Channel.CreateUnbounded<string>();
 
             // Process the stream in a separate task
             _ = Task.Run(async () =>

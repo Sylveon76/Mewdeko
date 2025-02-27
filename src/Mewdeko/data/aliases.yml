@@ -126,6 +126,128 @@ resetmessagecounts:
   - resetmsgcounts
   - resetmessages
   - resetcounts
+setupvoicehub:
+  - setupvoicehub
+  - svh
+  - createvoicehub
+  - voicesetup
+setvoicehub:
+  - setvoicehub
+  - sethub
+  - voicehub
+voiceconfig:
+  - voiceconfig
+  - vcconfig
+  - voicesettings
+  - vcsettings
+  - customvoiceconfig
+voicechannels:
+  - voicechannels
+  - vchannels
+  - listvoice
+  - customvoices
+  - voicelist
+voicerename:
+  - voicerename
+  - vrename
+  - renamevoice
+  - vcname
+  - vcrename
+voicelimit:
+  - voicelimit
+  - vclimit
+  - limitvoice
+  - vlimit
+  - setlimit
+voicebitrate:
+  - voicebitrate
+  - vcbitrate
+  - vbitrate
+  - setbitrate
+voicelock:
+  - voicelock
+  - vclock
+  - lockvoice
+  - vlock
+  - lockvc
+voiceunlock:
+  - voiceunlock
+  - vcunlock
+  - unlockvoice
+  - vunlock
+  - unlockvc
+voiceallow:
+  - voiceallow
+  - vcallow
+  - allowuser
+  - vallow
+  - adduser
+voicedeny:
+  - voicedeny
+  - vcdeny
+  - denyuser
+  - vdeny
+  - removeuser
+voiceclaim:
+  - voiceclaim
+  - vcclaim
+  - claimvoice
+  - vclaim
+  - takeover
+voicetransfer:
+  - voicetransfer
+  - vctransfer
+  - transfervoice
+  - vtransfer
+  - givevc
+voicekeepalive:
+  - voicekeepalive
+  - vckeepalive
+  - keepvoice
+  - vkeep
+  - persist
+voicepreferences:
+  - voicepreferences
+  - vcprefs
+  - voiceprefs
+  - vprefs
+  - myvoice
+voiceprefsname:
+  - voiceprefsname
+  - vcprefsname
+  - vpname
+  - prefname
+  - namepref
+voiceprefslimit:
+  - voiceprefslimit
+  - vcprefslimit
+  - vplimit
+  - preflimit
+  - limitpref
+voiceprefsbitrate:
+  - voiceprefsbitrate
+  - vcprefsbitrate
+  - vpbitrate
+  - prefbitrate
+  - bitratepref
+voicepreflock:
+  - voicepreflock
+  - vcpreflock
+  - vplock
+  - preflock
+  - lockpref
+voiceprefskeepalive:
+  - voiceprefskeepalive
+  - vcprefskeepalive
+  - vpkeepalive
+  - prefkeepalive
+  - keeppref
+voiceprefsreset:
+  - voiceprefsreset
+  - vcprefsreset
+  - vprefsreset
+  - resetprefs
+  - clearprefs
 antimassmentionignorebots:
   - antimassmentionignorebots
   - ammignorebots

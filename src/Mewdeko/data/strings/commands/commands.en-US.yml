@@ -21,6 +21,100 @@ gpingrole:
     - "roleid"
     - "@role"
   desc: "Sets the role to ping when a giveaway starts"
+setupvoicehub:
+  args:
+    - ""
+  desc: "Creates a new voice hub channel and category for custom voice channels."
+setvoicehub:
+  args:
+    - "voiceChannel"
+    - "voiceChannel [category]"
+  desc: "Sets an existing voice channel as the hub for creating custom voice channels."
+voiceconfig:
+  args:
+    - ""
+    - "setting"
+    - "setting value"
+  desc: "Views or modifies custom voice channel settings for the server."
+voicechannels:
+  args:
+    - ""
+  desc: "Lists all active custom voice channels in the server."
+voicerename:
+  args:
+    - "name"
+  desc: "Renames your custom voice channel."
+voicelimit:
+  args:
+    - "limit"
+  desc: "Sets the user limit for your custom voice channel (0 for unlimited)."
+voicebitrate:
+  args:
+    - "bitrate"
+  desc: "Sets the bitrate (in kbps) for your custom voice channel."
+voicelock:
+  args:
+    - ""
+    - "true/false"
+  desc: "Locks your custom voice channel to prevent others from joining."
+voiceunlock:
+  args:
+    - ""
+  desc: "Unlocks your custom voice channel to allow anyone to join."
+voiceallow:
+  args:
+    - "@user"
+  desc: "Allows a specific user to join your locked voice channel."
+voicedeny:
+  args:
+    - "@user"
+  desc: "Prevents a specific user from joining your voice channel."
+voiceclaim:
+  args:
+    - ""
+  desc: "Claims ownership of a custom voice channel if the owner has left."
+voicetransfer:
+  args:
+    - "@user"
+  desc: "Transfers ownership of your custom voice channel to another user."
+voicekeepalive:
+  args:
+    - ""
+    - "true/false"
+  desc: "Sets whether your voice channel should be kept alive when empty."
+voicepreferences:
+  args:
+    - ""
+  desc: "Shows your saved preferences for custom voice channels."
+voiceprefsname:
+  args:
+    - ""
+    - "format"
+  desc: "Sets your preferred name format for custom voice channels."
+voiceprefslimit:
+  args:
+    - ""
+    - "limit"
+  desc: "Sets your preferred user limit for custom voice channels."
+voiceprefsbitrate:
+  args:
+    - ""
+    - "bitrate"
+  desc: "Sets your preferred bitrate for custom voice channels."
+voiceprefslock:
+  args:
+    - ""
+    - "true/false"
+  desc: "Sets whether your custom voice channels should be locked by default."
+voiceprefskeepalive:
+  args:
+    - ""
+    - "true/false"
+  desc: "Sets whether your custom voice channels should be kept alive by default."
+voiceprefsreset:
+  args:
+    - ""
+  desc: "Resets all your custom voice channel preferences to server defaults."
 invites:
   args:
     - "@user"

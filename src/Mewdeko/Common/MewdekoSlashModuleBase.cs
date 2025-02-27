@@ -61,6 +61,22 @@ public abstract class MewdekoSlashCommandModule : InteractionModuleBase
     }
 
     /// <summary>
+    ///     Sends an ephemeral follow-up error message asynchronously.
+    /// </summary>
+    /// <param name="message">Message to include in the error.</param>
+    /// <returns>Task representing the asynchronous operation.</returns>
+    public Task<IUserMessage> SendEphemeralFollowupErrorAsync(
+        string message)
+    {
+        return ctx.Interaction.FollowupAsync(embed: new EmbedBuilder().WithErrorColor().WithDescription(message).Build(),
+            ephemeral: true, components: Config.ShowInviteButton
+                ? new ComponentBuilder()
+                    .WithButton("Support Server", style: ButtonStyle.Link, url: "https://discord.gg/mewdeko")
+                    .WithButton("Support Us!", style: ButtonStyle.Link, url: "https://ko-fi.com/mewdeko")
+                    .Build()
+                : null);
+    }
+    /// <summary>
     ///     Sends an ephemeral error message as a reply to the user with the specified key and optional arguments.
     /// </summary>
     public Task EphemeralReplyErrorAsync(string? text)
